@@ -1,0 +1,3 @@
+Copyright for LogicDesigner is held by Douglas H. Summerville, Binghamton University, 2018-2019.
+
+Copyright for portions of LogicDesigner are held by JGraph Ltd, 2006-2012 as part of GraphEditor sample included with mxGraph source code. 

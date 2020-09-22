@@ -1,0 +1,690 @@
+<!DOCTYPE html>
+<html>
+<head> 
+<meta name="viewport" content="width=device-width, initial-scale=1"> 
+<title>Binghamton University ECE Logic Circuit Simulator</title>
+<meta charset="UTF-8">
+
+<script src="go.js"></script>
+<!-- <script src="DrawCommandHandler.js"></script> -->
+<script id="mainapplication">
+
+var maxPortnameLength = 10;
+var gateLow = "white"; 
+var linkLow = "black"; 
+var gateHigh = "forestgreen";
+var linkHigh = "forestgreen";
+var operatingMode="Edit";
+
+function init() 
+{
+	var $ = go.GraphObject.make;
+
+	window.onbeforeunload = function() {
+		    return ".";
+	};
+	schematicDiagram = $(go.Diagram, "schematicDiv",  
+		//{ initialContentAlignment: go.Spot.Center,commandHandler: $(DrawCommandHandler), allowDrop: true, "draggingTool.isGridSnapEnabled": true, "undoManager.isEnabled": true });
+		{ initialContentAlignment: go.Spot.Center, allowDrop: true, "draggingTool.isGridSnapEnabled": true, "undoManager.isEnabled": true });
+
+	schematicDiagram.addDiagramListener
+	(	"Modified",
+		function(e) 
+		{
+			myAlert("");
+		}
+	);
+	schematicDiagram.model=$(go.GraphLinksModel,
+      	{ 
+		linkFromPortIdProperty: "fromPort",  // required information:
+		linkToPortIdProperty: "toPort",      // identifies data property names
+		nodeDataArray: [ ],
+		linkDataArray: [ ] }
+	);
+	var library = new go.Palette("library");
+	schematicDiagram.linkTemplate =
+	$(
+		go.Link, 
+		{ routing: go.Link.AvoidsNodes, relinkableFrom: true, relinkableTo: true,
+			selectionAdorned: false, shadowOffset: new go.Point(0, 0), shadowBlur: 5, shadowColor: "red", },
+		new go.Binding("isShadowed", "isSelected").ofObject(),
+		$(go.Shape, { name: "SHAPE", strokeWidth: 2, stroke: linkLow })
+	);
+
+	function nodeStyle() 
+	{
+		return [new go.Binding("location", "loc", go.Point.parse).makeTwoWay(go.Point.stringify), 
+			{ selectionAdorned: true} ];
+	}
+
+	function shapeStyle() 
+	{
+		return { name: "NODESHAPE", fill: "white", stroke: "black", desiredSize: new go.Size(40, 40), strokeWidth: 2 };
+	}
+
+	function ioPortStyle() 
+	{
+		return { name: "NODESHAPE", fill: "white", stroke: "black", minSize: new go.Size(70, 20), strokeWidth: 2 };
+	}
+
+	function portStyle(input) 
+	{
+		return { desiredSize: new go.Size(10, 10), fill:"transparent", strokeWidth:0, fromSpot: go.Spot.Right,
+			fromLinkable: !input, toSpot: go.Spot.Left, toLinkable: input, toMaxLinks: 1, cursor: "pointer",
+			mouseEnter: function(e, port) { port.fill = "rgba(255,0,255,0.5)"; },
+			mouseLeave: function(e, port) { port.fill = "transparent"; }
+		};
+	}
+
+	function checkPortName(textblock, oldstr, newstr) 
+	{
+		var verilogReserved=new Set( ["always", "ifnone", "rpmos", "and", "initial", "rtran", "assign", "inout", "rtranif0", 
+			"begin", "input", "rtranif1", "buf", "integer", "scalared", "bufif0", "join", "small", "bufif1", "large", 
+			"specify", "case", "macromodule", "specparam", "casex", "medium", "strong0", "casez", "module", "strong1", 
+			"cmos", "nand", "supply0", "deassign", "negedge", "supply1", "default", "nmos", "table", "defparam", "nor", 
+			"task", "disable", "not", "time", "edge", "notif0", "tran", "else", "notif1", "tranif0", "end", "or", 
+			"tranif1", "endcase", "output", "tri", "endmodule", "parameter", "tri0", "endfunction", "pmos", "tri1", 
+			"endprimitive", "posedge", "triand", "endspecify", "primitive", "trior", "endtable", "pull0", "trireg", 
+			"endtask", "pull1", "vectored", "event", "pullup", "wait", "for", "pulldown", "wand", "force", "rcmos", 
+			"weak0", "forever", "real", "weak1", "fork", "realtime", "while", "function", "reg", "wire", "highz0", 
+			"release", "wor", "highz1", "repeat", "xnor", "if", "rnmos", "xor"]);
+		if( /^[UX].*$/.test(newstr) )
+		{
+			myAlert("Port names cannot start with uppercase U or X");
+			return false;
+		}
+		if( newstr.length > maxPortnameLength )
+		{
+			myAlert("Port names must be less than" + maxPortnameLength + "characters");
+			return false;
+		}
+		if( ! /^[A-TV-WY-Za-z][A-Za-z0-9_]*$/.test(newstr))
+		{
+			myAlert("Port names must start with a letter (other than U or X) and contain only letters, numbers, or _");
+			return false;
+		}
+		if( verilogReserved.has(newstr) )
+		{
+			myAlert( newstr + " is a Verilog reserved word and cannot be used as a port name");
+			return false;
+		}
+		return true;
+	};
+
+	var inputTemplate = 
+		$(go.Node, "Spot", nodeStyle(),
+			$(go.Panel,"Auto",
+				$(go.Shape, "SquareArrow", ioPortStyle(), { fill: gateLow, angle:0 }),
+				$(go.TextBlock, {text:"input", name:"portname",editable: true, isMultiline:false, stroke:"black",textValidation:checkPortName},
+					new go.Binding("text").makeTwoWay())
+			),  
+			$(go.Shape, "Rectangle", portStyle(false),  { portId: "", alignment: new go.Spot(0.9, 0.5) }),
+			{
+				click: function (e, obj)
+				{
+					if( operatingMode === "Simulate" )
+					{
+						e.diagram.startTransaction("Toggle Input");
+						var shp = obj.findObject("NODESHAPE");
+						shp.fill = (shp.fill === gateHigh) ? gateLow : gateHigh;
+						updateStates();
+						e.diagram.commitTransaction("Toggle Input");
+					}
+				}
+			}
+		);
+
+	var outputTemplate =
+		$(go.Node, "Spot", nodeStyle(),
+		$(go.Panel,"Auto", 
+			$(go.Shape, "SquareArrow", ioPortStyle(), { fill: gateLow, angle:180,spot1: new go.Spot(.2,0) }),  
+			$(go.TextBlock ,{ alignment: go.Spot.Center, text: "output", name:"portname",  editable: true, isMultiline:false, stroke:"black",textValidation:checkPortName},
+					new go.Binding("text").makeTwoWay())
+			),  
+		$(go.Shape, "Rectangle", portStyle(true), { portId: "", alignment: new go.Spot(0.1, 0.5) })
+		);
+
+
+	var orTemplate =
+		$(go.Node, "Spot", nodeStyle(),
+			$(go.Shape, "OrGate", shapeStyle()),
+			$(go.Shape, "Rectangle", portStyle(true), { portId: "in1", alignment: new go.Spot(0.13, 0.1) }),
+			$(go.Shape, "Rectangle", portStyle(true), { portId: "in2", alignment: new go.Spot(0.23, 0.3) }),
+			$(go.Shape, "Rectangle", portStyle(true), { portId: "in3", alignment: new go.Spot(0.26, 0.5) }),
+			$(go.Shape, "Rectangle", portStyle(true), { portId: "in4", alignment: new go.Spot(0.23, 0.7) }),
+			$(go.Shape, "Rectangle", portStyle(true), { portId: "in5", alignment: new go.Spot(0.13, 0.9) }),
+			$(go.Shape, "Rectangle", portStyle(false),{ portId: "out", alignment: new go.Spot(0.9, 0.5) })
+		);
+
+	var xorTemplate =
+		$(go.Node, "Spot", nodeStyle(),
+			$(go.Shape, "XorGate", shapeStyle()), 
+			$(go.Shape, "Rectangle", portStyle(true), { portId: "in1", alignment: new go.Spot(0.23, 0.1) }),
+			$(go.Shape, "Rectangle", portStyle(true), { portId: "in2", alignment: new go.Spot(0.33, 0.3) }),
+			$(go.Shape, "Rectangle", portStyle(true), { portId: "in3", alignment: new go.Spot(0.36, 0.5) }),
+			$(go.Shape, "Rectangle", portStyle(true),	{ portId: "in4", alignment: new go.Spot(0.33, 0.7) }),
+			$(go.Shape, "Rectangle", portStyle(true), { portId: "in5", alignment: new go.Spot(0.23, 0.9) }),
+			$(go.Shape, "Rectangle", portStyle(false), { portId: "out", alignment: new go.Spot(0.9, 0.5) })
+		);
+
+		var norTemplate =
+			$(go.Node, "Spot", nodeStyle(),
+			$(go.Shape, "NorGate", shapeStyle()), 
+			$(go.Shape, "Rectangle", portStyle(true), { portId: "in1", alignment: new go.Spot(0.13, 0.1) }),
+			$(go.Shape, "Rectangle", portStyle(true), { portId: "in2", alignment: new go.Spot(0.23, 0.3) }),
+			$(go.Shape, "Rectangle", portStyle(true), { portId: "in3", alignment: new go.Spot(0.26, 0.5) }),
+			$(go.Shape, "Rectangle", portStyle(true),	{ portId: "in4", alignment: new go.Spot(0.23, 0.7) }),
+			$(go.Shape, "Rectangle", portStyle(true), { portId: "in5", alignment: new go.Spot(0.13, 0.9) }), 
+			$(go.Shape, "Rectangle", portStyle(false), { portId: "out", alignment: new go.Spot(0.9, 0.5) })
+		);
+
+		var xnorTemplate =
+			$(go.Node, "Spot", nodeStyle(),
+			$(go.Shape, "XnorGate", shapeStyle()),
+			$(go.Shape, "Rectangle", portStyle(true), { portId: "in1", alignment: new go.Spot(0.23, 0.1) }),
+			$(go.Shape, "Rectangle", portStyle(true), { portId: "in2", alignment: new go.Spot(0.33, 0.3) }),
+			$(go.Shape, "Rectangle", portStyle(true), { portId: "in3", alignment: new go.Spot(0.36, 0.5) }),
+			$(go.Shape, "Rectangle", portStyle(true),	{ portId: "in4", alignment: new go.Spot(0.33, 0.7) }),
+			$(go.Shape, "Rectangle", portStyle(true), { portId: "in5", alignment: new go.Spot(0.23, 0.9) }), 
+			$(go.Shape, "Rectangle", portStyle(false), { portId: "out", alignment: new go.Spot(0.9, 0.5) })
+		);
+
+		var andTemplate =
+			$(go.Node, "Spot", nodeStyle(),
+			$(go.Shape, "AndGate", shapeStyle()),
+			$(go.Shape, "Rectangle", portStyle(true), { portId: "in1", alignment: new go.Spot(0.1, 0.1) }),
+			$(go.Shape, "Rectangle", portStyle(true), { portId: "in2", alignment: new go.Spot(0.1, 0.3) }),
+			$(go.Shape, "Rectangle", portStyle(true), { portId: "in3", alignment: new go.Spot(0.1, 0.5) }),
+			$(go.Shape, "Rectangle", portStyle(true), { portId: "in4", alignment: new go.Spot(0.1, 0.7) }),
+			$(go.Shape, "Rectangle", portStyle(true), { portId: "in5", alignment: new go.Spot(0.1, 0.9) }), 
+			$(go.Shape, "Rectangle", portStyle(false), { portId: "out", alignment: new go.Spot(0.85, 0.5) })
+		);
+		var nandTemplate =
+			$(go.Node, "Spot", nodeStyle(),
+			$(go.Shape, "NandGate", shapeStyle()),
+			$(go.Shape, "Rectangle", portStyle(true), { portId: "in1", alignment: new go.Spot(0.1, 0.1) }),
+			$(go.Shape, "Rectangle", portStyle(true), { portId: "in2", alignment: new go.Spot(0.1, 0.3) }),
+			$(go.Shape, "Rectangle", portStyle(true), { portId: "in3", alignment: new go.Spot(0.1, 0.5) }),
+			$(go.Shape, "Rectangle", portStyle(true), { portId: "in4", alignment: new go.Spot(0.1, 0.7) }),
+			$(go.Shape, "Rectangle", portStyle(true), { portId: "in5", alignment: new go.Spot(0.1, 0.9) }), 
+			$(go.Shape, "Rectangle", portStyle(false), { portId: "out", alignment: new go.Spot(0.9, 0.5) })
+		);
+
+		var notTemplate =
+			$(go.Node, "Spot", nodeStyle(),
+			$(go.Shape, "Inverter", shapeStyle()),
+			$(go.Shape, "Rectangle", portStyle(true), { portId: "in", alignment: new go.Spot(0.1, 0.5) }),
+			$(go.Shape, "Rectangle", portStyle(false), { portId: "out", alignment: new go.Spot(0.9, 0.5) })
+		);
+
+	schematicDiagram.nodeTemplateMap.add("input", inputTemplate);
+	schematicDiagram.nodeTemplateMap.add("output", outputTemplate);
+	schematicDiagram.nodeTemplateMap.add("and", andTemplate);
+	schematicDiagram.nodeTemplateMap.add("or", orTemplate);
+	schematicDiagram.nodeTemplateMap.add("not", notTemplate);
+	schematicDiagram.nodeTemplateMap.add("xor", xorTemplate);   
+	schematicDiagram.nodeTemplateMap.add("nand", nandTemplate);         
+	schematicDiagram.nodeTemplateMap.add("nor", norTemplate);
+	schematicDiagram.nodeTemplateMap.add("xnor", xnorTemplate);
+
+	library.nodeTemplateMap = schematicDiagram.nodeTemplateMap;
+
+	library.model.nodeDataArray = [
+		{ category: "input" },
+		{ category: "output" },
+		{ category: "not" },
+		{ category: "and" },
+		{ category: "or" },
+		{ category: "xor" },
+		{ category: "nand" },
+		{ category: "nor" },
+		{ category: "xnor" }
+	];
+
+	loop();
+	schematicDiagram.isModified=false;
+	load();
+}
+
+function load() 
+{
+	myAlert("Drag circuit elements onto schematic to begin.");
+	return;
+}
+function loop() 
+{
+	setTimeout(function() { updateStates(); save(); loop(); }, 250);
+}
+
+function toggleMode()
+{
+	if( operatingMode == "Edit" )
+	{
+		schematicDiagram.isReadOnly = true;
+		operatingMode = "Simulate";
+		document.getElementById("modeBtn").innerText="Edit Schematic";
+	}
+	else
+	{
+		schematicDiagram.isReadOnly = false;
+		operatingMode = "Edit";
+		document.getElementById("modeBtn").innerText="Simulate";
+		schematicDiagram.nodes.each( 
+			function(node) 
+			{ 
+				if (node.category === "input") 
+				{  
+					setOutputLinks(node, linkLow);
+					var shp = node.findObject("NODESHAPE");
+					shp.fill = gateLow;
+				}
+				else if (node.category === "output") 
+				{  
+					var shp = node.findObject("NODESHAPE");
+					shp.fill = gateLow;
+				}
+				else
+					setOutputLinks(node, linkLow);
+			}
+		);
+	}
+}
+function updateStates() 
+{
+	if( operatingMode == "Simulate" )
+	{
+		var oldskip = schematicDiagram.skipsUndoManager;
+		schematicDiagram.skipsUndoManager = true;
+		schematicDiagram.nodes.each( function(node) { if (node.category === "input") { doInput(node); } });
+		schematicDiagram.nodes.each(function(node) {
+			switch (node.category) {
+				case "and":       doAnd(node); break;
+				case "or":         doOr(node); break;
+				case "xor":       doXor(node); break;
+				case "not":       doNot(node); break;
+				case "nand":     doNand(node); break;
+				case "nor":       doNor(node); break;
+				case "xnor":     doXnor(node); break;
+				case "output": doOutput(node); break;
+				case "input": break;  // doInput already called, above
+			}
+		});
+		schematicDiagram.skipsUndoManager = oldskip;
+	}
+}
+
+function linkIsTrue(link) 
+{  
+	return link.findObject("SHAPE").stroke === linkHigh;
+}
+
+function setOutputLinks(node, color) 
+{
+	node.findLinksOutOf().each(function(link) { link.findObject("SHAPE").stroke = color; });
+}
+
+function doInput(node) 
+{
+	setOutputLinks(node, node.findObject("NODESHAPE").fill===gateLow ? linkLow:linkHigh);
+}
+
+function doAnd(node) 
+{
+	var color = node.findLinksInto().all(linkIsTrue) ? linkHigh : linkLow;
+	setOutputLinks(node, color);
+}
+function doNand(node) 
+{
+	var color = !node.findLinksInto().all(linkIsTrue) ? linkHigh : linkLow;
+	setOutputLinks(node, color);
+}
+function doNot(node) 
+{
+	var color = !node.findLinksInto().all(linkIsTrue) ? linkHigh : linkLow;
+	setOutputLinks(node, color);
+}
+
+function doOr(node) 
+{
+	var color = node.findLinksInto().any(linkIsTrue) ? linkHigh : linkLow;
+	setOutputLinks(node, color);
+}
+function doNor(node) 
+{
+	var color = !node.findLinksInto().any(linkIsTrue) ? linkHigh : linkLow;
+	setOutputLinks(node, color);
+}
+
+function doXor(node) 
+{
+	var truecount = 0;
+	node.findLinksInto().each(function(link) { if (linkIsTrue(link)) truecount++; });
+	var color = truecount % 2 === 1 ? linkHigh : linkLow;
+	setOutputLinks(node, color);
+}
+function doXnor(node) 
+{
+	var truecount = 0;
+	node.findLinksInto().each(function(link) { if (linkIsTrue(link)) truecount++; });
+	var color = truecount % 2 === 0 ? linkHigh : linkLow;
+	setOutputLinks(node, color);
+}
+
+function doOutput(node) 
+{
+	node.linksConnected.each(
+	function(link) { node.findObject("NODESHAPE").fill = (link.findObject("SHAPE").stroke === linkHigh)?gateHigh:gateLow; });
+}
+
+function save() 
+{
+	if ( schematicDiagram.isModified )
+	{
+		var jsontext=schematicDiagram.model.toJson();
+		document.getElementById("textareaSchematic").value = jsontext;
+		document.getElementById("textareaVerilog").value = toVerilog(jsontext);
+		schematicDiagram.isModified = false;
+	}
+}
+function verilogifyLiteral( str )
+{
+	return str.replace( "-","");
+}
+function toVerilog(jsonarray)
+{
+	var netList="";
+	var inputList="";
+	var assignList="";
+	var wireList="";
+	var outputList="";
+	var netName={};
+	var gateInputs={};
+	var moduleName=document.getElementById("schematicName").innerText ;
+	var obj=JSON.parse(jsonarray);
+	var verilogCode="";
+	//generate net names
+	for( i in obj.nodeDataArray )
+	{
+		switch( obj.nodeDataArray[i].category)
+		{
+			case "input": 
+				netName[obj.nodeDataArray[i].key] = obj.nodeDataArray[i].text; 
+				break;
+			case "and":
+			case "nand":
+			case "or":
+			case "nor":
+			case "xor":
+			case "xnor":
+			case "not":
+				gateInputs[obj.nodeDataArray[i].key]=[];
+				netName[obj.nodeDataArray[i].key] = verilogifyLiteral("X"+obj.nodeDataArray[i].key); 
+				wireList+=verilogifyLiteral("X"+obj.nodeDataArray[i].key)+","; 
+				break;
+			case "output":
+				gateInputs[obj.nodeDataArray[i].key]=[];
+				break;
+		}
+	}
+	for( i in obj.linkDataArray )
+	{
+		gateInputs[ obj.linkDataArray[i].to ].push( obj.linkDataArray[i].from);
+	}
+	for( i in obj.nodeDataArray )
+	{
+		switch( obj.nodeDataArray[i].category)
+		{
+		case "input":
+			inputList+="\n\tinput " + obj.nodeDataArray[i].text + ",";
+			break;
+		case "output":
+			outputList+="\n\toutput " + obj.nodeDataArray[i].text + ",";
+			assignList += "\nassign " + obj.nodeDataArray[i].text+" = " ;
+			assignList += netName[ gateInputs[obj.nodeDataArray[i].key][0]] + ";";
+			break;
+		case "modulename":
+			moduleName+= obj.nodeDataArray[i].text;
+			break;
+		case "not":
+		case "and":
+		case "or":
+		case "xor":
+		case "nand":
+		case "nor":
+		case "xnor":
+			netList += "\n" + obj.nodeDataArray[i].category +verilogifyLiteral(" U"+obj.nodeDataArray[i].key)+" ("; 
+			netList += netName[obj.nodeDataArray[i].key]+",";
+			gateInputs[obj.nodeDataArray[i].key].forEach( function(port){ netList+=netName[port]+",";});
+			netList=netList.slice(0,-1)+");";
+			break; 
+		}
+	}
+
+	verilogCode="module ";
+	verilogCode+=(moduleName!=="")?moduleName:"mymodule";
+	verilogCode+= "(" ;
+	verilogCode += inputList;
+	verilogCode+= outputList;
+	if( verilogCode.slice(-1) === "," ) 
+		verilogCode=verilogCode.slice(0,-1);
+	verilogCode+="\n);";
+	verilogCode+="\n\nwire "+wireList.slice(0,-1)+";";
+	verilogCode+="\n"+assignList;
+	verilogCode+="\n"+netList;
+	verilogCode+="\n\nendmodule\n";
+	return verilogCode;
+}
+function downloadSchematic() 
+{
+    var text=schematicDiagram.model.toJson();
+    var blob = new Blob([text], { type: "text/plain"});
+    var anchor = document.createElement("a");
+    anchor.download = document.getElementById("schematicName").innerText + ".sch";
+    anchor.href = window.URL.createObjectURL(blob);
+    anchor.target ="_blank";
+    anchor.style.display = "none"; 
+    document.body.appendChild(anchor);
+    anchor.click();
+}
+function uploadSchematic()
+{
+	document.getElementById("uploadFile").click();
+}
+function enableLoad(f)
+{
+	var file=f[0];
+	var reader = new FileReader();
+	reader.onload = function (e) {
+	    schematicDiagram.model =go.Model.fromJson(e.target.result); 
+	};
+	reader.onloadend = function () {
+		document.getElementById("schematicName").innerText=file.name.replace(/\.[^/.]+$/, "")
+	}
+	reader.readAsText(file);
+	return;
+}
+function numLinksInto(node)
+{
+	var truecount=0;
+	node.findLinksInto().each(function(link) { truecount++; });
+	return truecount;
+}
+function numLinksOutOf(node)
+{
+	var truecount=0;
+	node.findLinksOutOf().each(function(link) { truecount++; });
+	return truecount;
+}
+function myAlert( msg )
+{
+	document.getElementById("consolelog").innerText=msg;
+}
+
+function runDRC()
+{
+	var it=schematicDiagram.nodes;
+	var numInputs=0;
+	var numOutputs=0;
+	var identifiers=new Set();
+	while(it.next())
+	{
+		switch(it.value.category)
+		{
+			case "output":
+				numOutputs++;
+				if( numLinksInto(it.value) === 0 )
+				{
+					myAlert("Output port must be connected to a driver");
+					schematicDiagram.select(it.value);
+					return false;
+				}
+				var netName=it.value.findObject("portname").text ;
+				if( netName == "output")
+				{
+					myAlert("Output port must be given a valid name");
+					schematicDiagram.select(it.value);
+					return false;
+				}
+				if( identifiers.has(netName))
+				{
+					myAlert("Port names must be unique");
+					schematicDiagram.select(it.value);
+					return false;
+				}
+				identifiers.add(netName);
+				break;
+
+			case "input":
+				numInputs++;
+				if( numLinksOutOf(it.value) === 0 )
+				{
+					myAlert("Input port must be connected to a gate or output.");
+					schematicDiagram.select(it.value);
+					return false;
+				}
+				var netName=it.value.findObject("portname").text ;
+				if( netName == "input")
+				{
+					myAlert("Input port must be given a valid name");
+					schematicDiagram.select(it.value);
+					return false;
+				}
+				if( identifiers.has(netName))
+				{
+					myAlert("Port names must be unique");
+					schematicDiagram.select(it.value);
+					return false;
+				}
+				identifiers.add(netName);
+				break;
+			case "not":
+				if( numLinksOutOf(it.value) < 1 )
+				{
+					myAlert("Inverter output must be connected.");
+					schematicDiagram.select(it.value);
+					return false;
+				}
+				if( numLinksInto(it.value) !== 1)
+				{
+					myAlert("Inverter input must be connected.");
+					schematicDiagram.select(it.value);
+					return false;
+				}
+				break;
+			case "and":
+			case "or":
+			case "xor":
+			case "nand":
+			case "nor":
+			case "xnor":
+				if( numLinksOutOf(it.value) < 1 )
+				{
+					myAlert("Gate output must be connected.");
+					schematicDiagram.select(it.value);
+					return false;
+				}
+				if( numLinksInto(it.value) < 2  )
+				{
+					myAlert("Gate must have at least two inputs.");
+					schematicDiagram.select(it.value);
+					return false;
+				}
+				break;
+			default:
+				break;
+		}
+	}
+	if( numOutputs===0 || numInputs === 0 )
+	{
+		myAlert("Schematic must have at least one input and at least one output");
+		return false;
+	}
+
+	myAlert("Schematic passed DRC!");
+	return true;
+}
+function exportVerilog()
+{
+    if(! runDRC() )
+	return;
+    var text = document.getElementById("textareaVerilog").value;
+    var blob = new Blob([text], { type: "text/plain"});
+    var anchor = document.createElement("a");
+    anchor.download = document.getElementById("schematicName").innerText + ".v";
+    anchor.href = window.URL.createObjectURL(blob);
+    anchor.target ="_blank";
+    anchor.style.display = "none"; 
+    document.body.appendChild(anchor);
+    anchor.click();
+}
+function clearSchematic()
+{
+	schematicDiagram.commandHandler.selectAll();
+	schematicDiagram.commandHandler.cutSelection();
+	return;
+}
+function undoSchematic()
+{
+	schematicDiagram.commandHandler.undo();
+	return;
+}
+function redoSchematic()
+{
+	schematicDiagram.commandHandler.redo();
+	return;
+}
+</script>
+</head>
+<body onload="init()" >
+<div id="toolbar">
+	<button id="newBtn" onclick="clearSchematic()" >New</button>
+	<button id="saveSch" onclick="downloadSchematic()">Save</button>
+	<button id="uploadSch" onclick="uploadSchematic()">Open</button>
+	<button id="DRC" onclick="runDRC()">Design Rule Check</button>
+	<button id="saveVerilog" onclick="exportVerilog()">Export Verilog</button>
+	<button id="undoBtn" onclick="undoSchematic()">Undo</button>
+	<button id="redoBtn" onclick="redoSchematic()">Redo</button>
+	<button id="modeBtn" onclick="toggleMode()">Simulate</button>
+	Schematic Name:<span  spellcheck="false" style="display: inline-block; width: 100px; border:1px solid gray; resize: none; cursor:pointer;" contenteditable="true" id="schematicName" >myschematic</span>
+	<input type="file" id="uploadFile"  name="uploadFile" accept=".sch" onchange="enableLoad(this.files)" style="display:none;">
+	<span style=" font-family:fontawesome; text-decoration:none; line-height:1; font-size:27px; letter-spacing:3px; color:#005A43;"> 
+	&nbsp;&nbsp;LogicDesigner
+	</span>
+</div>
+<div id="sample">
+ <div style="width:100%; white-space:nowrap;">
+  <span style="display: inline-block; vertical-align: top; width:100px">
+  <div id="library" style="border: solid 1px black; height: 600px"></div>
+  </span>
+  <span style="display: inline-block; vertical-align: top; width:85%">
+  <div id="schematicDiv" style="border: solid 1px black; height: 600px"></div>
+  </span>
+ </div>
+ <textarea rows=1 id="consolelog" style="width:100%; color:red;"> </textarea>
+ <div>
+	 <textarea id="textareaSchematic" style="width:100%;height:200px; display:none;"> </textarea>
+	 <textarea id="textareaVerilog"   style="width: 40%;height:200px; display:none;"> </textarea>
+ </div>
+</div>
+</body>
+</html>
