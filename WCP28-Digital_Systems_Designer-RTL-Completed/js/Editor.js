@@ -16,42 +16,42 @@ Editor = function(chromeless, themes, model, graph, editable)
 	{
 		return this.filename || mxResources.get('schematic', [Editor.pageCounter]) + '.sch';
 	};
-	
+
 	this.getFilename = function()
 	{
 		return this.filename;
 	};
-	
-	
+
+
 	this.setStatus = function(value)
 	{
 		this.status = value;
 		this.fireEvent(new mxEventObject('statusChanged'));
 	};
-	
-	
+
+
 	this.getStatus = function()
 	{
 		return this.status;
 	};
 
-	
-	this.graphChangeListener = function(sender, eventObject) 
+
+	this.graphChangeListener = function(sender, eventObject)
 	{
 		var edit = (eventObject != null) ? eventObject.getProperty('edit') : null;
-				
+
 		if (edit == null || !edit.ignoreEdit)
 		{
 			this.setModified(true);
 		}
 	};
-	
+
 	this.graph.getModel().addListener(mxEvent.CHANGE, mxUtils.bind(this, function()
 	{
 		this.graphChangeListener.apply(this, arguments);
 	}));
 
-	
+
 	this.graph.resetViewOnRootChange = false;
 	this.init();
 };
@@ -67,14 +67,14 @@ Editor.pageCounter = 0;
 		var op = window;
 
 		while (op.opener != null && typeof op.opener.Editor !== 'undefined' &&
-			!isNaN(op.opener.Editor.pageCounter) &&	
-			
+			!isNaN(op.opener.Editor.pageCounter) &&
+
 			op.opener != op)
 		{
 			op = op.opener;
 		}
-		
-		
+
+
 		if (op != null)
 		{
 			op.Editor.pageCounter++;
@@ -83,7 +83,7 @@ Editor.pageCounter = 0;
 	}
 	catch (e)
 	{
-		
+
 	}
 })();
 
@@ -181,12 +181,12 @@ Editor.prototype.getEditBlankUrl = function(params)
 Editor.prototype.editAsNew = function(xml, title)
 {
 	var p = (title != null) ? '?title=' + encodeURIComponent(title) : '';
-	
+
 	if (urlParams['ui'] != null)
 	{
 		p += ((p.length > 0) ? '&' : '?') + 'ui=' + urlParams['ui'];
 	}
-	
+
 	if (this.editorWindow != null && !this.editorWindow.closed)
 	{
 		this.editorWindow.focus();
@@ -221,8 +221,8 @@ Editor.prototype.createGraph = function(themes, model)
 {
 	var graph = new Graph(null, model, null, null, themes);
 	graph.transparentBackground = false;
-	
-	
+
+
 	if (!this.chromeless)
 	{
 		graph.isBlankLink = function(href)
@@ -230,7 +230,7 @@ Editor.prototype.createGraph = function(themes, model)
 			return !this.isExternalProtocol(href);
 		};
 	}
-	
+
 	return graph;
 };
 
@@ -243,7 +243,7 @@ Editor.prototype.resetGraph = function()
 	this.graph.foldingEnabled = true;
 	this.graph.scrollbars = this.graph.defaultScrollbars;
 	this.graph.pageVisible = this.graph.defaultPageVisible;
-	this.graph.pageBreaksVisible = this.graph.pageVisible; 
+	this.graph.pageBreaksVisible = this.graph.pageVisible;
 	this.graph.preferPageSize = this.graph.pageBreaksVisible;
 	this.graph.background = this.graph.defaultGraphBackground;
 	this.graph.pageScale = mxGraph.prototype.pageScale;
@@ -270,9 +270,9 @@ Editor.prototype.readGraphState = function(node)
 		this.graph.foldingEnabled = urlParams['nav'] == '1';
 		this.graph.cellRenderer.forceControlClickHandler = this.graph.foldingEnabled;
 	}
-	
+
 	var ps = parseFloat(node.getAttribute('pageScale'));
-	
+
 	if (!isNaN(ps) && ps > 0)
 	{
 		this.graph.pageScale = ps;
@@ -285,7 +285,7 @@ Editor.prototype.readGraphState = function(node)
 	if (!this.graph.isLightboxView())
 	{
 		var pv = node.getAttribute('page');
-	
+
 		if (pv != null)
 		{
 			this.graph.pageVisible = (pv != '0');
@@ -299,21 +299,21 @@ Editor.prototype.readGraphState = function(node)
 	{
 		this.graph.pageVisible = false;
 	}
-	
-	this.graph.pageBreaksVisible = this.graph.pageVisible; 
+
+	this.graph.pageBreaksVisible = this.graph.pageVisible;
 	this.graph.preferPageSize = this.graph.pageBreaksVisible;
-	
+
 	var pw = parseFloat(node.getAttribute('pageWidth'));
 	var ph = parseFloat(node.getAttribute('pageHeight'));
-	
+
 	if (!isNaN(pw) && !isNaN(ph))
 	{
 		this.graph.pageFormat = new mxRectangle(0, 0, pw, ph);
 	}
 
-	
+
 	var bg = node.getAttribute('background');
-	
+
 	if (bg != null && bg.length > 0)
 	{
 		this.graph.background = bg;
@@ -329,11 +329,11 @@ Editor.prototype.setGraphXml = function(node)
 	if (node != null)
 	{
 		var dec = new mxCodec(node.ownerDocument);
-	
+
 		if (node.nodeName == 'mxGraphModel')
 		{
 			this.graph.model.beginUpdate();
-			
+
 			try
 			{
 				this.graph.model.clear();
@@ -346,25 +346,25 @@ Editor.prototype.setGraphXml = function(node)
 			{
 				this.graph.model.endUpdate();
 			}
-	
+
 			this.fireEvent(new mxEventObject('resetGraphView'));
 		}
 		else if (node.nodeName == 'root')
 		{
 			this.resetGraph();
-			
-			
+
+
 			var wrapper = dec.document.createElement('mxGraphModel');
 			wrapper.appendChild(node);
-			
+
 			dec.decode(wrapper, this.graph.getModel());
 			this.updateGraphComponents();
 			this.fireEvent(new mxEventObject('resetGraphView'));
 		}
 		else
 		{
-			throw { 
-			    message: mxResources.get('cannotOpenFile'), 
+			throw {
+			    message: mxResources.get('cannotOpenFile'),
 			    node: node,
 			    toString: function() { return this.message; }
 			};
@@ -382,7 +382,7 @@ Editor.prototype.getGraphXml = function(ignoreSelection)
 {
 	ignoreSelection = (ignoreSelection != null) ? ignoreSelection : true;
 	var node = null;
-	
+
 	if (ignoreSelection)
 	{
 		var enc = new mxCodec(mxUtils.createXmlDocument());
@@ -399,7 +399,7 @@ Editor.prototype.getGraphXml = function(ignoreSelection)
 		node.setAttribute('dx', Math.round(this.graph.view.translate.x * 100) / 100);
 		node.setAttribute('dy', Math.round(this.graph.view.translate.y * 100) / 100);
 	}
-	
+
 	node.setAttribute('grid', (this.graph.isGridEnabled()) ? '1' : '0');
 	node.setAttribute('gridSize', this.graph.gridSize);
 	node.setAttribute('guides', (this.graph.graphHandler.guidesEnabled) ? '1' : '0');
@@ -416,19 +416,19 @@ Editor.prototype.getGraphXml = function(ignoreSelection)
 	{
 		node.setAttribute('background', this.graph.background);
 	}
-	
+
 	return node;
 };
 
 Editor.prototype.updateGraphComponents = function()
 {
 	var graph = this.graph;
-	
+
 	if (graph.container != null)
 	{
 		graph.view.validateBackground();
 		graph.container.style.overflow = (graph.scrollbars) ? 'auto' : 'hidden';
-		
+
 		this.fireEvent(new mxEventObject('updateGraphComponents'));
 	}
 };
@@ -452,23 +452,23 @@ Editor.prototype.createUndoManager = function()
 	{
 		undoMgr.undoableEditHappened(evt.getProperty('edit'));
 	};
-	
-    
+
+
 	var listener = mxUtils.bind(this, function(sender, evt)
 	{
 		this.undoListener.apply(this, arguments);
 	});
-	
+
 	graph.getModel().addListener(mxEvent.UNDO, listener);
 	graph.getView().addListener(mxEvent.UNDO, listener);
 
-	
+
 	var undoHandler = function(sender, evt)
 	{
 		var cand = graph.getSelectionCellsForChanges(evt.getProperty('edit').changes);
 		var model = graph.getModel();
 		var cells = [];
-		
+
 		for (var i = 0; i < cand.length; i++)
 		{
 			if ((model.isVertex(cand[i]) || model.isEdge(cand[i])) && graph.view.getState(cand[i]) != null)
@@ -476,10 +476,10 @@ Editor.prototype.createUndoManager = function()
 				cells.push(cand[i]);
 			}
 		}
-		
+
 		graph.setSelectionCells(cells);
 	};
-	
+
 	undoMgr.addListener(mxEvent.UNDO, undoHandler);
 	undoMgr.addListener(mxEvent.REDO, undoHandler);
 
@@ -543,36 +543,36 @@ OpenFile.prototype.cancel = function(cancel)
 function Dialog(editorUi, elt, w, h, modal, closable, onClose, noScroll, transparent)
 {
 	var dx = 0;
-	
+
 	if (mxClient.IS_VML && (document.documentMode == null || document.documentMode < 8))
 	{
-		
-		
+
+
 		dx = 80;
 	}
-	
+
 	w += dx;
 	h += dx;
-	
+
 	var w0 = w;
 	var h0 = h;
-	
-	
+
+
 	var dh = (document.documentElement.clientHeight > 0) ? document.documentElement.clientHeight :
 		Math.max(document.body.clientHeight || 0, document.documentElement.clientHeight);
 	var left = Math.max(1, Math.round((document.body.clientWidth - w - 64) / 2));
 	var top = Math.max(1, Math.round((dh - h - editorUi.footerHeight) / 3));
-	
-	
+
+
 	if (!mxClient.IS_QUIRKS)
 	{
 		elt.style.maxHeight = '100%';
 	}
-	
+
 	w = Math.min(w, document.body.scrollWidth - 64);
 	h = Math.min(h, dh - 64);
-	
-	
+
+
 	if (editorUi.dialogs.length > 0)
 	{
 		this.zIndex += editorUi.dialogs.length * 2;
@@ -586,15 +586,15 @@ function Dialog(editorUi, elt, w, h, modal, closable, onClose, noScroll, transpa
 		this.bg.style.height = dh + 'px';
 		this.bg.style.right = '0px';
 		this.bg.style.zIndex = this.zIndex - 2;
-		
+
 		mxUtils.setOpacity(this.bg, this.bgOpacity);
-		
+
 		if (mxClient.IS_QUIRKS)
 		{
 			new mxDivResizer(this.bg);
 		}
 	}
-	
+
 	var origin = mxUtils.getDocumentScrollOrigin(document);
 	this.bg.style.left = origin.x + 'px';
 	this.bg.style.top = origin.y + 'px';
@@ -605,27 +605,27 @@ function Dialog(editorUi, elt, w, h, modal, closable, onClose, noScroll, transpa
 	{
 		document.body.appendChild(this.bg);
 	}
-	
+
 	var div = editorUi.createDiv(transparent? 'geTransDialog' : 'geDialog');
 	var pos = this.getPosition(left, top, w, h);
 	left = pos.x;
 	top = pos.y;
-	
+
 	div.style.width = w + 'px';
 	div.style.height = h + 'px';
 	div.style.left = left + 'px';
 	div.style.top = top + 'px';
 	div.style.zIndex = this.zIndex;
-	
+
 	div.appendChild(elt);
 	document.body.appendChild(div);
-	
-	
+
+
 	if (!noScroll && elt.clientHeight > div.clientHeight - 64)
 	{
 		elt.style.overflowY = 'auto';
 	}
-	
+
 	if (closable)
 	{
 		var img = document.createElement('img');
@@ -636,58 +636,58 @@ function Dialog(editorUi, elt, w, h, modal, closable, onClose, noScroll, transpa
 		img.style.top = (top + 14) + 'px';
 		img.style.left = (left + w + 38 - dx) + 'px';
 		img.style.zIndex = this.zIndex;
-		
+
 		mxEvent.addListener(img, 'click', mxUtils.bind(this, function()
 		{
 			editorUi.hideDialog(true);
 		}));
-		
+
 		document.body.appendChild(img);
 		this.dialogImg = img;
-		
+
 		mxEvent.addGestureListeners(this.bg, null, null, mxUtils.bind(this, function(evt)
 		{
 			editorUi.hideDialog(true);
 		}));
 	}
-	
+
 	this.resizeListener = mxUtils.bind(this, function()
 	{
 		dh = Math.max(document.body.clientHeight, document.documentElement.clientHeight);
 		this.bg.style.height = dh + 'px';
-		
+
 		left = Math.max(1, Math.round((document.body.clientWidth - w - 64) / 2));
 		top = Math.max(1, Math.round((dh - h - editorUi.footerHeight) / 3));
 		w = Math.min(w0, document.body.scrollWidth - 64);
 		h = Math.min(h0, dh - 64);
-		
+
 		var pos = this.getPosition(left, top, w, h);
 		left = pos.x;
 		top = pos.y;
-		
+
 		div.style.left = left + 'px';
 		div.style.top = top + 'px';
 		div.style.width = w + 'px';
 		div.style.height = h + 'px';
-		
-		
+
+
 		if (!noScroll && elt.clientHeight > div.clientHeight - 64)
 		{
 			elt.style.overflowY = 'auto';
 		}
-		
+
 		if (this.dialogImg != null)
 		{
 			this.dialogImg.style.top = (top + 14) + 'px';
 			this.dialogImg.style.left = (left + w + 38 - dx) + 'px';
 		}
 	});
-	
+
 	mxEvent.addListener(window, 'resize', this.resizeListener);
 
 	this.onDialogClose = onClose;
 	this.container = div;
-	
+
 	editorUi.editor.fireEvent(new mxEventObject('showDialog'));
 };
 
@@ -719,18 +719,18 @@ Dialog.prototype.close = function(cancel)
 		this.onDialogClose(cancel);
 		this.onDialogClose = null;
 	}
-	
+
 	if (this.dialogImg != null)
 	{
 		this.dialogImg.parentNode.removeChild(this.dialogImg);
 		this.dialogImg = null;
 	}
-	
+
 	if (this.bg != null && this.bg.parentNode != null)
 	{
 		this.bg.parentNode.removeChild(this.bg);
 	}
-	
+
 	mxEvent.removeListener(window, 'resize', this.resizeListener);
 	this.container.parentNode.removeChild(this.container);
 };
@@ -744,61 +744,61 @@ PrintDialog.prototype.create = function(editorUi)
 {
 	var graph = editorUi.editor.graph;
 	var row, td;
-	
+
 	var table = document.createElement('table');
 	table.style.width = '100%';
 	table.style.height = '100%';
 	var tbody = document.createElement('tbody');
-	
+
 	row = document.createElement('tr');
-	
+
 	var onePageCheckBox = document.createElement('input');
 	onePageCheckBox.setAttribute('type', 'checkbox');
 	td = document.createElement('td');
 	td.setAttribute('colspan', '2');
 	td.style.fontSize = '10pt';
 	td.appendChild(onePageCheckBox);
-	
+
 	var span = document.createElement('span');
 	mxUtils.write(span, ' ' + mxResources.get('fitPage'));
 	td.appendChild(span);
-	
+
 	mxEvent.addListener(span, 'click', function(evt)
 	{
 		onePageCheckBox.checked = !onePageCheckBox.checked;
 		pageCountCheckBox.checked = !onePageCheckBox.checked;
 		mxEvent.consume(evt);
 	});
-	
+
 	mxEvent.addListener(onePageCheckBox, 'change', function()
 	{
 		pageCountCheckBox.checked = !onePageCheckBox.checked;
 	});
-	
+
 	row.appendChild(td);
 	tbody.appendChild(row);
 
 	row = row.cloneNode(false);
-	
+
 	var pageCountCheckBox = document.createElement('input');
 	pageCountCheckBox.setAttribute('type', 'checkbox');
 	td = document.createElement('td');
 	td.style.fontSize = '10pt';
 	td.appendChild(pageCountCheckBox);
-	
+
 	var span = document.createElement('span');
 	mxUtils.write(span, ' ' + mxResources.get('posterPrint') + ':');
 	td.appendChild(span);
-	
+
 	mxEvent.addListener(span, 'click', function(evt)
 	{
 		pageCountCheckBox.checked = !pageCountCheckBox.checked;
 		onePageCheckBox.checked = !pageCountCheckBox.checked;
 		mxEvent.consume(evt);
 	});
-	
+
 	row.appendChild(td);
-	
+
 	var pageCountInput = document.createElement('input');
 	pageCountInput.setAttribute('value', '1');
 	pageCountInput.setAttribute('type', 'number');
@@ -829,68 +829,68 @@ PrintDialog.prototype.create = function(editorUi)
 	});
 
 	row = row.cloneNode(false);
-	
+
 	td = document.createElement('td');
 	mxUtils.write(td, mxResources.get('pageScale') + ':');
 	row.appendChild(td);
-	
+
 	td = document.createElement('td');
 	var pageScaleInput = document.createElement('input');
 	pageScaleInput.setAttribute('value', '100 %');
 	pageScaleInput.setAttribute('size', '5');
 	pageScaleInput.style.width = '50px';
-	
+
 	td.appendChild(pageScaleInput);
 	row.appendChild(td);
 	tbody.appendChild(row);
-	
+
 	row = document.createElement('tr');
 	td = document.createElement('td');
 	td.colSpan = 2;
 	td.style.paddingTop = '20px';
 	td.setAttribute('align', 'right');
-	
-	
+
+
 	function preview(print)
 	{
 		var autoOrigin = onePageCheckBox.checked || pageCountCheckBox.checked;
 		var printScale = parseInt(pageScaleInput.value) / 100;
-		
+
 		if (isNaN(printScale))
 		{
 			printScale = 1;
 			pageScaleInput.value = '100%';
 		}
-		
-		
+
+
 		printScale *= 0.75;
 
 		var pf = graph.pageFormat || mxConstants.PAGE_FORMAT_A4_PORTRAIT;
 		var scale = 1 / graph.pageScale;
-		
+
 		if (autoOrigin)
 		{
     		var pageCount = (onePageCheckBox.checked) ? 1 : parseInt(pageCountInput.value);
-			
+
 			if (!isNaN(pageCount))
 			{
 				scale = mxUtils.getScaleForPageCount(pageCount, graph, pf);
 			}
 		}
 
-		
+
 		var gb = graph.getGraphBounds();
 		var border = 0;
 		var x0 = 0;
 		var y0 = 0;
 
-		
+
 		pf = mxRectangle.fromRectangle(pf);
 		pf.width = Math.ceil(pf.width * printScale);
 		pf.height = Math.ceil(pf.height * printScale);
 		scale *= printScale;
-		
-		
+
+
 		if (!autoOrigin && graph.pageVisible)
 		{
 			var layout = graph.getPageLayout();
@@ -901,22 +901,22 @@ PrintDialog.prototype.create = function(editorUi)
 		{
 			autoOrigin = true;
 		}
-		
+
 		var preview = PrintDialog.createPrintPreview(graph, scale, pf, border, x0, y0, autoOrigin);
 		preview.open();
-	
+
 		if (print)
 		{
 			PrintDialog.printPreview(preview);
 		}
 	};
-	
+
 	var cancelBtn = mxUtils.button(mxResources.get('cancel'), function()
 	{
 		editorUi.hideDialog();
 	});
 	cancelBtn.className = 'geBtn';
-	
+
 	if (editorUi.editor.cancelFirst)
 	{
 		td.appendChild(cancelBtn);
@@ -932,7 +932,7 @@ PrintDialog.prototype.create = function(editorUi)
 		previewBtn.className = 'geBtn';
 		td.appendChild(previewBtn);
 	}
-	
+
 	var printBtn = mxUtils.button(mxResources.get((!PrintDialog.previewEnabled) ? 'ok' : 'print'), function()
 	{
 		editorUi.hideDialog();
@@ -940,7 +940,7 @@ PrintDialog.prototype.create = function(editorUi)
 	});
 	printBtn.className = 'geBtn gePrimaryBtn';
 	td.appendChild(printBtn);
-	
+
 	if (!editorUi.editor.cancelFirst)
 	{
 		td.appendChild(cancelBtn);
@@ -948,7 +948,7 @@ PrintDialog.prototype.create = function(editorUi)
 
 	row.appendChild(td);
 	tbody.appendChild(row);
-	
+
 	table.appendChild(tbody);
 	this.container = table;
 };
@@ -963,10 +963,10 @@ PrintDialog.printPreview = function(preview)
 			preview.wnd.print();
 			preview.wnd.close();
 		};
-		
-		
-		
-		
+
+
+
+
 		if (mxClient.IS_GC)
 		{
 			window.setTimeout(printFn, 500);
@@ -985,28 +985,28 @@ PrintDialog.createPrintPreview = function(graph, scale, pf, border, x0, y0, auto
 	preview.printBackgroundImage = true;
 	preview.autoOrigin = autoOrigin;
 	var bg = graph.background;
-	
+
 	if (bg == null || bg == '' || bg == mxConstants.NONE)
 	{
 		bg = '#ffffff';
 	}
-	
+
 	preview.backgroundColor = bg;
-	
+
 	var writeHead = preview.writeHead;
-	
-	
+
+
 	preview.writeHead = function(doc)
 	{
 		writeHead.apply(this, arguments);
-		
+
 		doc.writeln('<style type="text/css">');
 		doc.writeln('@media screen {');
 		doc.writeln('  body > div { padding:30px;box-sizing:content-box; }');
 		doc.writeln('}');
 		doc.writeln('</style>');
 	};
-	
+
 	return preview;
 };
 
@@ -1021,47 +1021,47 @@ var PageSetupDialog = function(editorUi)
 	table.style.width = '100%';
 	table.style.height = '100%';
 	var tbody = document.createElement('tbody');
-	
+
 	row = document.createElement('tr');
-	
+
 	td = document.createElement('td');
 	td.style.verticalAlign = 'top';
 	td.style.fontSize = '10pt';
 	mxUtils.write(td, mxResources.get('paperSize') + ':');
-	
+
 	row.appendChild(td);
-	
+
 	td = document.createElement('td');
 	td.style.verticalAlign = 'top';
 	td.style.fontSize = '10pt';
-	
+
 	var accessor = PageSetupDialog.addPageFormatPanel(td, 'pagesetupdialog', graph.pageFormat);
 
 	row.appendChild(td);
 	tbody.appendChild(row);
-	
+
 	row = document.createElement('tr');
-	
+
 	td = document.createElement('td');
 	mxUtils.write(td, mxResources.get('background') + ':');
-	
+
 	row.appendChild(td);
-	
+
 	td = document.createElement('td');
 	td.style.whiteSpace = 'nowrap';
-	
+
 	var backgroundInput = document.createElement('input');
 	backgroundInput.setAttribute('type', 'text');
 	var backgroundButton = document.createElement('button');
-	
+
 	backgroundButton.style.width = '18px';
 	backgroundButton.style.height = '18px';
 	backgroundButton.style.marginRight = '20px';
 	backgroundButton.style.backgroundPosition = 'center center';
 	backgroundButton.style.backgroundRepeat = 'no-repeat';
-	
+
 	var newBackgroundColor = graph.background;
-	
+
 	function updateBackgroundColor()
 	{
 		if (newBackgroundColor == null || newBackgroundColor == mxConstants.NONE)
@@ -1075,7 +1075,7 @@ var PageSetupDialog = function(editorUi)
 			backgroundButton.style.backgroundImage = '';
 		}
 	};
-	
+
 	updateBackgroundColor();
 
 	mxEvent.addListener(backgroundButton, 'click', function(evt)
@@ -1087,44 +1087,44 @@ var PageSetupDialog = function(editorUi)
 		});
 		mxEvent.consume(evt);
 	});
-	
+
 	td.appendChild(backgroundButton);
-	
+
 	mxUtils.write(td, mxResources.get('gridSize') + ':');
-	
+
 	var gridSizeInput = document.createElement('input');
 	gridSizeInput.setAttribute('type', 'number');
 	gridSizeInput.setAttribute('min', '0');
 	gridSizeInput.style.width = '40px';
 	gridSizeInput.style.marginLeft = '6px';
-	
+
 	gridSizeInput.value = graph.getGridSize();
 	td.appendChild(gridSizeInput);
-	
+
 	mxEvent.addListener(gridSizeInput, 'change', function()
 	{
 		var value = parseInt(gridSizeInput.value);
 		gridSizeInput.value = Math.max(1, (isNaN(value)) ? graph.getGridSize() : value);
 	});
-	
+
 	row.appendChild(td);
 	tbody.appendChild(row);
-	
+
 	row = document.createElement('tr');
 	td = document.createElement('td');
-	
+
 	mxUtils.write(td, mxResources.get('image') + ':');
-	
+
 	row.appendChild(td);
 	td = document.createElement('td');
-	
+
 	var changeImageLink = document.createElement('a');
 	changeImageLink.style.textDecoration = 'underline';
 	changeImageLink.style.cursor = 'pointer';
 	changeImageLink.style.color = '#a0a0a0';
-	
+
 	var newBackgroundImage = graph.backgroundImage;
-	
+
 	function updateBackgroundImage()
 	{
 		if (newBackgroundImage == null)
@@ -1140,7 +1140,7 @@ var PageSetupDialog = function(editorUi)
 			changeImageLink.innerHTML = newBackgroundImage.src.substring(0, 42) + '...';
 		}
 	};
-	
+
 	mxEvent.addListener(changeImageLink, 'click', function(evt)
 	{
 		editorUi.showBackgroundImageDialog(function(image)
@@ -1148,17 +1148,17 @@ var PageSetupDialog = function(editorUi)
 			newBackgroundImage = image;
 			updateBackgroundImage();
 		});
-		
+
 		mxEvent.consume(evt);
 	});
-	
+
 	updateBackgroundImage();
 
 	td.appendChild(changeImageLink);
-	
+
 	row.appendChild(td);
 	tbody.appendChild(row);
-	
+
 	row = document.createElement('tr');
 	td = document.createElement('td');
 	td.colSpan = 2;
@@ -1170,16 +1170,16 @@ var PageSetupDialog = function(editorUi)
 		editorUi.hideDialog();
 	});
 	cancelBtn.className = 'geBtn';
-	
+
 	if (editorUi.editor.cancelFirst)
 	{
 		td.appendChild(cancelBtn);
 	}
-	
+
 	var applyBtn = mxUtils.button(mxResources.get('apply'), function()
 	{
 		editorUi.hideDialog();
-		
+
 		if (graph.gridSize !== gridSizeInput.value)
 		{
 			graph.setGridSize(parseInt(gridSizeInput.value));
@@ -1188,10 +1188,10 @@ var PageSetupDialog = function(editorUi)
 		var change = new ChangePageSetup(editorUi, newBackgroundColor,
 			newBackgroundImage, accessor.get());
 		change.ignoreColor = graph.background == newBackgroundColor;
-		
+
 		var oldSrc = (graph.backgroundImage != null) ? graph.backgroundImage.src : null;
 		var newSrc = (newBackgroundImage != null) ? newBackgroundImage.src : null;
-		
+
 		change.ignoreImage = oldSrc === newSrc;
 
 		if (graph.pageFormat.width != change.previousFormat.width ||
@@ -1208,10 +1208,10 @@ var PageSetupDialog = function(editorUi)
 	{
 		td.appendChild(cancelBtn);
 	}
-	
+
 	row.appendChild(td);
 	tbody.appendChild(row);
-	
+
 	table.appendChild(tbody);
 	this.container = table;
 };
@@ -1219,17 +1219,17 @@ var PageSetupDialog = function(editorUi)
 PageSetupDialog.addPageFormatPanel = function(div, namePostfix, pageFormat, pageFormatListener)
 {
 	var formatName = 'format-' + namePostfix;
-	
+
 	var portraitCheckBox = document.createElement('input');
 	portraitCheckBox.setAttribute('name', formatName);
 	portraitCheckBox.setAttribute('type', 'radio');
 	portraitCheckBox.setAttribute('value', 'portrait');
-	
+
 	var landscapeCheckBox = document.createElement('input');
 	landscapeCheckBox.setAttribute('name', formatName);
 	landscapeCheckBox.setAttribute('type', 'radio');
 	landscapeCheckBox.setAttribute('value', 'landscape');
-	
+
 	var paperSizeSelect = document.createElement('select');
 	paperSizeSelect.style.marginBottom = '8px';
 	paperSizeSelect.style.width = '202px';
@@ -1241,7 +1241,7 @@ PageSetupDialog.addPageFormatPanel = function(div, namePostfix, pageFormat, page
 
 	portraitCheckBox.style.marginRight = '6px';
 	formatDiv.appendChild(portraitCheckBox);
-	
+
 	var portraitSpan = document.createElement('span');
 	portraitSpan.style.maxWidth = '100px';
 	mxUtils.write(portraitSpan, mxResources.get('portrait'));
@@ -1250,7 +1250,7 @@ PageSetupDialog.addPageFormatPanel = function(div, namePostfix, pageFormat, page
 	landscapeCheckBox.style.marginLeft = '10px';
 	landscapeCheckBox.style.marginRight = '6px';
 	formatDiv.appendChild(landscapeCheckBox);
-	
+
 	var landscapeSpan = document.createElement('span');
 	landscapeSpan.style.width = '100px';
 	mxUtils.write(landscapeSpan, mxResources.get('landscape'));
@@ -1260,13 +1260,13 @@ PageSetupDialog.addPageFormatPanel = function(div, namePostfix, pageFormat, page
 	customDiv.style.marginLeft = '4px';
 	customDiv.style.width = '210px';
 	customDiv.style.height = '24px';
-	
+
 	var widthInput = document.createElement('input');
 	widthInput.setAttribute('size', '7');
 	widthInput.style.textAlign = 'right';
 	customDiv.appendChild(widthInput);
 	mxUtils.write(customDiv, ' in x ');
-	
+
 	var heightInput = document.createElement('input');
 	heightInput.setAttribute('size', '7');
 	heightInput.style.textAlign = 'right';
@@ -1275,10 +1275,10 @@ PageSetupDialog.addPageFormatPanel = function(div, namePostfix, pageFormat, page
 
 	formatDiv.style.display = 'none';
 	customDiv.style.display = 'none';
-	
+
 	var pf = new Object();
 	var formats = PageSetupDialog.getFormats();
-	
+
 	for (var i = 0; i < formats.length; i++)
 	{
 		var f = formats[i];
@@ -1289,20 +1289,20 @@ PageSetupDialog.addPageFormatPanel = function(div, namePostfix, pageFormat, page
 		mxUtils.write(paperSizeOption, f.title);
 		paperSizeSelect.appendChild(paperSizeOption);
 	}
-	
+
 	var customSize = false;
-	
+
 	function listener(sender, evt, force)
 	{
 		if (force || (widthInput != document.activeElement && heightInput != document.activeElement))
 		{
 			var detected = false;
-			
+
 			for (var i = 0; i < formats.length; i++)
 			{
 				var f = formats[i];
-	
-				
+
+
 				if (customSize)
 				{
 					if (f.key == 'custom')
@@ -1313,7 +1313,7 @@ PageSetupDialog.addPageFormatPanel = function(div, namePostfix, pageFormat, page
 				}
 				else if (f.format != null)
 				{
-					
+
 					if (f.key == 'a4')
 					{
 						if (pageFormat.width == 826)
@@ -1340,7 +1340,7 @@ PageSetupDialog.addPageFormatPanel = function(div, namePostfix, pageFormat, page
 							pageFormat.height = 583;
 						}
 					}
-					
+
 					if (pageFormat.width == f.format.width && pageFormat.height == f.format.height)
 					{
 						paperSizeSelect.value = f.key;
@@ -1365,8 +1365,8 @@ PageSetupDialog.addPageFormatPanel = function(div, namePostfix, pageFormat, page
 					}
 				}
 			}
-			
-			
+
+
 			if (!detected)
 			{
 				widthInput.value = pageFormat.width / 100;
@@ -1383,7 +1383,7 @@ PageSetupDialog.addPageFormatPanel = function(div, namePostfix, pageFormat, page
 			}
 		}
 	};
-	
+
 	listener();
 
 	div.appendChild(paperSizeSelect);
@@ -1391,13 +1391,13 @@ PageSetupDialog.addPageFormatPanel = function(div, namePostfix, pageFormat, page
 
 	div.appendChild(formatDiv);
 	div.appendChild(customDiv);
-	
+
 	var currentPageFormat = pageFormat;
-	
+
 	var update = function(evt, selectChanged)
 	{
 		var f = pf[paperSizeSelect.value];
-		
+
 		if (f.format != null)
 		{
 			widthInput.value = f.format.width / 100;
@@ -1410,37 +1410,37 @@ PageSetupDialog.addPageFormatPanel = function(div, namePostfix, pageFormat, page
 			formatDiv.style.display = 'none';
 			customDiv.style.display = '';
 		}
-		
+
 		var wi = parseFloat(widthInput.value);
-		
+
 		if (isNaN(wi) || wi <= 0)
 		{
 			widthInput.value = pageFormat.width / 100;
 		}
-		
+
 		var hi = parseFloat(heightInput.value);
-		
+
 		if (isNaN(hi) || hi <= 0)
 		{
 			heightInput.value = pageFormat.height / 100;
 		}
-		
+
 		var newPageFormat = new mxRectangle(0, 0,
 			Math.floor(parseFloat(widthInput.value) * 100),
 			Math.floor(parseFloat(heightInput.value) * 100));
-		
+
 		if (paperSizeSelect.value != 'custom' && landscapeCheckBox.checked)
 		{
 			newPageFormat = new mxRectangle(0, 0, newPageFormat.height, newPageFormat.width);
 		}
-		
-		
+
+
 		if ((!selectChanged || !customSize) && (newPageFormat.width != currentPageFormat.width ||
 			newPageFormat.height != currentPageFormat.height))
 		{
 			currentPageFormat = newPageFormat;
-			
-			
+
+
 			if (pageFormatListener != null)
 			{
 				pageFormatListener(currentPageFormat);
@@ -1454,14 +1454,14 @@ PageSetupDialog.addPageFormatPanel = function(div, namePostfix, pageFormat, page
 		update(evt);
 		mxEvent.consume(evt);
 	});
-	
+
 	mxEvent.addListener(landscapeSpan, 'click', function(evt)
 	{
 		landscapeCheckBox.checked = true;
 		update(evt);
 		mxEvent.consume(evt);
 	});
-	
+
 	mxEvent.addListener(widthInput, 'blur', update);
 	mxEvent.addListener(widthInput, 'click', update);
 	mxEvent.addListener(heightInput, 'blur', update);
@@ -1470,13 +1470,13 @@ PageSetupDialog.addPageFormatPanel = function(div, namePostfix, pageFormat, page
 	mxEvent.addListener(portraitCheckBox, 'change', update);
 	mxEvent.addListener(paperSizeSelect, 'change', function(evt)
 	{
-		
+
 		customSize = paperSizeSelect.value == 'custom';
 		update(evt, true);
 	});
-	
+
 	update();
-	
+
 	return {set: function(value)
 	{
 		pageFormat = value;
@@ -1506,55 +1506,55 @@ PageSetupDialog.getFormats = function()
 
 (function()
 {
-	
+
 	mxGraphView.prototype.validateBackgroundPage = function()
 	{
 		var graph = this.graph;
-		
+
 		if (graph.container != null && !graph.transparentBackground)
 		{
 			if (graph.pageVisible)
 			{
 				var bounds = this.getBackgroundPageBounds();
-				
+
 				if (this.backgroundPageShape == null)
 				{
-					
+
 					var firstChild = graph.container.firstChild;
-					
+
 					while (firstChild != null && firstChild.nodeType != mxConstants.NODETYPE_ELEMENT)
 					{
 						firstChild = firstChild.nextSibling;
 					}
-					
+
 					if (firstChild != null)
 					{
 						this.backgroundPageShape = this.createBackgroundPageShape(bounds);
 						this.backgroundPageShape.scale = 1;
-						
-						
-						
+
+
+
 						this.backgroundPageShape.isShadow = !mxClient.IS_QUIRKS;
 						this.backgroundPageShape.dialect = mxConstants.DIALECT_STRICTHTML;
 						this.backgroundPageShape.init(graph.container);
-	
-						
+
+
 						firstChild.style.position = 'absolute';
 						graph.container.insertBefore(this.backgroundPageShape.node, firstChild);
 						this.backgroundPageShape.redraw();
-						
+
 						this.backgroundPageShape.node.className = 'geBackgroundPage';
-						
-						
+
+
 						mxEvent.addListener(this.backgroundPageShape.node, 'dblclick',
 							mxUtils.bind(this, function(evt)
 							{
 								graph.dblClick(evt);
 							})
 						);
-						
-						
-						
+
+
+
 						mxEvent.addGestureListeners(this.backgroundPageShape.node,
 							mxUtils.bind(this, function(evt)
 							{
@@ -1562,12 +1562,12 @@ PageSetupDialog.getFormats = function()
 							}),
 							mxUtils.bind(this, function(evt)
 							{
-								
+
 								if (graph.tooltipHandler != null && graph.tooltipHandler.isHideOnHover())
 								{
 									graph.tooltipHandler.hide();
 								}
-								
+
 								if (graph.isMouseDown && !mxEvent.isConsumed(evt))
 								{
 									graph.fireMouseEvent(mxEvent.MOUSE_MOVE, new mxMouseEvent(evt));
@@ -1592,12 +1592,12 @@ PageSetupDialog.getFormats = function()
 				this.backgroundPageShape.destroy();
 				this.backgroundPageShape = null;
 			}
-			
+
 			this.validateBackgroundStyles();
 		}
 	};
 
-	
+
 	mxGraphView.prototype.validateBackgroundStyles = function()
 	{
 		var graph = this.graph;
@@ -1605,14 +1605,14 @@ PageSetupDialog.getFormats = function()
 		var gridColor = (color != null && this.gridColor != color.toLowerCase()) ? this.gridColor : '#ffffff';
 		var image = 'none';
 		var position = '';
-		
+
 		if (graph.isGridEnabled())
 		{
 			var phase = 10;
-			
+
 			if (mxClient.IS_SVG)
 			{
-				
+
 				image = unescape(encodeURIComponent(this.createSvgGrid(gridColor)));
 				image = (window.btoa) ? btoa(image) : Base64.encode(image, true);
 				image = 'url(' + 'data:image/svg+xml;base64,' + image + ')'
@@ -1620,33 +1620,33 @@ PageSetupDialog.getFormats = function()
 			}
 			else
 			{
-				
+
 				image = 'url(' + this.gridImage + ')';
 			}
-			
+
 			var x0 = 0;
 			var y0 = 0;
-			
+
 			if (graph.view.backgroundPageShape != null)
 			{
 				var bds = this.getBackgroundPageBounds();
-				
+
 				x0 = 1 + bds.x;
 				y0 = 1 + bds.y;
 			}
-			
-			
+
+
 			position = -Math.round(phase - mxUtils.mod(this.translate.x * this.scale - x0, phase)) + 'px ' +
 				-Math.round(phase - mxUtils.mod(this.translate.y * this.scale - y0, phase)) + 'px';
 		}
-		
+
 		var canvas = graph.view.canvas;
-		
+
 		if (canvas.ownerSVGElement != null)
 		{
 			canvas = canvas.ownerSVGElement;
 		}
-		
+
 		if (graph.view.backgroundPageShape != null)
 		{
 			graph.view.backgroundPageShape.node.style.backgroundPosition = position;
@@ -1664,30 +1664,30 @@ PageSetupDialog.getFormats = function()
 			canvas.style.backgroundImage = image;
 		}
 	};
-	
-	
+
+
 	mxGraphView.prototype.createSvgGrid = function(color)
 	{
 		var tmp = this.graph.gridSize * this.scale;
-		
+
 		while (tmp < this.minGridSize)
 		{
 			tmp *= 2;
 		}
-		
+
 		var tmp2 = this.gridSteps * tmp;
-		
-		
+
+
 		var d = [];
-		
+
 		for (var i = 1; i < this.gridSteps; i++)
 		{
 			var tmp3 = i * tmp;
 			d.push('M 0 ' + tmp3 + ' L ' + tmp2 + ' ' + tmp3 + ' M ' + tmp3 + ' 0 L ' + tmp3 + ' ' + tmp2);
 		}
-		
-		
-		
+
+
+
 		var size = tmp2;
 		var svg =  '<svg width="' + size + '" height="' + size + '" xmlns="' + mxConstants.NS_SVG + '">' +
 		    '<defs><pattern id="grid" width="' + tmp2 + '" height="' + tmp2 + '" patternUnits="userSpaceOnUse">' +
@@ -1698,29 +1698,29 @@ PageSetupDialog.getFormats = function()
 		return svg;
 	};
 
-	
+
 	var mxGraphPanGraph = mxGraph.prototype.panGraph;
 	mxGraph.prototype.panGraph = function(dx, dy)
 	{
 		mxGraphPanGraph.apply(this, arguments);
-		
+
 		if (this.shiftPreview1 != null)
 		{
 			var canvas = this.view.canvas;
-			
+
 			if (canvas.ownerSVGElement != null)
 			{
 				canvas = canvas.ownerSVGElement;
 			}
-			
+
 			var phase = this.gridSize * this.view.scale * this.view.gridSteps;
 			var position = -Math.round(phase - mxUtils.mod(this.view.translate.x * this.view.scale + dx, phase)) + 'px ' +
 				-Math.round(phase - mxUtils.mod(this.view.translate.y * this.view.scale + dy, phase)) + 'px';
 			canvas.style.backgroundPosition = position;
 		}
 	};
-	
-	
+
+
 	mxGraph.prototype.updatePageBreaks = function(visible, width, height)
 	{
 		var scale = this.view.scale;
@@ -1734,7 +1734,7 @@ PageSetupDialog.getFormats = function()
 		height = bounds2.height;
 		var bounds = new mxRectangle(scale * tr.x, scale * tr.y, fmt.width * ps, fmt.height * ps);
 
-		
+
 		visible = visible && Math.min(bounds.width, bounds.height) > this.minPageBreakDist;
 
 		var horizontalCount = (visible) ? Math.ceil(height / bounds.height) - 1 : 0;
@@ -1746,18 +1746,18 @@ PageSetupDialog.getFormats = function()
 		{
 			this.horizontalPageBreaks = [];
 		}
-		
+
 		if (this.verticalPageBreaks == null && verticalCount > 0)
 		{
 			this.verticalPageBreaks = [];
 		}
-			
+
 		var drawPageBreaks = mxUtils.bind(this, function(breaks)
 		{
 			if (breaks != null)
 			{
-				var count = (breaks == this.horizontalPageBreaks) ? horizontalCount : verticalCount; 
-				
+				var count = (breaks == this.horizontalPageBreaks) ? horizontalCount : verticalCount;
+
 				for (var i = 0; i <= count; i++)
 				{
 					var pts = (breaks == this.horizontalPageBreaks) ?
@@ -1765,7 +1765,7 @@ PageSetupDialog.getFormats = function()
 						 new mxPoint(Math.round(right), Math.round(bounds2.y + (i + 1) * bounds.height))] :
 						[new mxPoint(Math.round(bounds2.x + (i + 1) * bounds.width), Math.round(bounds2.y)),
 						 new mxPoint(Math.round(bounds2.x + (i + 1) * bounds.width), Math.round(bottom))];
-					
+
 					if (breaks[i] != null)
 					{
 						breaks[i].points = pts;
@@ -1779,25 +1779,25 @@ PageSetupDialog.getFormats = function()
 						pageBreak.pointerEvents = false;
 						pageBreak.init(this.view.backgroundPane);
 						pageBreak.redraw();
-						
+
 						breaks[i] = pageBreak;
 					}
 				}
-				
+
 				for (var i = count; i < breaks.length; i++)
 				{
 					breaks[i].destroy();
 				}
-				
+
 				breaks.splice(count, breaks.length - count);
 			}
 		});
-			
+
 		drawPageBreaks(this.horizontalPageBreaks);
 		drawPageBreaks(this.verticalPageBreaks);
 	};
-	
-	
+
+
 	var mxGraphHandlerShouldRemoveCellsFromParent = mxGraphHandler.prototype.shouldRemoveCellsFromParent;
 	mxGraphHandler.prototype.shouldRemoveCellsFromParent = function(parent, cells, evt)
 	{
@@ -1806,53 +1806,53 @@ PageSetupDialog.getFormats = function()
 			if (this.graph.getModel().isVertex(cells[i]))
 			{
 				var geo = this.graph.getCellGeometry(cells[i]);
-				
+
 				if (geo != null && geo.relative)
 				{
 					return false;
 				}
 			}
 		}
-		
+
 		return mxGraphHandlerShouldRemoveCellsFromParent.apply(this, arguments);
 	};
 
-	
+
 	var mxConnectionHandlerCreateMarker = mxConnectionHandler.prototype.createMarker;
 	mxConnectionHandler.prototype.createMarker = function()
 	{
 		var marker = mxConnectionHandlerCreateMarker.apply(this, arguments);
-		
+
 		marker.intersects = mxUtils.bind(this, function(state, evt)
 		{
 			if (this.isConnecting())
 			{
 				return true;
 			}
-			
+
 			return mxCellMarker.prototype.intersects.apply(marker, arguments);
 		});
-		
+
 		return marker;
 	};
 
-	
+
 	mxGraphView.prototype.createBackgroundPageShape = function(bounds)
 	{
 		return new mxRectangleShape(bounds, '#ffffff', this.graph.defaultPageBorderColor);
 	};
 
-	
+
 	mxGraphView.prototype.getBackgroundPageBounds = function()
 	{
 		var gb = this.getGraphBounds();
-		
-		
+
+
 		var x = (gb.width > 0) ? gb.x / this.scale - this.translate.x : 0;
 		var y = (gb.height > 0) ? gb.y / this.scale - this.translate.y : 0;
 		var w = gb.width / this.scale;
 		var h = gb.height / this.scale;
-		
+
 		var fmt = this.graph.pageFormat;
 		var ps = this.graph.pageScale;
 
@@ -1863,22 +1863,22 @@ PageSetupDialog.getFormats = function()
 		var y0 = Math.floor(Math.min(0, y) / ph);
 		var xe = Math.ceil(Math.max(1, x + w) / pw);
 		var ye = Math.ceil(Math.max(1, y + h) / ph);
-		
+
 		var rows = xe - x0;
 		var cols = ye - y0;
 
 		var bounds = new mxRectangle(this.scale * (this.translate.x + x0 * pw), this.scale *
 				(this.translate.y + y0 * ph), this.scale * rows * pw, this.scale * cols * ph);
-		
+
 		return bounds;
 	};
-	
-	
+
+
 	var graphPanGraph = mxGraph.prototype.panGraph;
 	mxGraph.prototype.panGraph = function(dx, dy)
 	{
 		graphPanGraph.apply(this, arguments);
-		
+
 		if ((this.dialect != mxConstants.DIALECT_SVG && this.view.backgroundPageShape != null) &&
 			(!this.useScrollbarsForPanning || !mxUtils.hasScrollbars(this.container)))
 		{
@@ -1891,7 +1891,7 @@ PageSetupDialog.getFormats = function()
 	mxPopupMenu.prototype.addItem = function(title, image, funct, parent, iconCls, enabled)
 	{
 		var result = mxPopupMenuAddItem.apply(this, arguments);
-		
+
 		if (enabled != null && !enabled)
 		{
 			mxEvent.addListener(result, 'mousedown', function(evt)
@@ -1899,11 +1899,11 @@ PageSetupDialog.getFormats = function()
 				mxEvent.consume(evt);
 			});
 		}
-		
+
 		return result;
 	};
 
-	
+
 	var graphHandlerGetInitialCellForEvent = mxGraphHandler.prototype.getInitialCellForEvent;
 	mxGraphHandler.prototype.getInitialCellForEvent = function(me)
 	{
@@ -1911,7 +1911,7 @@ PageSetupDialog.getFormats = function()
 		var psel = model.getParent(this.graph.getSelectionCell());
 		var cell = graphHandlerGetInitialCellForEvent.apply(this, arguments);
 		var parent = model.getParent(cell);
-		
+
 		if (psel == null || (psel != cell && psel != parent))
 		{
 			while (!this.graph.isCellSelected(cell) && !this.graph.isCellSelected(parent) &&
@@ -1921,53 +1921,53 @@ PageSetupDialog.getFormats = function()
 				parent = this.graph.getModel().getParent(cell);
 			}
 		}
-		
+
 		return cell;
 	};
-	
-	
+
+
 	var graphHandlerIsDelayedSelection = mxGraphHandler.prototype.isDelayedSelection;
 	mxGraphHandler.prototype.isDelayedSelection = function(cell, me)
 	{
 		var result = graphHandlerIsDelayedSelection.apply(this, arguments);
-		
+
 		if (!result)
 		{
 			var model = this.graph.getModel();
 			var parent = model.getParent(cell);
-			
+
 			while (parent != null)
 			{
-				
-				
+
+
 				if (this.graph.isCellSelected(parent) && model.isVertex(parent))
 				{
 					result = true;
 					break;
 				}
-				
+
 				parent = model.getParent(parent);
 			}
 		}
-		
+
 		return result;
 	};
-	
-	
+
+
 	mxGraphHandler.prototype.selectDelayed = function(me)
 	{
 		if (!this.graph.popupMenuHandler.isPopupTrigger(me))
 		{
 			var cell = me.getCell();
-			
+
 			if (cell == null)
 			{
 				cell = this.cell;
 			}
 
-			
+
 			var state = this.graph.view.getState(cell)
-			
+
 			if (state != null && me.isSource(state.control))
 			{
 				this.graph.selectCellForEvent(cell, me.getEvent());
@@ -1976,35 +1976,35 @@ PageSetupDialog.getFormats = function()
 			{
 				var model = this.graph.getModel();
 				var parent = model.getParent(cell);
-				
+
 				while (!this.graph.isCellSelected(parent) && model.isVertex(parent))
 				{
 					cell = parent;
 					parent = model.getParent(cell);
 				}
-				
+
 				this.graph.selectCellForEvent(cell, me.getEvent());
 			}
 		}
 	};
 
-	
+
 	mxPopupMenuHandler.prototype.getCellForPopupEvent = function(me)
 	{
 		var cell = me.getCell();
 		var model = this.graph.getModel();
 		var parent = model.getParent(cell);
-		
+
 		while (model.isVertex(parent) && !this.graph.isContainer(parent))
 		{
 			if (this.graph.isCellSelected(parent))
 			{
 				cell = parent;
 			}
-			
+
 			parent = model.getParent(parent);
 		}
-		
+
 		return cell;
 	};
 

@@ -1,6 +1,6 @@
 /**
  * Copyright (c) 2018, Douglas H. Summerville, Binghamton University
- * 
+ *
  */
 
 function schematic( graph )
@@ -15,7 +15,7 @@ schematic.prototype.isVerilogReserved = function(str)
 	return verilogReserved.has(str);
 };
 
-schematic.prototype.checkPortName= function(newstr) 
+schematic.prototype.checkPortName= function(newstr)
 {
 	if( /^[UX].*$/.test(newstr) )
 		return "Error: Port names cannot start with uppercase U or X";
@@ -50,7 +50,7 @@ schematic.prototype.runDRC = function()
 		var muxsize=1;
 		var decodersize=2
 		var fan_in=2;
-			var style=graph.getCellStyle(item); 
+			var style=graph.getCellStyle(item);
 		switch( style["shape"] )
 		{
 		case "constant0":
@@ -164,7 +164,7 @@ schematic.prototype.runDRC = function()
 				Messages.addWarning("Flip-Flop has an unconnected output",item);
 			break;
 		}
-	},this);	
+	},this);
 	if( numOutputs===0 )
 		Messages.addError("Schematic must have at least one connected output",null);
 	if( numInputs===0 )
@@ -172,425 +172,214 @@ schematic.prototype.runDRC = function()
 	return Messages;
 };
 
-schematic.prototype.createVerilog=function(name)
+//Tomer's code for writing verilog
+schematic.prototype.createVerilog=function(moduleName)
 {
-	var netList="";
-	var inputList="";
-	var inputSet=new Set();
-	var assignList="";
-	var wireList="";
-	var wireSet=new Set();
-	var outputList="";
-	var netAliases={};
-	var gateInputs={};
-	var moduleName= name;
+
 	var verilogCode="";
+	//used to reference the current schematic
 	var graph=this.graph;
-	var gateNames={and:"and", nand:"nand",or:"or",nor:"nor",xor:"xor",xnor:"xnor",buffer:"buf", inverter:"not",mux2:"mux #(2,1)", mux4:"mux #(4,1)", mux8:"mux #(8,1)", mux16:"mux #(16,1)",decoder2:"decoder #(2,1)",decoder3:"decoder #(3,1)",decoder4:"decoder #(4,1)",dlatch:"d_latch",dlatch_en:"d_latch_en",dff:"dff",dff_en:"dff_en",srlatch:"sr_latch",srlatch_en:"sr_latch_en"};
-	function gateName( node, prefix){ return prefix+node.id;}
-	function portName( node, prefix ){ return node.value ? node.value : gateName(node,prefix);}
-	function netName( link ){
-		var oPortName=/sourcePort=out([^_]*)/.exec(link.style);
-		if( oPortName[1] == "" )
-			return 'X'+link.source.id;
-		else
-			return 'X'+link.source.id + '_'+ oPortName[1];
-	}
-	function getNameOrAlias( link ){
-		var x= netAliases[netName(link)] ;
-		return x ? x : netName(link);
-	}
-	
+
+	//variables used to hold input/output port names
+	var input_counter = 0;
+	var output_counter = 0;
+	var ports = new Object();
+	ports["output"] = new Array();
+	ports["input"] = new Array();
+
+	//variables to hold information and write instatiations for importedModules
+	var sourcePort = "";
+	var targetPort = "";
+	var importedModules = new Object();
+
+	//variable used to hold wires
+	var wire_counter = 0;
+	var wire_connections = 0
+	var wires = new Array();
+
+	//variable used to name module
+	//var moduleName= name; //name will always be schematic1
+
+	//holds Id that MxGraph has assigned current node
+	var node_Id;
+
+	//retrieves all nodes in the current schematic
 	nodes=graph.getChildVertices(graph.getDefaultParent());
-	
-	//name the nets
-	if( nodes ) nodes.forEach(function(item){
-		var style=graph.getCellStyle(item); 
-		var muxsize=0;
-		var decodersize=1;
-		switch( style["shape"] )
+
+	//iterate over all nodes in the schematic
+	if( nodes ) nodes.forEach(function(node){
+
+		var style=graph.getCellStyle(node);
+		var module = style["shape"];
+		node_Id = node.getId();
+
+		if( module == "inputport" || module == "outputport" )
+			return;
+		//the importedModules object holds the instations for imported modules
+		if (module in importedModules)
 		{
-			case "inputport": 
-				var links=item.linksOutOf();
-				if( item.value && links.length )
-					netAliases[netName(links[0])] = item.value;
-				else if( links.length )
-					netAliases[netName(links[0])] = portName(item,"I");
-				break;
-			case "constant0": 
-				var links=item.linksOutOf();
-				if( item.value && links.length )
-					links.forEach( function( link ){
-					netAliases[netName(link)] = '1\'b0';});
-				break;
-			case "constant1": 
-				var links=item.linksOutOf();
-				if( item.value && links.length )
-					links.forEach( function( link ){
-					netAliases[netName(link)] = '1\'b1';});
-				break;
+			var info = {}
+			importedModules[module].push(info);
+			importedModules[module][importedModules[module].length - 1]["inputs"] = [];
+			importedModules[module][importedModules[module].length - 1]["outputs"] = [];
 		}
-	});
-	//map the netlist
-	if( nodes ) nodes.forEach(function(item){
-		var muxsize=0;
-		var decodersize=1;
-		var style=graph.getCellStyle(item); 
-		switch( style["shape"] )
+		else
 		{
-		case "and":
-		case "nand":
-		case "or":
-		case "nor":
-		case "xor":
-		case "xnor":
-		case "buffer":
-		case "inverter":
-		case "mux2":
-		case "mux4":
-		case "mux8":
-		case "mux16":
-		case "dlatch":
-		case "dlatch_en":
-		case "srlatch":
-		case "srlatch_en":
-		case "dff":
-		case "dff_en":
-			//determine if output net name is port name
-			var linksout=item.linksOutOf();
-			if( linksout.length == 1 && 
-				graph.getCellStyle(linksout[0].target)["shape"] == "outputport" ) 
-				netAliases[netName(linksout[0])] = portName(linksout[0].target,"O");
-			//else add net name to wire list
-			else if( linksout.length )
-				//wireList+=' '+netName(linksout[0],"X") + ',';
-				wireSet.add(netName(linksout[0],"X"));
-			else
-				//wireList+= ' '+gateName(item,"X") + ',';
-				wireSet.add(gateName(item,"X") );
-			break;
-		case "decoder4":decodersize++;
-		case "decoder3":decodersize++;
-		case "decoder2":decodersize++;
-			for( var i=0; i<(1<<decodersize); i=i+1 )
+			importedModules[module] = [];
+			var info = {}
+			importedModules[module].push(info);
+			importedModules[module][importedModules[module].length - 1]["inputs"] = [];
+			importedModules[module][importedModules[module].length - 1]["outputs"] = [];
+		}
+
+
+
+		//find all edges connected to this node in the graph and iterate over each edge
+		Edges = graph.getEdges(node, graph.getDefaultParent());
+		if( Edges ) Edges.forEach(function(Edge){
+
+			//find the source of this edge
+			var sourceStyle = Edge["source"]["style"];
+			var start = sourceStyle.search(/=/);
+			var end = sourceStyle.search(/;|$/);
+			sourceStyle = sourceStyle.substring(start+1, end)
+
+			//find the target of this edge
+			var targetStyle = Edge["target"]["style"];
+			var start = targetStyle.search(/=/);
+			var end = targetStyle.search(/;|$/);
+			targetStyle = targetStyle.substring(start+1, end)
+
+
+			//start building instations for the imported modules
+
+			//adds any edges connected to the imported component that are connected to an output port or input port
+			if ( sourceStyle === "inputport" || targetStyle === "outputport" )
 			{
-				var linksout=item.getLinks( 'out'+(i+1)+'_d',true);
-				if( linksout.length == 1 && 
-					graph.getCellStyle(linksout[0].target)["shape"] == "outputport" )
+
+				//if imported module is the source
+				if( targetStyle == "outputport" )
 				{
-					netAliases[netName(linksout[0])] = portName(linksout[0].target,"O");
+					if( Edge["target"]["value"] )
+						ports["output"].push(Edge["target"]["value"])
+					else
+						ports["output"].push("O" + output_counter++);
+
+					sourcePort = Edge["style"].match(/sourcePort=(.*?);/)[1].split("_")[0];
+					importedModules[module][importedModules[module].length - 1]["outputs"].push("." + sourcePort + "(" + ports["output"][ports["output"].length - 1] + ")");
 				}
-				else if( linksout.length )
-					//wireList+=' '+netName(linksout[0],"X") + ',';
-					wireSet.add(netName(linksout[0],"X"));
+				// if imported module is the target
+				else if( sourceStyle === "inputport" )
+				{
+					if( Edge["source"]["value"] )
+						ports["input"].push(Edge["source"]["value"])
+					else
+						ports["input"].push("I" + input_counter++);
+					targetPort = Edge["style"].match(/targetPort=(.*?);/)[1].split("_")[0];
+					importedModules[module][importedModules[module].length - 1]["inputs"].push("." + targetPort + "(" + ports["input"][ports["input"].length - 1] + ")");
+				}
+			}
+			//adds any edges connected to the imported component that are connected by a wire
+			else
+			{
+				//remove issues that causes a wire in running between two modules to have
+				//different values. This forces wires between modules to have the same name
+				if ((wire_connections) % 2 != 0)
+				{
+					wires.push("wire" + (wire_counter - 1));
+				}
 				else
-					//wireList+= ' '+gateName(item,"X")+'_'+i + ',';
-					wireSet.add(gateName(item,"X")+'_'+i);
+				{
+					wires.push("wire" + wire_counter);
+					wire_counter++;
+				}
+				wire_connections++;
+				//TODO: Is there an else case for when the wire does not match the current node at all?
+				if( Edge["source"].getId() === node_Id )
+				{
+					sourcePort = Edge["style"].match(/sourcePort=(.*?);/)[1].split("_")[0];
+					importedModules[module][importedModules[module].length - 1]["outputs"].push("." + sourcePort + "(" + wires[wires.length - 1] + ")");
+				}
+				else if ( Edge["target"].getId() === node_Id )
+				{
+					targetPort = Edge["style"].match(/targetPort=(.*?);/)[1].split("_")[0];
+					importedModules[module][importedModules[module].length - 1]["inputs"].push("." + targetPort + "(" + wires[wires.length - 1] + ")");
+				}
 			}
-			break;
-		}
-	});
-	//dump Verilog
-	if( nodes )
-	nodes.forEach(function(item){
-		var muxsize=0;
-		var decodersize=1;
-		var style=graph.getCellStyle(item); 
-		switch( style["shape"] )
-		{
-		case "inputport":
-			//inputList+="\n\tinput " + portName(item,'I') + ',';
-			inputSet.add( portName(item,'I') );
-			break;
-		case "outputport":
-			outputList+="\n\toutput " + portName(item,'O') + ',';
-			var link=item.linksInto();
-			if( link.length == 0 )
-			{
-				assignList += "\nassign " + portName(item,"O") + " = 1\'bx;" ;
-			}
-			else if( getNameOrAlias(link[0]) != portName(item,"O")) 
-			{
-				assignList += "\nassign " + portName(item,"O") + " = " ;
-				assignList += getNameOrAlias(link[0])  + ";";
-			}
-			break;
-		case "inverter":
-		case "buffer":
-			netList += "\n\n" + gateNames[style["shape"]] + ' ' + gateName(item,"U") + " ("; 
-			var links=item.linksOutOf();
-			if( links.length )
-				netList += getNameOrAlias(links[0]);
-			else
-				netList += gateName(item,"X");
-			netList+=',';
-			var links=item.linksInto();
-			if( links.length )
-				netList += getNameOrAlias(links[0]);
-			else
-				netList += '1\'bx';
-			netList+=");";
-			break; 
-		case "and":
-		case "or":
-		case "xor":
-		case "nand":
-		case "nor":
-		case "xnor":
-			netList += "\n\n" + gateNames[style["shape"]] + ' ' + gateName(item,"U") + " ("; 
-			var links=item.linksOutOf();
-			if( links.length )
-				netList += getNameOrAlias(links[0]);
-			else
-				netList += gateName(item,"X");
-			netList+=',';
-			var links=item.linksInto();
-			if( links.length )
-				links.forEach( function(link){ netList += getNameOrAlias(link) + ', ';});
-			else
-				netList += '1\'bx,';
-			netList=netList.replace(/, *$/gi, '');
-			netList=netList+");";
-			break; 
-		case "mux16": muxsize++;
-		case "mux8": muxsize++;
-		case "mux4": muxsize++;
-		case "mux2": muxsize++;
-			netList += "\n\n" + gateNames[style["shape"]] + ' ' + gateName(item,"U") + " ("; 
-			netList += '\n\t.data_out(';
-			var links=item.linksOutOf();
-			if( links.length )
-				netList += getNameOrAlias(links[0]);
-			else
-				netList += gateName(item,"X");
-			netList += '),\n\t.select_in( {';
-			for( var i=muxsize-1; i>=0; i=i-1 )
-			{
-				var lnk=item.getLink( 'in_s'+i,false);
-				if( lnk ) netList+=getNameOrAlias(lnk);
-				else netList+='1\'bx';
-				netList+=',';
-			}
-			netList=netList.replace(/, *$/gi, '');
 
-			netList=netList+"} ),\n\t.data_in( {";
-			for( var i=(1<<muxsize)-1; i>=0; i=i-1 )
-			{
-				var lnk=item.getLink( 'in_i'+i,false);
-				if( lnk ) netList+=getNameOrAlias(lnk);
-				else netList+='1\'bx';
-				netList+=',';
-			}
-			netList=netList.replace(/, *$/gi, '');
-			netList=netList+"} )\n);";
-			break; 
-		case "dlatch":
-			netList += "\n\n" + gateNames[style["shape"]] + ' ' + gateName(item,"U") + " ("; 
-			netList += '\n\t.data_out(';
-			var links=item.linksOutOf();
-			if( links.length )
-				netList += getNameOrAlias(links[0]);
-			else
-				netList += gateName(item,"X");
-			netList += '),\n\t.in_D( ';
-			{
-				var lnk=item.getLink( 'in_D',false);
-				if( lnk ) netList+=getNameOrAlias(lnk);
-				else netList+='1\'bx';
-			}
-			netList=netList+" ),\n\t.in_G( ";
-			{
-				var lnk=item.getLink( 'in_G',false);
-				if( lnk ) netList+=getNameOrAlias(lnk);
-				else netList+='1\'bx';
-			}
-			netList=netList+" )\n);";
-			break;
-		case "srlatch":
-			netList += "\n\n" + gateNames[style["shape"]] + ' ' + gateName(item,"U") + " ("; 
-			netList += '\n\t.data_out(';
-			var links=item.linksOutOf();
-			if( links.length )
-				netList += getNameOrAlias(links[0]);
-			else
-				netList += gateName(item,"X");
-			netList += '),\n\t.in_S( ';
-			{
-				var lnk=item.getLink( 'in_S',false);
-				if( lnk ) netList+=getNameOrAlias(lnk);
-				else netList+='1\'bx';
-			}
-			netList=netList+" ),\n\t.in_R( ";
-			{
-				var lnk=item.getLink( 'in_R',false);
-				if( lnk ) netList+=getNameOrAlias(lnk);
-				else netList+='1\'bx';
-			}
-			netList=netList+" )\n);";
-			break;
-		case "srlatch_en":
-			netList += "\n\n" + gateNames[style["shape"]] + ' ' + gateName(item,"U") + " ("; 
-			netList += '\n\t.data_out(';
-			var links=item.linksOutOf();
-			if( links.length )
-				netList += getNameOrAlias(links[0]);
-			else
-				netList += gateName(item,"X");
-			netList += '),\n\t.in_S( ';
-			{
-				var lnk=item.getLink( 'in_S',false);
-				if( lnk ) netList+=getNameOrAlias(lnk);
-				else netList+='1\'bx';
-			}
-			netList=netList+" ),\n\t.in_R( ";
-			{
-				var lnk=item.getLink( 'in_R',false);
-				if( lnk ) netList+=getNameOrAlias(lnk);
-				else netList+='1\'bx';
-			}
-			netList=netList+" ),\n\t.in_EN( ";
-			{
-				var lnk=item.getLink( 'in_en',false);
-				if( lnk ) netList+=getNameOrAlias(lnk);
-				else netList+='1\'bx';
-			}
-			netList=netList+" )\n);";
-			break;
-		case "dlatch_en":
-			netList += "\n\n" + gateNames[style["shape"]] + ' ' + gateName(item,"U") + " ("; 
-			netList += '\n\t.data_out(';
-			var links=item.linksOutOf();
-			if( links.length )
-				netList += getNameOrAlias(links[0]);
-			else
-				netList += gateName(item,"X");
-			netList += '),\n\t.in_D( ';
-			{
-				var lnk=item.getLink( 'in_D',false);
-				if( lnk ) netList+=getNameOrAlias(lnk);
-				else netList+='1\'bx';
-			}
-			netList=netList+" ),\n\t.in_G( ";
-			{
-				var lnk=item.getLink( 'in_G',false);
-				if( lnk ) netList+=getNameOrAlias(lnk);
-				else netList+='1\'bx';
-			}
-			netList=netList+" ),\n\t.in_EN( ";
-			{
-				var lnk=item.getLink( 'in_en',false);
-				if( lnk ) netList+=getNameOrAlias(lnk);
-				else netList+='1\'bx';
-			}
-			netList=netList+" )\n);";
-			break;
-		case "dff":
-			netList += "\n\n" + gateNames[style["shape"]] + ' ' + gateName(item,"U") + " ("; 
-			netList += '\n\t.data_out(';
-			var links=item.linksOutOf();
-			if( links.length )
-				netList += getNameOrAlias(links[0]);
-			else
-				netList += gateName(item,"X");
-			netList += '),\n\t.in_D( ';
-			{
-				var lnk=item.getLink( 'in_D',false);
-				if( lnk ) netList+=getNameOrAlias(lnk);
-				else netList+='1\'bx';
-			}
-			netList=netList+" ),\n\t.in_CLK( ";
-			{
-				var lnk=item.getLink( 'in_>',false);
-				if( lnk ) netList+=getNameOrAlias(lnk);
-				else netList+='1\'bx';
-			}
-			netList=netList+" )\n);";
-			break;
-		case "dff_en":
-			netList += "\n\n" + gateNames[style["shape"]] + ' ' + gateName(item,"U") + " ("; 
-			netList += '\n\t.data_out(';
-			var links=item.linksOutOf();
-			if( links.length )
-				netList += getNameOrAlias(links[0]);
-			else
-				netList += gateName(item,"X");
-			netList += '),\n\t.in_D( ';
-			{
-				var lnk=item.getLink( 'in_D',false);
-				if( lnk ) netList+=getNameOrAlias(lnk);
-				else netList+='1\'bx';
-			}
-			netList=netList+" ),\n\t.in_CLK( ";
-			{
-				var lnk=item.getLink( 'in_>',false);
-				if( lnk ) netList+=getNameOrAlias(lnk);
-				else netList+='1\'bx';
-			}
-			netList=netList+" ),\n\t.in_EN( ";
-			{
-				var lnk=item.getLink( 'in_en',false);
-				if( lnk ) netList+=getNameOrAlias(lnk);
-				else netList+='1\'bx';
-			}
-			netList=netList+" )\n);";
-			break;
-		case "decoder4": decodersize++;
-		case "decoder3": decodersize++;
-		case "decoder2": decodersize++;
-			netList += "\n\n" + gateNames[style["shape"]] + ' ' + gateName(item,"U") + " ("; 
-			netList += '\n\t.data_out( {';
-			for( var i=(1<<decodersize)-1; i>=0; i=i-1 )
-			{
-				var lnk=item.getLink( 'out'+(i+1)+'_d'+i,true);
-				if( lnk ) netList+=getNameOrAlias(lnk);
-				else netList+='1\'bx';
-				netList+=',';
-			}
-			netList=netList.replace(/, *$/gi, '');
-			netList = netList+ '} ),\n\t.address_in( {';
-			for( var i=decodersize-1; i>=0; i=i-1 )
-			{
-				var lnk=item.getLink( 'in_a'+i,false);
-				if( lnk ) netList+=getNameOrAlias(lnk);
-				else netList+='1\'bx';
-				netList+=',';
-			}
-			netList=netList.replace(/, *$/gi, '');
-			netList=netList+"} ),\n\t.en_in( ";
-			var lnk=item.getLink( 'in_en',false);
-				if( lnk ) netList+=getNameOrAlias(lnk);
-				else netList+='1\'bx';
-			netList+=")\n);";
-			break; 
-		}
+		});
 	});
 
-	verilogCode="module ";
+	wires = [...new Set(wires)];
+
+	//creat verilog code for export
+	verilogCode+="module ";
 	verilogCode+=(moduleName!=="")?moduleName:"mymodule";
 	verilogCode+= "(" ;
-	inputSet.forEach( function(item){ inputList+="\n\tinput " + item + ',';});
-	if( inputList != '' || outputList != '')
-	{
-		verilogCode += inputList;
-		verilogCode+= outputList;
-		verilogCode=verilogCode.replace(/, *$/gi, '');
-	}
+	//adds outputs and inputs for the current schematic to verilogCode
+	ports["input"].forEach( function(item){
+		verilogCode+="\n\tinput " + item + ',';
+	});
+	ports["output"].forEach( function(item){
+		verilogCode+="\n\toutput " + item + ',';
+	});
+	verilogCode=verilogCode.replace(/, *$/gi, '');
 	verilogCode+="\n);";
-	wireSet.forEach( function(item){ wireList += item + ", "; } );
-	if( wireList != "" )
+	//adds all wires needed in the current schematic to verilogCode
+	if( wires.length )
+		verilogCode+="\n\nwire "+(wires).join(", ")+";";
+	//adds all imported modules in the current scehmatic to verilogCode
+	if( importedModules )
 	{
-		wireList=wireList.replace(/, *$/gi, '');
-		verilogCode+="\n\nwire "+wireList+";";
+
+		// list of all node shapes in order
+		var modules = [];
+
+		// for each node, create an instantiation
+		if( nodes ) nodes.forEach(function(node){
+
+			//push newest node style into array
+			var style = graph.getCellStyle(node);
+			var module = style["shape"];
+			modules.push(module);
+
+			// how many times this node has been instantiated
+			var iter = 0;
+			// list of nodes styles must be greater than 1 to do a comparison
+			if (modules.length > 1)
+			{
+				// THIS IS INNEFICIENT, FIND A BETTER WAY TO DO IT
+				for(var i = 0; i < modules.length-1; i++)
+				{
+					if (modules[i] === modules[modules.length-1])
+						iter++;
+				}
+			}
+
+			//do not create an instantiation for a port
+			if( modules[modules.length-1] == "inputport" || modules[modules.length-1] == "outputport" )
+				return;
+
+			//begin adding instantiation to verilogCode
+			verilogCode+="\n\n"+ modules[modules.length-1] + " " + modules[modules.length-1] + "_" + (iter) + "(";
+			for (var inputport of importedModules[module][iter]["inputs"]){
+				verilogCode+="\n\t" + inputport + ",";
+			};
+			for (var outputport of importedModules[module][iter]["outputs"]){
+				verilogCode+="\n\t" + outputport + ",";
+			};
+
+			// remove last comma to correct syntax, due to a comma being placed after every output
+			verilogCode = verilogCode.slice(0, verilogCode.length-1);
+			verilogCode+="\n);";
+		});
 	}
-	if( assignList != '' )
-		verilogCode+="\n"+assignList;
-	if( netList != '' )
-		verilogCode+="\n"+netList;
 	verilogCode+="\n\nendmodule\n";
+	//returns complete verilog code ready for synthesis
 	return verilogCode;
 };
 
-	
+
 schematic.prototype.overlay_led_on = new mxCellOverlay(new mxImage('images/led_on.png',20,40), 'Output is high',mxConstants.ALIGN_RIGHT,mxConstants.ALIGN_MIDDLE);
 
 schematic.prototype.overlay_led_off = new mxCellOverlay(new mxImage('images/led_off.png',20,40), 'Output is low',mxConstants.ALIGN_RIGHT,mxConstants.ALIGN_MIDDLE);
@@ -605,29 +394,29 @@ schematic.prototype.overlay_sw_off = new mxCellOverlay(new mxImage('images/switc
 schematic.prototype.overlay_sw_off.addListener(mxEvent.CLICK, function(sender, evt)
 {
 	var cell=evt.getProperty("cell");
-	this.graph.removeCellOverlays(cell);		
+	this.graph.removeCellOverlays(cell);
 	this.graph.addCellOverlay(cell, schematic.prototype.overlay_sw_on);
-	
-	
-	
+
+
+
 });
 schematic.prototype.overlay_sw_on.addListener(mxEvent.CLICK, function(sender, evt)
 {
 	var cell=evt.getProperty("cell");
-	this.graph.removeCellOverlays(cell);		
+	this.graph.removeCellOverlays(cell);
 	this.graph.addCellOverlay(cell, schematic.prototype.overlay_sw_off);
-	
-	
-	
+
+
+
 });
 schematic.prototype.linkIsHigh=function( link ){
-	
-	
-	var style=this.graph.getCellStyle(link); 
+
+
+	var style=this.graph.getCellStyle(link);
 	return style[mxConstants.STYLE_STROKECOLOR] == 'green';
 };
 schematic.prototype.setGateOutput=function( cell, logic, outname="out" ){
-	if( logic) 
+	if( logic)
 	{
 		this.graph.setCellStyles(mxConstants.STYLE_STROKECOLOR,'green',[cell]);
 		this.graph.setCellStyles(mxConstants.STYLE_STROKECOLOR,'green',cell.getLinks(outname,true));
@@ -642,7 +431,7 @@ schematic.prototype.updateGateOutput=function(node)
 {
 	var ckt=this;
 	var graph=ckt.graph;
-	var style=graph.getCellStyle(node); 
+	var style=graph.getCellStyle(node);
 	var sel=0;
 	switch( style["shape"] )
 	{
@@ -677,7 +466,7 @@ schematic.prototype.updateGateOutput=function(node)
 	case "constant1":
 		ckt.setGateOutput(node,true);
 		break;
-		
+
 	case "and":
 	case "buffer":
 		var links=node.linksInto();
@@ -757,6 +546,13 @@ schematic.prototype.updateGateOutput=function(node)
 			ckt.setGateOutput( node,ckt.linkIsHigh( node.getLink("in_D")));
 		node.clkLast = ckt.linkIsHigh( node.getLink("in_>")) ;
 		break;
+	default:
+	//------- never tested
+		sel+= ckt.linkIsHigh(node.getLink("in_a1")) ? 2 : 0;
+		sel+= ckt.linkIsHigh(node.getLink("in_a0")) ? 1 : 0;
+		ckt.setGateOutput( node,false);
+		ckt.setGateOutput( node,ckt.linkIsHigh( node.getLink("in_en")),"out"+(sel+1));
 		break;
+	//-------
 	}
 };

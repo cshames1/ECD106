@@ -27,7 +27,7 @@ var AboutDialog = function(editorUi)
 	var div = document.createElement('div');
 	div.setAttribute('align', 'center');
 	var h3 = document.createElement('h3');
-	mxUtils.write(h3, mxResources.get('about') + ' Logic Designer');
+	mxUtils.write(h3, mxResources.get('about') + ' Digital Systems Designer');
 	div.appendChild(h3);
 	var img = document.createElement('img');
 	img.style.border = '0px';
@@ -987,7 +987,6 @@ var DRCWindow = function(editorUi, x, y, w, h)
 		update();
 	}
 	div.appendChild(againBtn);
-	graph.getModel().addListener(mxEvent.CHANGE, again);
 	var textarea = document.createElement('div');
 	textarea.style.position = 'static';
 	textarea.style.width = '100%';
@@ -1111,6 +1110,7 @@ var VerilogWindow = function(editorUi, x, y, w, h)
 	});
 	
 	mxEvent.addListener(window, 'resize', resizeListener);
+	graph.getModel().addListener(mxEvent.CHANGE, update);
 	
 	this.destroy = function()
 	{
@@ -1132,7 +1132,6 @@ var VerilogWindow = function(editorUi, x, y, w, h)
 	{
 		textarea.value=editorUi.circuit.createVerilog(moduleName(),editorUi.editor.graph);
 	};
-	graph.getModel().addListener(mxEvent.CHANGE, update);
 	update();
 };
 var OutlineWindow = function(editorUi, x, y, w, h)

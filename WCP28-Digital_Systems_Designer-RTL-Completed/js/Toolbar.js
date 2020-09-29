@@ -1,6 +1,6 @@
 /**
  * Copyright (c) 2018, Douglas H. Summerville, Binghamton University
- * 
+ *
  */
 function Toolbar(editorUi, container)
 {
@@ -9,7 +9,7 @@ function Toolbar(editorUi, container)
 	this.staticElements = [];
 	this.init();
 
-	
+
 	this.gestureHandler = mxUtils.bind(this, function(evt)
 	{
 		if (this.editorUi.currentMenu != null && mxEvent.getSource(evt) != this.editorUi.currentMenu.div)
@@ -35,17 +35,17 @@ Toolbar.prototype.staticElements = null;
 Toolbar.prototype.init = function()
 {
 	var sw = screen.width;
-	
-	
+
+
 	sw -= (screen.height > 740) ? 56 : 0;
-	
-	
+
+
 	var viewMenu = this.addMenu('', mxResources.get('zoom') + ' (Alt+Mousewheel)', true, 'viewZoom', null, true);
 	viewMenu.showDisabled = true;
 	viewMenu.style.whiteSpace = 'nowrap';
 	viewMenu.style.position = 'relative';
 	viewMenu.style.overflow = 'hidden';
-	
+
 	if (EditorUi.compactUi)
 	{
 		viewMenu.style.width = (mxClient.IS_QUIRKS) ? '58px' : '50px';
@@ -54,7 +54,7 @@ Toolbar.prototype.init = function()
 	{
 		viewMenu.style.width = (mxClient.IS_QUIRKS) ? '62px' : '36px';
 	}
-	
+
 	if (sw >= 420)
 	{
 		this.addSeparator();
@@ -62,13 +62,13 @@ Toolbar.prototype.init = function()
 		elts[0].setAttribute('title', mxResources.get('zoomIn') + ' (' + this.editorUi.actions.get('zoomIn').shortcut + ')');
 		elts[1].setAttribute('title', mxResources.get('zoomOut') + ' (' + this.editorUi.actions.get('zoomOut').shortcut + ')');
 	}
-	
-	
+
+
 	this.updateZoom = mxUtils.bind(this, function()
 	{
 		viewMenu.innerHTML = Math.round(this.editorUi.editor.graph.view.scale * 100) + '%' +
 			this.dropdownImageHtml;
-		
+
 		if (EditorUi.compactUi)
 		{
 			viewMenu.getElementsByTagName('img')[0].style.right = '1px';
@@ -82,16 +82,22 @@ Toolbar.prototype.init = function()
 	var elts = this.addItems(['-', 'undo', 'redo']);
 	elts[1].setAttribute('title', mxResources.get('undo') + ' (' + this.editorUi.actions.get('undo').shortcut + ')');
 	elts[2].setAttribute('title', mxResources.get('redo') + ' (' + this.editorUi.actions.get('redo').shortcut + ')');
-	
+
 	if (sw >= 320)
 	{
 		var elts = this.addItems(['-', 'delete']);
 		elts[1].setAttribute('title', mxResources.get('delete') + ' (' + this.editorUi.actions.get('delete').shortcut + ')');
 	}
-	
+
 	if (sw >= 550)
 	{
 		this.addItems(['-', 'toFront', 'toBack']);
+	}
+
+	if (sw >= 780)
+	{
+		//add import and export buttons
+		this.addItems(['-', 'importVerilogComponent', 'exportVerilog']);
 	}
 
 
@@ -110,7 +116,7 @@ Toolbar.prototype.addMenu = function(label, tooltip, showLabels, name, c, showAl
 	{
 		menu.funct.apply(menu, arguments);
 	}, c, showAll);
-	
+
 	if (!ignoreState)
 	{
 		menu.addListener('stateChanged', function()
@@ -118,7 +124,7 @@ Toolbar.prototype.addMenu = function(label, tooltip, showLabels, name, c, showAl
 			elt.setEnabled(menu.enabled);
 		});
 	}
-	
+
 	return elt;
 };
 
@@ -133,7 +139,7 @@ Toolbar.prototype.addMenuFunctionInContainer = function(container, label, toolti
 	this.initElement(elt, tooltip);
 	this.addMenuHandler(elt, showLabels, funct, showAll);
 	container.appendChild(elt);
-	
+
 	return elt;
 };
 
@@ -143,18 +149,18 @@ Toolbar.prototype.addSeparator = function(c)
 	var elt = document.createElement('div');
 	elt.className = 'geSeparator';
 	c.appendChild(elt);
-	
+
 	return elt;
 };
 
 Toolbar.prototype.addItems = function(keys, c, ignoreDisabled)
 {
 	var items = [];
-	
+
 	for (var i = 0; i < keys.length; i++)
 	{
 		var key = keys[i];
-		
+
 		if (key == '-')
 		{
 			items.push(this.addSeparator(c));
@@ -164,7 +170,7 @@ Toolbar.prototype.addItems = function(keys, c, ignoreDisabled)
 			items.push(this.addItem('geSprite-' + key.toLowerCase(), key, c, ignoreDisabled));
 		}
 	}
-	
+
 	return items;
 };
 
@@ -172,29 +178,29 @@ Toolbar.prototype.addItem = function(sprite, key, c, ignoreDisabled)
 {
 	var action = this.editorUi.actions.get(key);
 	var elt = null;
-	
+
 	if (action != null)
 	{
 		var tooltip = action.label;
-		
+
 		if (action.shortcut != null)
 		{
 			tooltip += ' (' + action.shortcut + ')';
 		}
-		
+
 		elt = this.addButton(sprite, tooltip, action.funct, c);
 
 		if (!ignoreDisabled)
 		{
 			elt.setEnabled(action.enabled);
-			
+
 			action.addListener('stateChanged', function()
 			{
 				elt.setEnabled(action.enabled);
 			});
 		}
 	}
-	
+
 	return elt;
 };
 
@@ -202,17 +208,17 @@ Toolbar.prototype.addButton = function(classname, tooltip, funct, c)
 {
 	var elt = this.createButton(classname);
 	c = (c != null) ? c : this.container;
-	
+
 	this.initElement(elt, tooltip);
 	this.addClickHandler(elt, funct);
 	c.appendChild(elt);
-	
+
 	return elt;
 };
 
 Toolbar.prototype.initElement = function(elt, tooltip)
 {
-	
+
 	if (tooltip != null)
 	{
 		elt.setAttribute('title', tooltip);
@@ -224,11 +230,11 @@ Toolbar.prototype.initElement = function(elt, tooltip)
 Toolbar.prototype.addEnabledState = function(elt)
 {
 	var classname = elt.className;
-	
+
 	elt.setEnabled = function(value)
 	{
 		elt.enabled = value;
-		
+
 		if (value)
 		{
 			elt.className = classname;
@@ -238,7 +244,7 @@ Toolbar.prototype.addEnabledState = function(elt)
 			elt.className = classname + ' mxDisabled';
 		}
 	};
-	
+
 	elt.setEnabled(true);
 };
 
@@ -252,13 +258,13 @@ Toolbar.prototype.addClickHandler = function(elt, funct)
 			{
 				funct(evt);
 			}
-			
+
 			mxEvent.consume(evt);
 		});
-		
+
 		if (document.documentMode != null && document.documentMode >= 9)
 		{
-			
+
 			mxEvent.addListener(elt, 'mousedown', function(evt)
 			{
 				evt.preventDefault();
@@ -274,14 +280,14 @@ Toolbar.prototype.createButton = function(classname)
 	elt.className = 'geButton';
 
 	var inner = document.createElement('div');
-	
+
 	if (classname != null)
 	{
 		inner.className = 'geSprite ' + classname;
 	}
-	
+
 	elt.appendChild(inner);
-	
+
 	return elt;
 };
 
@@ -291,7 +297,7 @@ Toolbar.prototype.createLabel = function(label, tooltip)
 	elt.setAttribute('href', 'javascript:void(0);');
 	elt.className = 'geLabel';
 	mxUtils.write(elt, label);
-	
+
 	return elt;
 };
 
@@ -313,41 +319,41 @@ Toolbar.prototype.addMenuHandler = function(elt, showLabels, funct, showAll)
 				menu.showDisabled = showAll;
 				menu.labels = showLabels;
 				menu.autoExpand = true;
-				
+
 				var offset = mxUtils.getOffset(elt);
 				menu.popup(offset.x, offset.y + elt.offsetHeight, null, evt);
 				this.editorUi.setCurrentMenu(menu, elt);
-				
-				
+
+
 				if (!showLabels && menu.div.scrollHeight > menu.div.clientHeight)
 				{
 					menu.div.style.width = '40px';
 				}
-				
+
 				menu.hideMenu = mxUtils.bind(this, function()
 				{
 					mxPopupMenu.prototype.hideMenu.apply(menu, arguments);
 					this.editorUi.resetCurrentMenu();
 					menu.destroy();
 				});
-				
-				
+
+
 				menu.addListener(mxEvent.EVENT_HIDE, mxUtils.bind(this, function()
 				{
 					this.currentElt = null;
 				}));
 			}
-			
+
 			show = true;
 			mxEvent.consume(evt);
 		}));
 
-		
+
 		mxEvent.addListener(elt, 'mousedown', mxUtils.bind(this, function(evt)
 		{
 			show = this.currentElt != elt;
-			
-			
+
+
 			if (document.documentMode != null && document.documentMode >= 9)
 			{
 				evt.preventDefault();
@@ -359,7 +365,7 @@ Toolbar.prototype.addMenuHandler = function(elt, showLabels, funct, showAll)
 Toolbar.prototype.destroy = function()
 {
 	if (this.gestureHandler != null)
-	{	
+	{
 		mxEvent.removeGestureListeners(document, this.gestureHandler);
 		this.gestureHandler = null;
 	}

@@ -904,7 +904,7 @@ Actions.prototype.init = function()
 	
 	var showingAbout = false;
 	
-	this.put('about', new Action(mxResources.get('about') + ' Logic Designer...', function()
+	this.put('about', new Action(mxResources.get('about') + ' Digital Systems Designer...', function()
 	{
 		if (!showingAbout)
 		{

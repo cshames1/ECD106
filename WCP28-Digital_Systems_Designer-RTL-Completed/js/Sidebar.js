@@ -14,7 +14,7 @@ function Sidebar(editorUi, container)
 	this.graph.foldingEnabled = false;
 	this.graph.container.style.visibility = 'hidden';
 	document.body.appendChild(this.graph.container);
-	
+
 	this.pointerUpHandler = mxUtils.bind(this, function()
 	{
 		this.showTooltips = true;
@@ -27,29 +27,29 @@ function Sidebar(editorUi, container)
 		this.showTooltips = false;
 		this.hideTooltip();
 	});
-	
+
 	mxEvent.addListener(document, (mxClient.IS_POINTER) ? 'pointerdown' : 'mousedown', this.pointerDownHandler);
-	
+
 	this.pointerMoveHandler = mxUtils.bind(this, function(evt)
 	{
 		var src = mxEvent.getSource(evt);
-		
+
 		while (src != null)
 		{
 			if (src == this.currentElt)
 			{
 				return;
 			}
-			
+
 			src = src.parentNode;
 		}
-		
+
 		this.hideTooltip();
 	});
 
 	mxEvent.addListener(document, (mxClient.IS_POINTER) ? 'pointermove' : 'mousemove', this.pointerMoveHandler);
 
-	
+
 	this.pointerOutHandler = mxUtils.bind(this, function(evt)
 	{
 		if (evt.toElement == null && evt.relatedTarget == null)
@@ -57,19 +57,19 @@ function Sidebar(editorUi, container)
 			this.hideTooltip();
 		}
 	});
-	
+
 	mxEvent.addListener(document, (mxClient.IS_POINTER) ? 'pointerout' : 'mouseout', this.pointerOutHandler);
 
-	
+
 	mxEvent.addListener(container, 'scroll', mxUtils.bind(this, function()
 	{
 		this.showTooltips = true;
 		this.hideTooltip();
 	}));
-	
+
 	this.init();
-	
-	
+
+
 	if (!mxClient.IS_SVG)
 	{
 		new Image().src = IMAGE_PATH + '/tooltip.png';
@@ -79,11 +79,9 @@ function Sidebar(editorUi, container)
 Sidebar.prototype.init = function()
 {
 	var dir = STENCIL_PATH;
-	
-	this.addBasicGatesPalette(false);
-	this.addIntermediateGatesPalette(false);
-	this.addMiscPalette(false);
-	this.addBistablePalette(false);
+
+	this.addComponentsPalette(true);
+	this.addMiscPalette(true);
 };
 
 Sidebar.prototype.collapsedImage = (!mxClient.IS_SVG) ? IMAGE_PATH + '/collapsed.gif' : 'data:image/gif;base64,R0lGODlhDQANAIABAJmZmf///yH/C1hNUCBEYXRhWE1QPD94cGFja2V0IGJlZ2luPSLvu78iIGlkPSJXNU0wTXBDZWhpSHpyZVN6TlRjemtjOWQiPz4gPHg6eG1wbWV0YSB4bWxuczp4PSJhZG9iZTpuczptZXRhLyIgeDp4bXB0az0iQWRvYmUgWE1QIENvcmUgNS4wLWMwNjAgNjEuMTM0Nzc3LCAyMDEwLzAyLzEyLTE3OjMyOjAwICAgICAgICAiPiA8cmRmOlJERiB4bWxuczpyZGY9Imh0dHA6Ly93d3cudzMub3JnLzE5OTkvMDIvMjItcmRmLXN5bnRheC1ucyMiPiA8cmRmOkRlc2NyaXB0aW9uIHJkZjphYm91dD0iIiB4bWxuczp4bXA9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC8iIHhtbG5zOnhtcE1NPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvbW0vIiB4bWxuczpzdFJlZj0iaHR0cDovL25zLmFkb2JlLmNvbS94YXAvMS4wL3NUeXBlL1Jlc291cmNlUmVmIyIgeG1wOkNyZWF0b3JUb29sPSJBZG9iZSBQaG90b3Nob3AgQ1M1IE1hY2ludG9zaCIgeG1wTU06SW5zdGFuY2VJRD0ieG1wLmlpZDozNUQyRTJFNjZGNUYxMUU1QjZEOThCNDYxMDQ2MzNCQiIgeG1wTU06RG9jdW1lbnRJRD0ieG1wLmRpZDozNUQyRTJFNzZGNUYxMUU1QjZEOThCNDYxMDQ2MzNCQiI+IDx4bXBNTTpEZXJpdmVkRnJvbSBzdFJlZjppbnN0YW5jZUlEPSJ4bXAuaWlkOjFERjc3MEUxNkY1RjExRTVCNkQ5OEI0NjEwNDYzM0JCIiBzdFJlZjpkb2N1bWVudElEPSJ4bXAuZGlkOjFERjc3MEUyNkY1RjExRTVCNkQ5OEI0NjEwNDYzM0JCIi8+IDwvcmRmOkRlc2NyaXB0aW9uPiA8L3JkZjpSREY+IDwveDp4bXBtZXRhPiA8P3hwYWNrZXQgZW5kPSJyIj8+Af/+/fz7+vn49/b19PPy8fDv7u3s6+rp6Ofm5eTj4uHg397d3Nva2djX1tXU09LR0M/OzczLysnIx8bFxMPCwcC/vr28u7q5uLe2tbSzsrGwr66trKuqqainpqWko6KhoJ+enZybmpmYl5aVlJOSkZCPjo2Mi4qJiIeGhYSDgoGAf359fHt6eXh3dnV0c3JxcG9ubWxramloZ2ZlZGNiYWBfXl1cW1pZWFdWVVRTUlFQT05NTEtKSUhHRkVEQ0JBQD8+PTw7Ojk4NzY1NDMyMTAvLi0sKyopKCcmJSQjIiEgHx4dHBsaGRgXFhUUExIREA8ODQwLCgkIBwYFBAMCAQAAIfkEAQAAAQAsAAAAAA0ADQAAAhSMj6lrwAjcC1GyahV+dcZJgeIIFgA7';
@@ -146,17 +144,17 @@ Sidebar.prototype.showTooltip = function(elt, cells, w, h, title, showLabel)
 				window.clearTimeout(this.thread);
 				this.thread = null;
 			}
-			
+
 			var show = mxUtils.bind(this, function()
 			{
-				
+
 				if (this.tooltip == null)
 				{
 					this.tooltip = document.createElement('div');
 					this.tooltip.className = 'geSidebarTooltip';
 					this.tooltip.style.zIndex = mxPopupMenu.prototype.zIndex - 1;
 					document.body.appendChild(this.tooltip);
-					
+
 					this.graph2 = new Graph(this.tooltip, null, null, this.editorUi.editor.graph.getStylesheet());
 					this.graph2.resetViewOnRootChange = false;
 					this.graph2.foldingEnabled = false;
@@ -165,22 +163,22 @@ Sidebar.prototype.showTooltip = function(elt, cells, w, h, title, showLabel)
 					this.graph2.setTooltips(false);
 					this.graph2.setConnectable(false);
 					this.graph2.setEnabled(false);
-					
+
 					if (!mxClient.IS_SVG)
 					{
 						this.graph2.view.canvas.style.position = 'relative';
 					}
-					
+
 					this.tooltipImage = mxUtils.createImage(this.tooltipImage);
 					this.tooltipImage.className = 'geSidebarTooltipImage';
 					this.tooltipImage.style.zIndex = mxPopupMenu.prototype.zIndex - 1;
 					this.tooltipImage.style.position = 'absolute';
 					this.tooltipImage.style.width = '14px';
 					this.tooltipImage.style.height = '27px';
-					
+
 					document.body.appendChild(this.tooltipImage);
 				}
-				
+
 				this.graph2.model.clear();
 				this.graph2.view.setTranslate(this.tooltipBorder, this.tooltipBorder);
 
@@ -192,18 +190,18 @@ Sidebar.prototype.showTooltip = function(elt, cells, w, h, title, showLabel)
 				{
 					this.graph2.view.scale = 1;
 				}
-				
+
 				this.tooltip.style.display = 'block';
 				this.graph2.labelsVisible = (showLabel == null || showLabel);
 				var fo = mxClient.NO_FO;
 				mxClient.NO_FO = Editor.prototype.originalNoForeignObject;
 				this.graph2.addCells(cells);
 				mxClient.NO_FO = fo;
-				
+
 				var bounds = this.graph2.getGraphBounds();
 				var width = bounds.width + 2 * this.tooltipBorder + 4;
 				var height = bounds.height + 2 * this.tooltipBorder;
-				
+
 				if (mxClient.IS_QUIRKS)
 				{
 					height += 4;
@@ -216,8 +214,8 @@ Sidebar.prototype.showTooltip = function(elt, cells, w, h, title, showLabel)
 
 				this.tooltipImage.style.visibility = 'visible';
 				this.tooltip.style.width = width + 'px';
-				
-				
+
+
 				if (this.tooltipTitles && title != null && title.length > 0)
 				{
 					if (this.tooltipTitle == null)
@@ -226,8 +224,8 @@ Sidebar.prototype.showTooltip = function(elt, cells, w, h, title, showLabel)
 						this.tooltipTitle.style.borderTop = '1px solid gray';
 						this.tooltipTitle.style.textAlign = 'center';
 						this.tooltipTitle.style.width = '100%';
-						
-						
+
+
 						this.tooltipTitle.style.overflow = 'hidden';
 						this.tooltipTitle.style.position = 'absolute';
 						this.tooltipTitle.style.paddingTop = '6px';
@@ -239,13 +237,13 @@ Sidebar.prototype.showTooltip = function(elt, cells, w, h, title, showLabel)
 					{
 						this.tooltipTitle.innerHTML = '';
 					}
-					
+
 					this.tooltipTitle.style.display = '';
 					mxUtils.write(this.tooltipTitle, title);
-					
+
 					var ddy = this.tooltipTitle.offsetHeight + 10;
 					height += ddy;
-					
+
 					if (mxClient.IS_SVG)
 					{
 						this.tooltipTitle.style.marginTop = (2 - ddy) + 'px';
@@ -253,18 +251,18 @@ Sidebar.prototype.showTooltip = function(elt, cells, w, h, title, showLabel)
 					else
 					{
 						height -= 6;
-						this.tooltipTitle.style.top = (height - ddy) + 'px';	
+						this.tooltipTitle.style.top = (height - ddy) + 'px';
 					}
 				}
 				else if (this.tooltipTitle != null && this.tooltipTitle.parentNode != null)
 				{
 					this.tooltipTitle.style.display = 'none';
 				}
-				
+
 				this.tooltip.style.height = height + 'px';
 				var x0 = -Math.round(bounds.x - this.tooltipBorder);
 				var y0 = -Math.round(bounds.y - this.tooltipBorder);
-				
+
 				var b = document.body;
 				var d = document.documentElement;
 				var off = this.getTooltipOffset();
@@ -289,9 +287,9 @@ Sidebar.prototype.showTooltip = function(elt, cells, w, h, title, showLabel)
 					this.graph2.view.drawPane.style.left = x0 + 'px';
 					this.graph2.view.drawPane.style.top = y0 + 'px';
 				}
-				
-				
-				
+
+
+
 				this.tooltip.style.position = 'absolute';
 				this.tooltip.style.left = left + 'px';
 				this.tooltip.style.top = top + 'px';
@@ -320,7 +318,7 @@ Sidebar.prototype.hideTooltip = function()
 		window.clearTimeout(this.thread);
 		this.thread = null;
 	}
-	
+
 	if (this.tooltip != null)
 	{
 		this.tooltip.style.display = 'none';
@@ -341,7 +339,7 @@ Sidebar.prototype.addEntry = function(tags, fn)
 {
 	if (this.taglist != null && tags != null && tags.length > 0)
 	{
-		
+
 		var tmp = tags.toLowerCase().replace(/[\/\,\(\)]/g, ' ').split(' ');
 
 		var doAddEntry = mxUtils.bind(this, function(tag)
@@ -349,14 +347,14 @@ Sidebar.prototype.addEntry = function(tags, fn)
 			if (tag.length > 1)
 			{
 				var entry = this.taglist[tag];
-				
+
 				if (typeof entry !== 'object')
 				{
 					entry = {entries: [], dict: new mxDictionary()};
 					this.taglist[tag] = entry;
 				}
 
-				
+
 				if (entry.dict.get(fn) == null)
 				{
 					entry.dict.put(fn, fn);
@@ -364,21 +362,21 @@ Sidebar.prototype.addEntry = function(tags, fn)
 				}
 			}
 		});
-		
+
 		for (var i = 0; i < tmp.length; i++)
 		{
 			doAddEntry(tmp[i]);
-			
-			
+
+
 			var normalized = tmp[i].replace(/\.*\d*$/, '');
-			
+
 			if (normalized != tmp[i])
 			{
 				doAddEntry(normalized);
 			}
 		}
 	}
-	
+
 	return fn;
 };
 
@@ -391,14 +389,14 @@ Sidebar.prototype.searchEntries = function(searchTerms, count, page, success, er
 		var max = (page + 1) * count;
 		var results = [];
 		var index = 0;
-		
+
 		for (var i = 0; i < tmp.length; i++)
 		{
 			if (tmp[i].length > 0)
 			{
 				var entry = this.taglist[tmp[i]];
 				var tmpDict = new mxDictionary();
-				
+
 				if (entry != null)
 				{
 					var arr = entry.entries;
@@ -407,17 +405,17 @@ Sidebar.prototype.searchEntries = function(searchTerms, count, page, success, er
 					for (var j = 0; j < arr.length; j++)
 					{
 						var entry = arr[j];
-	
-						
+
+
 						if ((index == 0) == (dict.get(entry) == null))
 						{
 							tmpDict.put(entry, entry);
 							results.push(entry);
-							
+
 							if (i == tmp.length - 1 && results.length == max)
 							{
 								success(results.slice(page * count, max), max, true, tmp);
-								
+
 								return;
 							}
 						}
@@ -427,12 +425,12 @@ Sidebar.prototype.searchEntries = function(searchTerms, count, page, success, er
 				{
 					results = [];
 				}
-				
+
 				dict = tmpDict;
 				index++;
 			}
 		}
-		
+
 		var len = results.length;
 		success(results.slice(page * count, (page + 1) * count), len, false, tmp);
 	}
@@ -449,33 +447,33 @@ Sidebar.prototype.filterTags = function(tags)
 		var arr = tags.split(' ');
 		var result = [];
 		var hash = {};
-		
-		
+
+
 		for (var i = 0; i < arr.length; i++)
 		{
-			
+
 			if (hash[arr[i]] == null)
 			{
 				hash[arr[i]] = '1';
 				result.push(arr[i]);
 			}
 		}
-		
+
 		return result.join(' ');
 	}
-	
+
 	return null;
 };
 
 Sidebar.prototype.cloneCell = function(cell, value)
 {
 	var clone = cell.clone();
-	
+
 	if (value != null)
 	{
 		clone.value = value;
 	}
-	
+
 	return clone;
 };
 
@@ -484,7 +482,7 @@ Sidebar.prototype.addSearchPalette = function(expand)
 	var elt = document.createElement('div');
 	elt.style.visibility = 'hidden';
 	this.container.appendChild(elt);
-		
+
 	var div = document.createElement('div');
 	div.className = 'geSidebar';
 	div.style.boxSizing = 'border-box';
@@ -498,7 +496,7 @@ Sidebar.prototype.addSearchPalette = function(expand)
 	{
 		div.style.display = 'none';
 	}
-	
+
 	var inner = document.createElement('div');
 	inner.style.whiteSpace = 'nowrap';
 	inner.style.textOverflow = 'clip';
@@ -523,7 +521,7 @@ Sidebar.prototype.addSearchPalette = function(expand)
 	cross.setAttribute('title', mxResources.get('search'));
 	cross.style.position = 'relative';
 	cross.style.left = '-18px';
-	
+
 	if (mxClient.IS_QUIRKS)
 	{
 		input.style.height = '28px';
@@ -534,9 +532,9 @@ Sidebar.prototype.addSearchPalette = function(expand)
 		cross.style.top = '1px';
 	}
 
-	
+
 	cross.style.background = 'url(\'' + this.editorUi.editor.transparentImage + '\')';
-	
+
 	var find;
 
 	inner.appendChild(cross);
@@ -548,45 +546,45 @@ Sidebar.prototype.addSearchPalette = function(expand)
 		find();
 	});
 	button.style.display = 'none';
-	
-	
+
+
 	button.style.lineHeight = 'normal';
 	button.style.marginTop = '4px';
 	button.style.marginBottom = '8px';
 	center.style.paddingTop = '4px';
 	center.style.paddingBottom = '8px';
-	
+
 	center.appendChild(button);
 	div.appendChild(center);
-	
+
 	var searchTerm = '';
 	var active = false;
 	var complete = false;
 	var page = 0;
 	var hash = new Object();
 
-	
+
 	var count = 12;
-	
+
 	var clearDiv = mxUtils.bind(this, function()
 	{
 		active = false;
 		this.currentSearch = null;
 		var child = div.firstChild;
-		
+
 		while (child != null)
 		{
 			var next = child.nextSibling;
-			
+
 			if (child != inner && child != center)
 			{
 				child.parentNode.removeChild(child);
 			}
-			
+
 			child = next;
 		}
 	});
-		
+
 	mxEvent.addListener(cross, 'click', function()
 	{
 		if (cross.getAttribute('src') == Dialog.prototype.closeImage)
@@ -604,10 +602,10 @@ Sidebar.prototype.addSearchPalette = function(expand)
 
 	find = mxUtils.bind(this, function()
 	{
-		
+
 		count = 4 * Math.max(1, Math.floor(this.container.clientWidth / (this.thumbWidth + 10)));
 		this.hideTooltip();
-		
+
 		if (input.value != '')
 		{
 			if (center.parentNode != null)
@@ -620,7 +618,7 @@ Sidebar.prototype.addSearchPalette = function(expand)
 					complete = false;
 					page = 0;
 				}
-				
+
 				if (!active && !complete)
 				{
 					button.setAttribute('disabled', 'true');
@@ -628,11 +626,11 @@ Sidebar.prototype.addSearchPalette = function(expand)
 					button.style.cursor = 'wait';
 					button.innerHTML = mxResources.get('loading') + '...';
 					active = true;
-					
-					
+
+
 					var current = new Object();
 					this.currentSearch = current;
-					
+
 					this.searchEntries(searchTerm, count, page, mxUtils.bind(this, function(results, len, more, terms)
 					{
 						if (this.currentSearch == current)
@@ -646,15 +644,15 @@ Sidebar.prototype.addSearchPalette = function(expand)
 							for (var i = 0; i < results.length; i++)
 							{
 								var elt = results[i]();
-								
-								
+
+
 								if (hash[elt.innerHTML] == null)
 								{
 									hash[elt.innerHTML] = '1';
 									div.appendChild(results[i]());
 								}
 							}
-							
+
 							if (more)
 							{
 								button.removeAttribute('disabled');
@@ -666,13 +664,13 @@ Sidebar.prototype.addSearchPalette = function(expand)
 								button.style.display = 'none';
 								complete = true;
 							}
-							
+
 							button.style.cursor = '';
 							div.appendChild(center);
 						}
 					}), mxUtils.bind(this, function()
 					{
-						
+
 						button.style.cursor = '';
 					}));
 				}
@@ -689,7 +687,7 @@ Sidebar.prototype.addSearchPalette = function(expand)
 			input.focus();
 		}
 	});
-	
+
 	mxEvent.addListener(input, 'keydown', mxUtils.bind(this, function(evt)
 	{
 		if (evt.keyCode == 13 )
@@ -698,19 +696,19 @@ Sidebar.prototype.addSearchPalette = function(expand)
 			mxEvent.consume(evt);
 		}
 	}));
-	
+
 	mxEvent.addListener(input, 'focus', function()
 	{
 		input.style.paddingRight = '';
 	});
-	
+
 	mxEvent.addListener(input, 'blur', function()
 	{
 		input.style.paddingRight = '20px';
 	});
 
 	input.style.paddingRight = '20px';
-	
+
 	mxEvent.addListener(input, 'keyup', mxUtils.bind(this, function(evt)
 	{
 		if (input.value == '')
@@ -723,7 +721,7 @@ Sidebar.prototype.addSearchPalette = function(expand)
 			cross.setAttribute('src', Dialog.prototype.closeImage);
 			cross.setAttribute('title', mxResources.get('reset'));
 		}
-		
+
 		if (input.value == '')
 		{
 			complete = true;
@@ -747,33 +745,33 @@ Sidebar.prototype.addSearchPalette = function(expand)
 		}
 	}));
 
-    
+
     mxEvent.addListener(input, 'mousedown', function(evt)
     {
     	if (evt.stopPropagation)
     	{
     		evt.stopPropagation();
     	}
-    	
+
     	evt.cancelBubble = true;
     });
-    
-    
+
+
     mxEvent.addListener(input, 'selectstart', function(evt)
     {
     	if (evt.stopPropagation)
     	{
     		evt.stopPropagation();
     	}
-    	
+
     	evt.cancelBubble = true;
     });
 
 	var outer = document.createElement('div');
     outer.appendChild(div);
     this.container.appendChild(outer);
-	
-    
+
+
 	this.palettes['search'] = [elt, outer];
 };
 
@@ -784,68 +782,48 @@ Sidebar.prototype.addSearchPalette = function(expand)
 ;
 
 ;
-Sidebar.prototype.addBasicGatesPalette = function(expand)
+
+/*
+SIDE BAR SECTIONS START
+*/
+Sidebar.prototype.addComponentsPalette = function(expand)
 {
-	
-	this.addPaletteFunctions('basicgates', mxResources.get('basicgates'), true, this.createBasicGatesShapes());
+
+	this.addPaletteFunctions('components', mxResources.get('components'), true, this.createComponentsShapes());
 };
 
-Sidebar.prototype.createBasicGatesShapes = function()
+Sidebar.prototype.createComponentsShapes = function()
 {
-	
+
 	var sb = this;
 
-	
+
 	var field = new mxCell('List Item', new mxGeometry(0, 0, 60, 26), 'text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;');
 	field.vertex = true;
-	return [
-	 	this.createVertexTemplateEntry('shape=and;editable=0;', 30, 40, '', 'And', null, null, 'logic and'),
-	 	this.createVertexTemplateEntry('shape=nand;editable=0;', 40, 40, '', 'Nand', null, null, 'logic nand'),
-	 	this.createVertexTemplateEntry('shape=or;editable=0;', 30, 40, '', 'Or', null, null, 'logic or'),
-	 	this.createVertexTemplateEntry('shape=nor;editable=0;', 40, 40, '', 'Nor', null, null, 'logic nor'),
-	 	this.createVertexTemplateEntry('shape=xor;editable=0;', 30, 40, '', 'Xor', null, null, 'logic Xor'),
-	 	this.createVertexTemplateEntry('shape=xnor;editable=0;', 40, 40, '', 'XnOr', null, null, 'logic Xnor'),
-	 	this.createVertexTemplateEntry('shape=buffer;editable=0;', 30, 30, '', 'Buffer', null, null, 'logic buffer'),
-	 	this.createVertexTemplateEntry('shape=inverter;editable=0;', 30, 30, '', 'Inverter', null, null, 'logic Invert'),
-		
-	];
+
+	//go through all saved shapes and add them to the sidebar
+	var storedShapes = JSON.parse(localStorage.getItem('storedShapes'));
+	if(storedShapes == null)
+		storedShapes = []
+	var arr = [];
+	for (i = 0; i < storedShapes.length; i++) {
+		//make each shape for the sidebar
+		arr.push(this.createVertexTemplateEntry('shape='+storedShapes[i].componentName+';editable=0;', 80, 30*Math.max(storedShapes[i].signals.input.length,storedShapes[i].signals.output.length), '', storedShapes[i].componentName, null, null, 'logic and'))
+	}
+
+	return arr;
 
 };
-Sidebar.prototype.addIntermediateGatesPalette = function(expand)
-{
-	
-	this.addPaletteFunctions('intermediategates', mxResources.get('intermediategates'), false, this.createIntermediateGatesShapes());
-};
 
-Sidebar.prototype.createIntermediateGatesShapes = function()
-{
-	
-	var sb = this;
-
-	
-	var field = new mxCell('List Item', new mxGeometry(0, 0, 60, 26), 'text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;');
-	field.vertex = true;
-	return [
-	 	this.createVertexTemplateEntry('shape=mux2;editable=0;', 40, 80, '', 'Multiplexer 2-to-1', null, null, 'Mux 2'),
-	 	this.createVertexTemplateEntry('shape=mux4;editable=0;', 60, 120, '', 'Multiplexer 4-to-1', null, null, 'Mux 4'),
-	 	this.createVertexTemplateEntry('shape=mux8;editable=0;', 60, 160, '', 'Multiplexer 8-to-1', null, null, 'Mux 8'),
-	 	this.createVertexTemplateEntry('shape=mux16;editable=0;', 80, 320, '', 'Multiplexer 16-to-1', null, null, 'Mux 16'),
-	 	this.createVertexTemplateEntry('shape=decoder2;editable=0;', 80, 60, '', '2-to-4 Decoder', null, null, 'Decoder 2'),
-	 	this.createVertexTemplateEntry('shape=decoder3;editable=0;', 80, 100, '', '3-to-8 Decoder', null, null, 'Decoder 3'),
-	 	this.createVertexTemplateEntry('shape=decoder4;editable=0;', 80, 200, '', '4-to-16 Decoder', null, null, 'Decoder 4'),
-		
-	];
-
-};
 Sidebar.prototype.addMiscPalette = function(expand)
 {
-	
-	this.addPaletteFunctions('misc', mxResources.get('misc'), false, this.createMiscShapes());
+
+	this.addPaletteFunctions('misc', mxResources.get('misc'), true, this.createMiscShapes());
 };
 
 Sidebar.prototype.createMiscShapes = function()
 {
-	
+
 	var sb = this;
 	var field = new mxCell('List Item', new mxGeometry(0, 0, 60, 26), 'text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;');
 	field.vertex = true;
@@ -854,35 +832,16 @@ Sidebar.prototype.createMiscShapes = function()
 	 	this.createVertexTemplateEntry('shape=outputport', 60, 20, '', 'Output', null, null, 'Output Port'),
 		this.createVertexTemplateEntry('shape=constant0;editable=0;', 30, 30, '0', 'Constant 0', null, null, 'Binary Constant 0'),
 		this.createVertexTemplateEntry('shape=constant1;editable=0;', 30, 30, '1', 'Constant 1', null, null, 'Binary Constant 1'),
-		
+
 	];
 
 };
 
 
-Sidebar.prototype.addBistablePalette = function(expand)
-{
-	
-	this.addPaletteFunctions('bistable', mxResources.get('bistable'), false, this.createBistableShapes());
-};
+/*
+SIDE BAR SECTIONS END
+*/
 
-Sidebar.prototype.createBistableShapes = function()
-{
-	
-	var sb = this;
-	var field = new mxCell('List Item', new mxGeometry(0, 0, 60, 26), 'text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;');
-	field.vertex = true;
-	return [
-	 	this.createVertexTemplateEntry('shape=dlatch;editable=0;', 40, 60, '', 'D Latch', null, null, 'D-Latch'),
-	 	this.createVertexTemplateEntry('shape=dlatch_en;editable=0;', 40, 60, '', 'D Latch w/ enable', null, null, 'D-Latch'),
-	 	this.createVertexTemplateEntry('shape=dff;editable=0;', 40, 60, '', 'D Flip-Flop', null, null, 'D Flip-Flop'),
-	 	this.createVertexTemplateEntry('shape=dff_en;editable=0;', 40, 60, '', 'D Flip-Flop w/ enable', null, null, 'D Flip-Flop w/ enable'),
-	 	this.createVertexTemplateEntry('shape=srlatch;editable=0;', 40, 60, '', 'SR Latch', null, null, 'SR-Latch'),
-	 	this.createVertexTemplateEntry('shape=srlatch_en;editable=0;', 40, 60, '', 'SR Latch w/ enable', null, null, 'SR-Latch'),
-		
-	];
-
-};
 Sidebar.prototype.createTitle = function(label)
 {
 	var elt = document.createElement('a');
@@ -907,34 +866,34 @@ Sidebar.prototype.createThumb = function(cells, width, height, parent, title, sh
 	this.graph.view.scaleAndTranslate(s, Math.floor((width - bounds.width * s) / 2 / s - bounds.x),
 			Math.floor((height - bounds.height * s) / 2 / s - bounds.y));
 	var node = null;
-	
-	
+
+
 	if (this.graph.dialect == mxConstants.DIALECT_SVG && !mxClient.NO_FO)
 	{
 		node = this.graph.view.getCanvas().ownerSVGElement.cloneNode(true);
 	}
-	
+
 	else
 	{
 		node = this.graph.container.cloneNode(false);
 		node.innerHTML = this.graph.container.innerHTML;
-		
-		
+
+
 		if (mxClient.IS_QUIRKS || document.documentMode == 8)
 		{
 			node.firstChild.style.overflow = 'visible';
 		}
 	}
-	
+
 	this.graph.getModel().clear();
 	mxClient.NO_FO = fo;
-	
-	
+
+
 	if (mxClient.IS_IE6)
 	{
 		parent.style.backgroundImage = 'url(' + this.editorUi.editor.transparentImage + ')';
 	}
-	
+
 	node.style.position = 'relative';
 	node.style.overflow = 'hidden';
 	node.style.cursor = 'move';
@@ -945,21 +904,21 @@ Sidebar.prototype.createThumb = function(cells, width, height, parent, title, sh
 	node.style.visibility = '';
 	node.style.minWidth = '';
 	node.style.minHeight = '';
-	
+
 	parent.appendChild(node);
-	
-	
+
+
 	if (this.sidebarTitles && title != null && showTitle != false)
 	{
 		var border = (mxClient.IS_QUIRKS) ? 2 * this.thumbPadding + 2: 0;
 		parent.style.height = (this.thumbHeight + border + this.sidebarTitleSize + 8) + 'px';
-		
+
 		var div = document.createElement('div');
 		div.style.fontSize = this.sidebarTitleSize + 'px';
 		div.style.color = '#303030';
 		div.style.textAlign = 'center';
 		div.style.whiteSpace = 'nowrap';
-		
+
 		if (mxClient.IS_IE)
 		{
 			div.style.height = (this.sidebarTitleSize + 12) + 'px';
@@ -983,13 +942,13 @@ Sidebar.prototype.createItem = function(cells, title, showLabel, showTitle, widt
 	elt.style.width = (this.thumbWidth + border) + 'px';
 	elt.style.height = (this.thumbHeight + border) + 'px';
 	elt.style.padding = this.thumbPadding + 'px';
-	
+
 	if (mxClient.IS_IE6)
 	{
 		elt.style.border = 'none';
 	}
-	
-	
+
+
 	mxEvent.addListener(elt, 'click', function(evt)
 	{
 		mxEvent.consume(evt);
@@ -997,14 +956,14 @@ Sidebar.prototype.createItem = function(cells, title, showLabel, showTitle, widt
 
 	this.createThumb(cells, this.thumbWidth, this.thumbHeight, elt, title, showLabel, showTitle, width, height);
 	var bounds = new mxRectangle(0, 0, width, height);
-	
+
 	if (cells.length > 1 || cells[0].vertex)
 	{
 		var ds = this.createDragSource(elt, this.createDropHandler(cells, true, allowCellsInserted,
 			bounds), this.createDragPreview(width, height), cells, bounds);
 		this.addClickHandler(elt, ds, cells);
-	
-		
+
+
 		ds.isGuidesEnabled = mxUtils.bind(this, function()
 		{
 			return this.editorUi.editor.graph.graphHandler.guidesEnabled;
@@ -1016,8 +975,8 @@ Sidebar.prototype.createItem = function(cells, title, showLabel, showTitle, widt
 			bounds), this.createDragPreview(width, height), cells, bounds);
 		this.addClickHandler(elt, ds, cells);
 	}
-	
-	
+
+
 	if (!mxClient.IS_IOS)
 	{
 		mxEvent.addGestureListeners(elt, null, mxUtils.bind(this, function(evt)
@@ -1028,7 +987,7 @@ Sidebar.prototype.createItem = function(cells, title, showLabel, showTitle, widt
 			}
 		}));
 	}
-	
+
 	return elt;
 };
 
@@ -1037,34 +996,34 @@ Sidebar.prototype.updateShapes = function(source, targets)
 	var graph = this.editorUi.editor.graph;
 	var sourceCellStyle = graph.getCellStyle(source);
 	var result = [];
-	
+
 	graph.model.beginUpdate();
 	try
 	{
 		var cellStyle = graph.getModel().getStyle(source);
 
-		
+
 		var styles = ['shadow', 'dashed', 'dashPattern', 'fontFamily', 'fontSize', 'fontColor', 'align', 'startFill',
 		              'startSize', 'endFill', 'endSize', 'strokeColor', 'strokeWidth', 'fillColor', 'gradientColor',
 		              'html', 'part', 'noEdgeStyle', 'edgeStyle', 'elbow', 'childLayout', 'recursiveResize',
 		              'container', 'collapsible', 'connectable'];
-		
+
 		for (var i = 0; i < targets.length; i++)
 		{
 			var targetCell = targets[i];
-			
+
 			if ((graph.getModel().isVertex(targetCell) == graph.getModel().isVertex(source)) ||
 				(graph.getModel().isEdge(targetCell) == graph.getModel().isEdge(source)))
 			{
 				var state = graph.view.getState(targetCell);
 				var style = (state != null) ? state.style : graph.getCellStyle(targets[i]);
 				graph.getModel().setStyle(targetCell, cellStyle);
-				
-				
+
+
 				if (state != null && mxUtils.getValue(state.style, 'composite', '0') == '1')
 				{
 					var childCount = graph.model.getChildCount(targetCell);
-					
+
 					for (var j = childCount; j >= 0; j--)
 					{
 						graph.model.remove(graph.model.getChildAt(targetCell, j));
@@ -1073,25 +1032,25 @@ Sidebar.prototype.updateShapes = function(source, targets)
 
 				if (style != null)
 				{
-					
+
 					if (style[mxConstants.STYLE_SHAPE] == 'umlLifeline' &&
 						sourceCellStyle[mxConstants.STYLE_SHAPE] != 'umlLifeline')
 					{
 						graph.setCellStyles(mxConstants.STYLE_SHAPE, 'umlLifeline', [targetCell]);
 						graph.setCellStyles('participant', sourceCellStyle[mxConstants.STYLE_SHAPE], [targetCell]);
 					}
-					
+
 					for (var j = 0; j < styles.length; j++)
 					{
 						var value = style[styles[j]];
-						
+
 						if (value != null)
 						{
 							graph.setCellStyles(styles[j], value, [targetCell]);
 						}
 					}
 				}
-				
+
 				result.push(targetCell);
 			}
 		}
@@ -1100,34 +1059,34 @@ Sidebar.prototype.updateShapes = function(source, targets)
 	{
 		graph.model.endUpdate();
 	}
-	
+
 	return result;
 };
 
 Sidebar.prototype.createDropHandler = function(cells, allowSplit, allowCellsInserted, bounds)
 {
 	allowCellsInserted = (allowCellsInserted != null) ? allowCellsInserted : true;
-	
+
 	return mxUtils.bind(this, function(graph, evt, target, x, y, force)
 	{
 		var elt = (force) ? null : ((mxEvent.isTouchEvent(evt) || mxEvent.isPenEvent(evt)) ?
 			document.elementFromPoint(mxEvent.getClientX(evt), mxEvent.getClientY(evt)) :
 			mxEvent.getSource(evt));
-		
+
 		while (elt != null && elt != this.container)
 		{
 			elt = elt.parentNode;
 		}
-		
+
 		if (elt == null && graph.isEnabled())
 		{
 			cells = graph.getImportableCells(cells);
-			
+
 			if (cells.length > 0)
 			{
 				graph.stopEditing();
-				
-				
+
+
 				var validDropTarget = (target != null && !mxEvent.isAltDown(evt)) ?
 					graph.isValidDropTarget(target, cells, evt) : false;
 				var select = null;
@@ -1136,7 +1095,7 @@ Sidebar.prototype.createDropHandler = function(cells, allowSplit, allowCellsInse
 				{
 					target = null;
 				}
-				
+
 				if (!graph.isCellLocked(target || graph.getDefaultParent()))
 				{
 					graph.model.beginUpdate();
@@ -1144,8 +1103,8 @@ Sidebar.prototype.createDropHandler = function(cells, allowSplit, allowCellsInse
 					{
 						x = Math.round(x);
 						y = Math.round(y);
-						
-						
+
+
 						if (allowSplit && graph.isSplitTarget(target, cells, evt))
 						{
 							var clones = graph.cloneCells(cells);
@@ -1157,26 +1116,26 @@ Sidebar.prototype.createDropHandler = function(cells, allowSplit, allowCellsInse
 						{
 							select = graph.importCells(cells, x, y, target);
 						}
-						
-						
+
+
 						if (graph.layoutManager != null)
 						{
 							var layout = graph.layoutManager.getLayout(target);
-							
+
 							if (layout != null)
 							{
 								var s = graph.view.scale;
 								var tr = graph.view.translate;
 								var tx = (x + tr.x) * s;
 								var ty = (y + tr.y) * s;
-								
+
 								for (var i = 0; i < select.length; i++)
 								{
 									layout.moveCell(select[i], tx, ty);
 								}
 							}
 						}
-	
+
 						if (allowCellsInserted)
 						{
 							graph.fireEvent(new mxEventObject('cellsInserted', 'cells', select));
@@ -1190,7 +1149,7 @@ Sidebar.prototype.createDropHandler = function(cells, allowSplit, allowCellsInse
 					{
 						graph.model.endUpdate();
 					}
-	
+
 					if ( select != null && select.length > 0)
 					{
 						graph.scrollCellToVisible(select[0]);
@@ -1207,7 +1166,7 @@ Sidebar.prototype.createDropHandler = function(cells, allowSplit, allowCellsInse
 					}
 				}
 			}
-			
+
 			mxEvent.consume(evt);
 		}
 	});
@@ -1219,7 +1178,7 @@ Sidebar.prototype.createDragPreview = function(width, height)
 	elt.style.border = this.dragPreviewBorder;
 	elt.style.width = width + 'px';
 	elt.style.height = height + 'px';
-	
+
 	return elt;
 };
 
@@ -1227,13 +1186,13 @@ Sidebar.prototype.createDragPreview = function(width, height)
 
 Sidebar.prototype.createDragSource = function(elt, dropHandler, preview, cells, bounds)
 {
-	
+
 	var ui = this.editorUi;
 	var graph = ui.editor.graph;
 	var freeSourceEdge = null;
 	var firstVertex = null;
 	var sidebar = this;
-	
+
 	for (var i = 0; i < cells.length; i++)
 	{
 		if (firstVertex == null && this.editorUi.editor.graph.model.isVertex(cells[i]))
@@ -1245,13 +1204,13 @@ Sidebar.prototype.createDragSource = function(elt, dropHandler, preview, cells, 
 		{
 			freeSourceEdge = i;
 		}
-		
+
 		if (firstVertex != null && freeSourceEdge != null)
 		{
 			break;
 		}
 	}
-	
+
 	var dragSource = mxUtils.makeDraggable(elt, this.editorUi.editor.graph, mxUtils.bind(this, function(graph, evt, target, x, y)
 	{
 		if (this.updateThread != null)
@@ -1259,10 +1218,10 @@ Sidebar.prototype.createDragSource = function(elt, dropHandler, preview, cells, 
 			window.clearTimeout(this.updateThread);
 		}
 			dropHandler.apply(this, arguments);
-		
+
 	}), preview, 0, 0, graph.autoscroll, true, true);
-	
-	
+
+
 	graph.addListener(mxEvent.ESCAPE, function(sender, evt)
 	{
 		if (dragSource.isActive())
@@ -1271,9 +1230,9 @@ Sidebar.prototype.createDragSource = function(elt, dropHandler, preview, cells, 
 		}
 	});
 
-	
+
 	var mouseDown = dragSource.mouseDown;
-	
+
 	dragSource.mouseDown = function(evt)
 	{
 		if (!mxEvent.isPopupTrigger(evt) && !mxEvent.isMultiTouchEvent(evt))
@@ -1283,42 +1242,42 @@ Sidebar.prototype.createDragSource = function(elt, dropHandler, preview, cells, 
 		}
 	};
 
-	
+
 
 	var dsCreatePreviewElement = dragSource.createPreviewElement;
-	
-	
+
+
 	dragSource.createPreviewElement = function(graph)
 	{
 		var elt = dsCreatePreviewElement.apply(this, arguments);
-		
-		
+
+
 		if (mxClient.IS_SVG)
 		{
 			elt.style.pointerEvents = 'none';
 		}
-		
+
 		this.previewElementWidth = elt.style.width;
 		this.previewElementHeight = elt.style.height;
-		
+
 		return elt;
 	};
-	
-	
+
+
 	var dragEnter = dragSource.dragEnter;
 	dragSource.dragEnter = function(graph, evt)
 	{
-		
+
 		dragEnter.apply(this, arguments);
 	};
-	
+
 	var dragExit = dragSource.dragExit;
 	dragSource.dragExit = function(graph, evt)
 	{
-		
+
 		dragExit.apply(this, arguments);
 	};
-	
+
 	dragSource.dragOver = function(graph, evt)
 	{
 		mxDragSource.prototype.dragOver.apply(this, arguments);
@@ -1327,26 +1286,26 @@ Sidebar.prototype.createDragSource = function(elt, dropHandler, preview, cells, 
 		if (this.previewElement != null)
 		{
 			var view = graph.view;
-			
+
 			this.previewElement.style.width = this.previewElementWidth;
 			this.previewElement.style.height = this.previewElementHeight;
 			this.previewElement.style.display = '';
 		}
 	};
-	
+
 	var startTime = new Date().getTime();
 	var timeOnTarget = 0;
 	var prev = null;
-	
-	
+
+
 	var sourceCellStyle = this.editorUi.editor.graph.getCellStyle(cells[0]);
-	
-	
+
+
 	dragSource.stopDrag = function()
 	{
 		mxDragSource.prototype.stopDrag.apply(this, arguments);
 	};
-	
+
 	return dragSource;
 };
 
@@ -1354,14 +1313,14 @@ Sidebar.prototype.itemClicked = function(cells, ds, evt, elt)
 {
 	var graph = this.editorUi.editor.graph;
 	graph.container.focus();
-	
-	
+
+
 	if (mxEvent.isAltDown(evt))
 	{
 		if (graph.getSelectionCount() == 1 && graph.model.isVertex(graph.getSelectionCell()))
 		{
 			var firstVertex = null;
-			
+
 			for (var i = 0; i < cells.length && firstVertex == null; i++)
 			{
 				if (graph.model.isVertex(cells[i]))
@@ -1369,18 +1328,18 @@ Sidebar.prototype.itemClicked = function(cells, ds, evt, elt)
 					firstVertex = i;
 				}
 			}
-			
+
 			if (firstVertex != null)
 			{
 				graph.setSelectionCells(this.dropAndConnect(graph.getSelectionCell(), cells, (mxEvent.isMetaDown(evt) || mxEvent.isControlDown(evt)) ?
-					(mxEvent.isShiftDown(evt) ? mxConstants.DIRECTION_WEST : mxConstants.DIRECTION_NORTH) : 
+					(mxEvent.isShiftDown(evt) ? mxConstants.DIRECTION_WEST : mxConstants.DIRECTION_NORTH) :
 					(mxEvent.isShiftDown(evt) ? mxConstants.DIRECTION_EAST : mxConstants.DIRECTION_SOUTH),
 					firstVertex, evt));
 				graph.scrollCellToVisible(graph.getSelectionCell());
 			}
 		}
 	}
-	
+
 	else if (mxEvent.isShiftDown(evt) && !graph.isSelectionEmpty())
 	{
 		this.updateShapes(cells[0], graph.getSelectionCells());
@@ -1389,7 +1348,7 @@ Sidebar.prototype.itemClicked = function(cells, ds, evt, elt)
 	else
 	{
 		var pt = graph.getFreeInsertPoint();
-		
+
 		if (mxEvent.isShiftDown(evt))
 		{
 			var bounds = graph.getGraphBounds();
@@ -1398,9 +1357,9 @@ Sidebar.prototype.itemClicked = function(cells, ds, evt, elt)
 			pt.x = bounds.x / s - tr.x + bounds.width / s + graph.gridSize;
 			pt.y = bounds.y / s - tr.y;
 		}
-		
+
 		ds.drop(graph, evt, null, pt.x, pt.y, true);
-		
+
 	}
 };
 
@@ -1413,19 +1372,19 @@ Sidebar.prototype.addClickHandler = function(elt, ds, cells)
 	var tol = graph.tolerance;
 	var first = null;
 	var sb = this;
-	
+
 	ds.mouseDown =function(evt)
 	{
 		oldMouseDown.apply(this, arguments);
 		first = new mxPoint(mxEvent.getClientX(evt), mxEvent.getClientY(evt));
-		
+
 		if (this.dragElement != null)
 		{
 			this.dragElement.style.display = 'none';
 			mxUtils.setOpacity(elt, 50);
 		}
 	};
-	
+
 	ds.mouseMove = function(evt)
 	{
 		if (this.dragElement != null && this.dragElement.style.display == 'none' &&
@@ -1435,10 +1394,10 @@ Sidebar.prototype.addClickHandler = function(elt, ds, cells)
 			this.dragElement.style.display = '';
 			mxUtils.setOpacity(elt, 100);
 		}
-		
+
 		oldMouseMove.apply(this, arguments);
 	};
-	
+
 	ds.mouseUp = function(evt)
 	{
 		if (!mxEvent.isPopupTrigger(evt) && this.currentGraph == null &&
@@ -1450,8 +1409,8 @@ Sidebar.prototype.addClickHandler = function(elt, ds, cells)
 		oldMouseUp.apply(ds, arguments);
 		mxUtils.setOpacity(elt, 100);
 		first = null;
-		
-		
+
+
 		sb.currentElt = elt;
 	};
 };
@@ -1459,7 +1418,7 @@ Sidebar.prototype.addClickHandler = function(elt, ds, cells)
 Sidebar.prototype.createVertexTemplateEntry = function(style, width, height, value, title, showLabel, showTitle, tags)
 {
 	tags = (tags != null && tags.length > 0) ? tags : title.toLowerCase();
-	
+
 	return this.addEntry(tags, mxUtils.bind(this, function()
  	{
  		return this.createVertexTemplate(style, width, height, value, title, showLabel, showTitle);
@@ -1470,7 +1429,7 @@ Sidebar.prototype.createVertexTemplate = function(style, width, height, value, t
 {
 	var cells = [new mxCell((value != null) ? value : '', new mxGeometry(0, 0, width, height), style)];
 	cells[0].vertex = true;
-	
+
 	return this.createVertexTemplateFromCells(cells, width, height, title, showLabel, showTitle, allowCellsInserted);
 };
 
@@ -1481,7 +1440,7 @@ Sidebar.prototype.createVertexTemplateFromData = function(data, width, height, t
 
 	var model = new mxGraphModel();
 	codec.decode(doc.documentElement, model);
-	
+
 	var cells = this.graph.cloneCells(model.root.getChildAt(0).children);
 
 	return this.createVertexTemplateFromCells(cells, width, height, title, showLabel, showTitle, allowCellsInserted);
@@ -1489,15 +1448,15 @@ Sidebar.prototype.createVertexTemplateFromData = function(data, width, height, t
 
 Sidebar.prototype.createVertexTemplateFromCells = function(cells, width, height, title, showLabel, showTitle, allowCellsInserted)
 {
-	
-	
+
+
 	return this.createItem(cells, title, showLabel, showTitle, width, height, allowCellsInserted);
 };
 
 Sidebar.prototype.createEdgeTemplateEntry = function(style, width, height, value, title, showLabel, tags, allowCellsInserted)
 {
 	tags = (tags != null && tags.length > 0) ? tags : title.toLowerCase();
-	
+
  	return this.addEntry(tags, mxUtils.bind(this, function()
  	{
  		return this.createEdgeTemplate(style, width, height, value, title, showLabel, allowCellsInserted);
@@ -1511,12 +1470,12 @@ Sidebar.prototype.createEdgeTemplate = function(style, width, height, value, tit
 	cell.geometry.setTerminalPoint(new mxPoint(width, 0), false);
 	cell.geometry.relative = true;
 	cell.edge = true;
-	
+
 	return this.createEdgeTemplateFromCells([cell], width, height, title, showLabel, allowCellsInserted);
 };
 
 Sidebar.prototype.createEdgeTemplateFromCells = function(cells, width, height, title, showLabel, allowCellsInserted)
-{	
+{
 	return this.createItem(cells, title, showLabel, true, width, height, allowCellsInserted);
 };
 
@@ -1535,11 +1494,11 @@ Sidebar.prototype.addPalette = function(id, title, expanded, onInit)
 {
 	var elt = this.createTitle(title);
 	this.container.appendChild(elt);
-	
+
 	var div = document.createElement('div');
 	div.className = 'geSidebar';
-	
-	
+
+
 	if (mxClient.IS_POINTER)
 	{
 		div.style.touchAction = 'none';
@@ -1554,19 +1513,19 @@ Sidebar.prototype.addPalette = function(id, title, expanded, onInit)
 	{
 		div.style.display = 'none';
 	}
-	
+
     this.addFoldingHandler(elt, div, onInit);
-	
+
 	var outer = document.createElement('div');
     outer.appendChild(div);
     this.container.appendChild(outer);
-    
-    
+
+
     if (id != null)
     {
     		this.palettes[id] = [elt, outer];
     }
-    
+
     return div;
 };
 
@@ -1574,13 +1533,13 @@ Sidebar.prototype.addFoldingHandler = function(title, content, funct)
 {
 	var initialized = false;
 
-	
+
 	if (!mxClient.IS_IE || document.documentMode >= 8)
 	{
 		title.style.backgroundImage = (content.style.display == 'none') ?
 			'url(\'' + this.collapsedImage + '\')' : 'url(\'' + this.expandedImage + '\')';
 	}
-	
+
 	title.style.backgroundRepeat = 'no-repeat';
 	title.style.backgroundPosition = '0% 50%';
 
@@ -1591,14 +1550,14 @@ Sidebar.prototype.addFoldingHandler = function(title, content, funct)
 			if (!initialized)
 			{
 				initialized = true;
-				
+
 				if (funct != null)
 				{
-					
+
 					title.style.cursor = 'wait';
 					var prev = title.innerHTML;
 					title.innerHTML = mxResources.get('loading') + '...';
-					
+
 					window.setTimeout(function()
 					{
 						content.style.display = 'block';
@@ -1620,7 +1579,7 @@ Sidebar.prototype.addFoldingHandler = function(title, content, funct)
 			{
 				content.style.display = 'block';
 			}
-			
+
 			title.style.backgroundImage = 'url(\'' + this.expandedImage + '\')';
 		}
 		else
@@ -1628,8 +1587,7 @@ Sidebar.prototype.addFoldingHandler = function(title, content, funct)
 			title.style.backgroundImage = 'url(\'' + this.collapsedImage + '\')';
 			content.style.display = 'none';
 		}
-		
+
 		mxEvent.consume(evt);
 	}));
 };
-
