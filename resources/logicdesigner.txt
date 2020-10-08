@@ -19,6 +19,7 @@ addLayer=Add Layer
 addProperty=Add Property
 addToExistingDrawing=Add to Existing Drawing
 addWaypoint=Add Waypoint
+basicgates=Basic Gates
 components=Components
 bistable=Bistable Gates
 align=Align

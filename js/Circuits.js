@@ -103,6 +103,7 @@ schematic.prototype.runDRC = function()
 			if( item.numLinksInto() < fan_in )
 				Messages.addError("Gate must have at least "+fan_in+" input(s) connected",item);
 			break;
+			/*
 		case "mux16":muxsize++;
 		case "mux8":muxsize++;
 		case "mux4":muxsize++;
@@ -163,6 +164,7 @@ schematic.prototype.runDRC = function()
 			if( item.numLinksOutOf() == 0 )
 				Messages.addWarning("Flip-Flop has an unconnected output",item);
 			break;
+			*/
 		}
 	},this);
 	if( numOutputs===0 )
@@ -175,8 +177,9 @@ schematic.prototype.runDRC = function()
 //Tomer's code for writing verilog
 schematic.prototype.createVerilog=function(moduleName)
 {
-
+	
 	var verilogCode="";
+	var assignList="";
 	//used to reference the current schematic
 	var graph=this.graph;
 
@@ -210,7 +213,7 @@ schematic.prototype.createVerilog=function(moduleName)
 	if( nodes ) nodes.forEach(function(node){
 
 		var style=graph.getCellStyle(node);
-		var module = style["shape"];
+		var module = style["shape"];	
 		node_Id = node.getId();
 
 		if( module == "inputport" || module == "outputport" )
@@ -256,27 +259,52 @@ schematic.prototype.createVerilog=function(moduleName)
 			//adds any edges connected to the imported component that are connected to an output port or input port
 			if ( sourceStyle === "inputport" || targetStyle === "outputport" )
 			{
-
+				
 				//if imported module is the source
 				if( targetStyle == "outputport" )
 				{
-					if( Edge["target"]["value"] )
+					if( Edge["target"]["value"] ) {
 						ports["output"].push(Edge["target"]["value"])
-					else
+					}
+					else {
 						ports["output"].push("O" + output_counter++);
-
-					sourcePort = Edge["style"].match(/sourcePort=(.*?);/)[1].split("_")[0];
-					importedModules[module][importedModules[module].length - 1]["outputs"].push("." + sourcePort + "(" + ports["output"][ports["output"].length - 1] + ")");
+					}
+					var links = node.numLinksOutOf();
+					if (links>1 && isBasicGate(module)) {
+						var wire = importedModules[module][importedModules[module].length - 1]["outputs"].pop();
+						if (wires.includes(wire)) {
+							importedModules[module][importedModules[module].length - 1]["outputs"].push(wire);
+						}
+						else {
+							wires.push("wire" + wire_counter);
+							importedModules[module][importedModules[module].length - 1]["outputs"].push(wires[wires.length-1]);
+						}
+						assignList += ("\nassign " + ports["output"][ports["output"].length-1] + " = " + importedModules[module][importedModules[module].length - 1]["outputs"] + ";");
+					}
+					else if (isBasicGate(module)) {
+						importedModules[module][importedModules[module].length - 1]["outputs"].push(ports["output"][ports["output"].length - 1]);
+					}
+					else {
+						sourcePort = Edge["style"].match(/sourcePort=(.*?);/)[1].split("_")[0];
+						importedModules[module][importedModules[module].length - 1]["outputs"].push("\n\t." + sourcePort + "(" + ports["output"][ports["output"].length - 1] + ")");
+					}
 				}
 				// if imported module is the target
 				else if( sourceStyle === "inputport" )
 				{
-					if( Edge["source"]["value"] )
+					if( Edge["source"]["value"] ) {
 						ports["input"].push(Edge["source"]["value"])
-					else
-						ports["input"].push("I" + input_counter++);
-					targetPort = Edge["style"].match(/targetPort=(.*?);/)[1].split("_")[0];
-					importedModules[module][importedModules[module].length - 1]["inputs"].push("." + targetPort + "(" + ports["input"][ports["input"].length - 1] + ")");
+					}
+					else {
+						ports["input"].push("I" + input_counter++);					
+						if (isBasicGate(module)) {
+							importedModules[module][importedModules[module].length - 1]["inputs"].push(ports["input"][ports["input"].length - 1]);
+						}
+						else {
+							targetPort = Edge["style"].match(/targetPort=(.*?);/)[1].split("_")[0];
+							importedModules[module][importedModules[module].length - 1]["inputs"].push("\n\t." + targetPort + "(" + ports["input"][ports["input"].length - 1] + ")");
+						}
+					}
 				}
 			}
 			//adds any edges connected to the imported component that are connected by a wire
@@ -295,20 +323,54 @@ schematic.prototype.createVerilog=function(moduleName)
 				}
 				wire_connections++;
 				//TODO: Is there an else case for when the wire does not match the current node at all?
-				if( Edge["source"].getId() === node_Id )
-				{
-					sourcePort = Edge["style"].match(/sourcePort=(.*?);/)[1].split("_")[0];
-					importedModules[module][importedModules[module].length - 1]["outputs"].push("." + sourcePort + "(" + wires[wires.length - 1] + ")");
+				if (Edge["source"].getId() === node_Id){
+					if (isBasicGate(module)) {
+						if (importedModules[module][importedModules[module].length - 1]["outputs"].includes(wires[wires.length-1])==false) {
+							importedModules[module][importedModules[module].length - 1]["outputs"].push(wires[wires.length-1]);
+						}
+					}
+					else {
+						sourcePort = Edge["style"].match(/sourcePort=(.*?);/)[1].split("_")[0];
+						importedModules[module][importedModules[module].length - 1]["outputs"].push("\n\t." + sourcePort + "(" + wires[wires.length - 1] + ")");
+					}
 				}
-				else if ( Edge["target"].getId() === node_Id )
-				{
-					targetPort = Edge["style"].match(/targetPort=(.*?);/)[1].split("_")[0];
-					importedModules[module][importedModules[module].length - 1]["inputs"].push("." + targetPort + "(" + wires[wires.length - 1] + ")");
+				else if ( Edge["target"].getId() === node_Id){
+					if ( isBasicGate(module)){
+						if (importedModules[module][importedModules[module].length - 1]["inputs"].includes(wires[wires.length-1])==false) {
+							//TODO: the bug is the argument to the push function below
+							importedModules[module][importedModules[module].length - 1]["inputs"].push(wires[wires.length-1]);
+						}
+					}
+					else {
+						targetPort = Edge["style"].match(/targetPort=(.*?);/)[1].split("_")[0];
+						importedModules[module][importedModules[module].length - 1]["inputs"].push("\n\t." + targetPort + "(" + wires[wires.length - 1] + ")");
+					}
 				}
 			}
 
 		});
 	});
+	function isBasicGate(moduleType) {
+		return     moduleType == "and" 
+				|| moduleType == "nand"
+				|| moduleType == "or"
+				|| moduleType == "nor"
+				|| moduleType == "xor"
+				|| moduleType == "xnor"
+				|| moduleType == "inverter"
+				|| moduleType == "buffer";
+	}
+	function objNameToVerilog(objName) {
+		if (isBasicGate(objName)) {
+			var gateNames={and:"and", nand:"nand",or:"or",nor:"nor",xor:"xor",xnor:"xnor",buffer:"buf", inverter:"not"};
+			verilogWord = gateNames[objName];
+		}
+		else {
+			verilogWord = objName;
+		}
+		return verilogWord;
+	}
+
 
 	wires = [...new Set(wires)];
 
@@ -328,6 +390,9 @@ schematic.prototype.createVerilog=function(moduleName)
 	//adds all wires needed in the current schematic to verilogCode
 	if( wires.length )
 		verilogCode+="\n\nwire "+(wires).join(", ")+";";
+	//adds all assigns
+	if( assignList != '' )
+		verilogCode+="\n"+assignList;
 	//adds all imported modules in the current scehmatic to verilogCode
 	if( importedModules )
 	{
@@ -361,17 +426,16 @@ schematic.prototype.createVerilog=function(moduleName)
 				return;
 
 			//begin adding instantiation to verilogCode
-			verilogCode+="\n\n"+ modules[modules.length-1] + " " + modules[modules.length-1] + "_" + (iter) + "(";
+			verilogCode+="\n\n" + objNameToVerilog(modules[modules.length-1]) + " " + objNameToVerilog(modules[modules.length-1]) + "_" + (iter) + "(";
 			for (var inputport of importedModules[module][iter]["inputs"]){
-				verilogCode+="\n\t" + inputport + ",";
-			};
+				verilogCode+=inputport + ", ";
+			}
 			for (var outputport of importedModules[module][iter]["outputs"]){
-				verilogCode+="\n\t" + outputport + ",";
-			};
-
-			// remove last comma to correct syntax, due to a comma being placed after every output
-			verilogCode = verilogCode.slice(0, verilogCode.length-1);
-			verilogCode+="\n);";
+				verilogCode+=outputport + ", ";
+			}
+			// remove last comma and trailing space to correct syntax, due to a comma being placed after every output
+			verilogCode = verilogCode.slice(0, verilogCode.length-2);
+			verilogCode+=");";
 		});
 	}
 	verilogCode+="\n\nendmodule\n";
@@ -503,6 +567,7 @@ schematic.prototype.updateGateOutput=function(node)
 			links.forEach(function(link){ count=count+(ckt.linkIsHigh(link)?1:0);} );
 		ckt.setGateOutput(node,(1+count)%2 );
 		break;
+		/*
 	case "mux16":
 		sel+= ckt.linkIsHigh(node.getLink("in_s3")) ? 8 : 0;
 	case "mux8":
@@ -546,6 +611,7 @@ schematic.prototype.updateGateOutput=function(node)
 			ckt.setGateOutput( node,ckt.linkIsHigh( node.getLink("in_D")));
 		node.clkLast = ckt.linkIsHigh( node.getLink("in_>")) ;
 		break;
+		*/
 	default:
 	//------- never tested
 		sel+= ckt.linkIsHigh(node.getLink("in_a1")) ? 2 : 0;
