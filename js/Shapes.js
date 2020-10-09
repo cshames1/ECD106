@@ -93,4 +93,235 @@
 	mxUtils.extend(ConstantOneShape, ConstantShape);
 	mxCellRenderer.registerShape('constant1', ConstantOneShape);
 
+	function BufferShape()
+	{
+		mxActor.call(this);
+	};
+	mxUtils.extend(BufferShape, mxActor);
+	BufferShape.prototype.redrawPath = function(c, x, y, w, h)
+	{
+		c.moveTo(0,0);
+		c.lineTo(0.67*w,h/2);
+		c.lineTo(0,h);
+		c.close();
+		c.fillAndStroke();
+		c.end();
+	};
+	BufferShape.prototype.getPorts = function()
+	{
+		var ports=new Array();
+		ports['in1__w'] = {x: 0, y: 0.5, perimeter: true};
+		ports['out__e'] = {x: 0.67, y: 0.5, perimeter: false};
+		return ports;
+	};
+	mxCellRenderer.registerShape('buffer', BufferShape);
+	
+	function InverterShape()
+	{
+		mxActor.call(this);
+	};
+	mxUtils.extend(InverterShape, mxActor);
+	InverterShape.prototype.redrawPath = function(c, x, y, w, h)
+	{
+		c.moveTo(0,0);
+		c.lineTo(0,h);
+		c.lineTo(2*w/3,h/2);
+		c.lineTo(0,0);
+		c.close();
+		c.fillAndStroke();
+		c.ellipse(2*w/3,h/3,w/3,w/3);
+		c.fillAndStroke();
+		c.end();
+	};
+	InverterShape.prototype.getPorts = function()
+	{
+		var ports=new Array();
+		ports['in1__w'] = {x: 0, y: 0.5, perimeter: true};
+		ports['out__e'] = {x: 1, y: 0.5, perimeter: true};
+		return ports;
+	};
+	mxCellRenderer.registerShape('inverter', InverterShape);
+	
+	function OrShape()
+	{
+		mxActor.call(this);
+	};
+	mxUtils.extend(OrShape, mxActor);
+	OrShape.prototype.redrawPath = function(c, x, y, w, h)
+	{
+		c.moveTo(0,0);
+		c.curveTo(w/2,0,3*w/4,0,w,h/2);
+		c.curveTo(3*w/4,h,w/2,h,0,h);
+		c.quadTo(w/2,h/2,0,0);
+		c.end();
+	};
+	OrShape.prototype.getPorts = function()
+	{
+		var ports=new Array();
+		ports['in1__w'] = {x: 0.095, y: 0.11, perimeter: false};
+		ports['in2__w'] = {x: 0.17, y: 0.22, perimeter: false};
+		ports['in3__w'] = {x: 0.22, y: 0.33, perimeter: false};
+		ports['in4__w'] = {x: 0.248, y: 0.44, perimeter: false};
+		ports['in5__w'] = {x: 0.248, y: 0.56, perimeter: false};
+		ports['in6__w'] = {x: 0.22, y: 0.67, perimeter: false};
+		ports['in7__w'] = {x: 0.17, y: 0.78, perimeter: false};
+		ports['in8__w'] = {x: 0.095, y: 0.89, perimeter: false};
+		ports['out__e'] = {x: 1, y: 0.5, perimeter: true};
+		return ports;
+	};
+	mxCellRenderer.registerShape('or', OrShape);
+	
+	function NorShape()
+	{
+		mxActor.call(this);
+	};
+	mxUtils.extend(NorShape, mxActor);
+	NorShape.prototype.redrawPath = function(c, x, y, w, h)
+	{
+		
+		
+		
+		
+		
+		
+		OrShape.prototype.redrawPath(c,x,y,3*w/4,h);
+		c.fillAndStroke();
+		c.ellipse(3*w/4,h/2-w/8,w/4,w/4);
+		c.fillAndStroke();
+	}
+	NorShape.prototype.getPorts = function()
+{
+		var ports=new Array();
+		ports['in1__w'] = {x: 0.078, y: 0.11, perimeter: false};
+		ports['in2__w'] = {x: 0.13, y: 0.22, perimeter: false};
+		ports['in3__w'] = {x: 0.165, y: 0.33, perimeter: false};
+		ports['in4__w'] = {x: 0.185, y: 0.44, perimeter: false};
+		ports['in5__w'] = {x: 0.185, y: 0.56, perimeter: false};
+		ports['in6__w'] = {x: 0.165, y: 0.67, perimeter: false};
+		ports['in7__w'] = {x: 0.13, y: 0.78, perimeter: false};
+		ports['in8__w'] = {x: 0.078, y: 0.89, perimeter: false};
+		ports['out__e'] = {x: 1, y: 0.5, perimeter: true};
+		return ports;
+	} ;
+	mxCellRenderer.registerShape('nor', NorShape);
+	
+	function AndShape()
+	{
+		mxActor.call(this);
+	};
+	mxUtils.extend(AndShape, mxActor);
+	AndShape.prototype.redrawPath = function(c, x, y, w, h)
+	{
+		c.moveTo(0, 0);
+		c.quadTo(w, 0, w, h / 2);
+		c.quadTo(w, h, 0, h);
+		c.close();
+		c.end();
+	};
+			
+	
+	AndShape.prototype.getPorts = function()
+	{
+		var ports=new Array();
+		ports['in1__w'] = {x: 0, y: 0.11, perimeter: true};
+		ports['in2__w'] = {x: 0, y: 0.22, perimeter: true};
+		ports['in3__w'] = {x: 0, y: 0.33, perimeter: true};
+		ports['in4__w'] = {x: 0, y: 0.44, perimeter: true};
+		ports['in5__w'] = {x: 0, y: 0.56, perimeter: true};
+		ports['in6__w'] = {x: 0, y: 0.67, perimeter: true};
+		ports['in7__w'] = {x: 0, y: 0.78, perimeter: true};
+		ports['in8__w'] = {x: 0, y: 0.89, perimeter: true};
+		ports['out__e'] = {x: 1, y: 0.5, perimeter: true};
+		return ports;
+	};
+	mxCellRenderer.registerShape('and', AndShape);
+	
+	function NandShape()
+	{
+		mxActor.call(this);
+	};
+	mxUtils.extend(NandShape, mxActor);
+	NandShape.prototype.redrawPath = function(c, x, y, w, h)
+	{
+		AndShape.prototype.redrawPath(c,x,y,3*w/4,h);
+		c.fillAndStroke();
+		c.ellipse(3*w/4,h/2-w/8,w/4,w/4);
+		c.fillAndStroke();
+	};
+	NandShape.prototype.getPorts = function()
+	{
+		var ports=new Array();
+		ports['in1__w'] = {x: 0, y: 0.11, perimeter: true};
+		ports['in2__w'] = {x: 0, y: 0.22, perimeter: true};
+		ports['in3__w'] = {x: 0, y: 0.33, perimeter: true};
+		ports['in4__w'] = {x: 0, y: 0.44, perimeter: true};
+		ports['in5__w'] = {x: 0, y: 0.56, perimeter: true};
+		ports['in6__w'] = {x: 0, y: 0.67, perimeter: true};
+		ports['in7__w'] = {x: 0, y: 0.78, perimeter: true};
+		ports['in8__w'] = {x: 0, y: 0.89, perimeter: true};
+		ports['out__e'] = {x: 1, y: 0.5, perimeter: true};
+		return ports;
+	};
+	mxCellRenderer.registerShape('nand', NandShape);
+	
+	function XorShape()
+	{
+		mxActor.call(this);
+	};
+	mxUtils.extend(XorShape, mxActor);
+	XorShape.prototype.redrawPath = function(c, x, y, w, h)
+	{
+		c.moveTo(0,h);
+		c.quadTo(w/2,h/2,0,0);
+		c.quadTo(w/2,h/2,0,h);
+		c.moveTo( w/8, 0);
+		c.curveTo(w/2,0,3*w/4,0,w,h/2);
+		c.curveTo(3*w/4,h,w/2,h,w/8,h);
+		c.quadTo(5*w/8,h/2,w/8,0);
+		c.end();
+	};
+	XorShape.prototype.getPorts = function()
+	{
+		var ports=new Array();
+		ports['in1__w'] = {x: 0.095, y: 0.11, perimeter: false};
+		ports['in2__w'] = {x: 0.17, y: 0.22, perimeter: false};
+		ports['in3__w'] = {x: 0.22, y: 0.33, perimeter: false};
+		ports['in4__w'] = {x: 0.248, y: 0.44, perimeter: false};
+		ports['in5__w'] = {x: 0.248, y: 0.56, perimeter: false};
+		ports['in6__w'] = {x: 0.22, y: 0.67, perimeter: false};
+		ports['in7__w'] = {x: 0.17, y: 0.78, perimeter: false};
+		ports['in8__w'] = {x: 0.095, y: 0.89, perimeter: false};
+		ports['out__e'] = {x: 1, y: 0.5, perimeter: true};
+		return ports;
+	};
+	mxCellRenderer.registerShape('xor', XorShape);
+	
+	function XnorShape()
+	{
+		mxActor.call(this);
+	};
+	mxUtils.extend(XnorShape, mxActor);
+	XnorShape.prototype.redrawPath = function(c, x, y, w, h)
+	{
+		XorShape.prototype.redrawPath(c,x,y,3*w/4,h);
+		c.fillAndStroke();
+		c.ellipse(3*w/4,h/2-w/8,w/4,w/4);
+		c.fillAndStroke();
+	};
+	XnorShape.prototype.getPorts = function()
+	{
+		var ports=new Array();
+		ports['in1__w'] = {x: 0.078, y: 0.11, perimeter: false};
+		ports['in2__w'] = {x: 0.13, y: 0.22, perimeter: false};
+		ports['in3__w'] = {x: 0.165, y: 0.33, perimeter: false};
+		ports['in4__w'] = {x: 0.185, y: 0.44, perimeter: false};
+		ports['in5__w'] = {x: 0.185, y: 0.56, perimeter: false};
+		ports['in6__w'] = {x: 0.165, y: 0.67, perimeter: false};
+		ports['in7__w'] = {x: 0.13, y: 0.78, perimeter: false};
+		ports['in8__w'] = {x: 0.078, y: 0.89, perimeter: false};
+		ports['out__e'] = {x: 1, y: 0.5, perimeter: true};
+		return ports;
+	};
+	mxCellRenderer.registerShape('xnor', XnorShape);
+
 })();
