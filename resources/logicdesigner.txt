@@ -38,7 +38,6 @@ background=Background
 backgroundColor=Background Color
 backgroundImage=Background Image
 basic=Basic
-basicgates=Basic Gates
 block=Block
 blockquote=Blockquote
 bold=Bold

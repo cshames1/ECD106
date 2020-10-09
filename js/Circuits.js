@@ -163,14 +163,9 @@ schematic.prototype.runDRC = function()
 				Messages.addError("Flip-Flop D input must be connected",item);
 			if( item.numLinksOutOf() == 0 )
 				Messages.addWarning("Flip-Flop has an unconnected output",item);
-<<<<<<< Updated upstream
 			break;
 			*/
-=======
-			break;*/
->>>>>>> Stashed changes
 		}
-		
 	},this);
 	if( numOutputs===0 )
 		Messages.addError("Schematic must have at least one connected output",null);
@@ -266,12 +261,8 @@ schematic.prototype.createVerilog=function(moduleName)
 			{
 				
 				//if imported module is the source
-<<<<<<< Updated upstream
 				if( targetStyle == "outputport" )
 				{
-=======
-				if( targetStyle == "outputport" ) {
->>>>>>> Stashed changes
 					if( Edge["target"]["value"] ) {
 						ports["output"].push(Edge["target"]["value"])
 					}
@@ -305,7 +296,6 @@ schematic.prototype.createVerilog=function(moduleName)
 						ports["input"].push(Edge["source"]["value"])
 					}
 					else {
-<<<<<<< Updated upstream
 						ports["input"].push("I" + input_counter++);					
 						if (isBasicGate(module)) {
 							importedModules[module][importedModules[module].length - 1]["inputs"].push(ports["input"][ports["input"].length - 1]);
@@ -314,16 +304,6 @@ schematic.prototype.createVerilog=function(moduleName)
 							targetPort = Edge["style"].match(/targetPort=(.*?);/)[1].split("_")[0];
 							importedModules[module][importedModules[module].length - 1]["inputs"].push("\n\t." + targetPort + "(" + ports["input"][ports["input"].length - 1] + ")");
 						}
-=======
-						ports["input"].push("I" + input_counter++);	
-					}				
-					if (isBasicGate(module)) {
-						importedModules[module][importedModules[module].length - 1]["inputs"].push(ports["input"][ports["input"].length - 1]);
-					}
-					else {
-						targetPort = Edge["style"].match(/targetPort=(.*?);/)[1].split("_")[0];
-						importedModules[module][importedModules[module].length - 1]["inputs"].push("." + targetPort + "(" + ports["input"][ports["input"].length - 1] + ")");
->>>>>>> Stashed changes
 					}
 				}
 			}
@@ -351,11 +331,7 @@ schematic.prototype.createVerilog=function(moduleName)
 					}
 					else {
 						sourcePort = Edge["style"].match(/sourcePort=(.*?);/)[1].split("_")[0];
-<<<<<<< Updated upstream
 						importedModules[module][importedModules[module].length - 1]["outputs"].push("\n\t." + sourcePort + "(" + wires[wires.length - 1] + ")");
-=======
-						importedModules[module][importedModules[module].length - 1]["outputs"].push("." + sourcePort + "(" + wires[wires.length - 1] + ")");
->>>>>>> Stashed changes
 					}
 				}
 				else if ( Edge["target"].getId() === node_Id){
@@ -367,16 +343,11 @@ schematic.prototype.createVerilog=function(moduleName)
 					}
 					else {
 						targetPort = Edge["style"].match(/targetPort=(.*?);/)[1].split("_")[0];
-<<<<<<< Updated upstream
 						importedModules[module][importedModules[module].length - 1]["inputs"].push("\n\t." + targetPort + "(" + wires[wires.length - 1] + ")");
 					}
-=======
-						importedModules[module][importedModules[module].length - 1]["inputs"].push("." + targetPort + "(" + wires[wires.length - 1] + ")");
-					}
-			
->>>>>>> Stashed changes
 				}
 			}
+
 		});
 	});
 	function isBasicGate(moduleType) {
@@ -400,27 +371,6 @@ schematic.prototype.createVerilog=function(moduleName)
 		return verilogWord;
 	}
 
-
-	function isBasicGate(moduleType) {
-		return     moduleType == "and" 
-				|| moduleType == "nand"
-				|| moduleType == "or"
-				|| moduleType == "nor"
-				|| moduleType == "xor"
-				|| moduleType == "xnor"
-				|| moduleType == "inverter"
-				|| moduleType == "buffer";
-	}
-	function objNameToVerilog(objName) {
-		if (isBasicGate(objName)) {
-			var gateNames={and:"and", nand:"nand",or:"or",nor:"nor",xor:"xor",xnor:"xnor",buffer:"buf", inverter:"not"};
-			verilogWord = gateNames[objName];
-		}
-		else {
-			verilogWord = objName;
-		}
-		return verilogWord;
-	}
 
 	wires = [...new Set(wires)];
 
@@ -478,7 +428,6 @@ schematic.prototype.createVerilog=function(moduleName)
 			//begin adding instantiation to verilogCode
 			verilogCode+="\n\n" + objNameToVerilog(modules[modules.length-1]) + " " + objNameToVerilog(modules[modules.length-1]) + "_" + (iter) + "(";
 			for (var inputport of importedModules[module][iter]["inputs"]){
-<<<<<<< Updated upstream
 				verilogCode+=inputport + ", ";
 			}
 			for (var outputport of importedModules[module][iter]["outputs"]){
@@ -486,16 +435,6 @@ schematic.prototype.createVerilog=function(moduleName)
 			}
 			// remove last comma and trailing space to correct syntax, due to a comma being placed after every output
 			verilogCode = verilogCode.slice(0, verilogCode.length-2);
-=======
-				verilogCode+=inputport + ",";
-			};
-			for (var outputport of importedModules[module][iter]["outputs"]){
-				verilogCode+=outputport + ",";
-			};
-
-			// remove last comma to correct syntax, due to a comma being placed after every output
-			verilogCode = verilogCode.slice(0, verilogCode.length-1);
->>>>>>> Stashed changes
 			verilogCode+=");";
 		});
 	}
