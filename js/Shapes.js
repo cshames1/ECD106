@@ -115,7 +115,11 @@
 		return ports;
 	};
 	mxCellRenderer.registerShape('buffer', BufferShape);
+<<<<<<< Updated upstream
 	
+=======
+
+>>>>>>> Stashed changes
 	function InverterShape()
 	{
 		mxActor.call(this);
@@ -141,7 +145,11 @@
 		return ports;
 	};
 	mxCellRenderer.registerShape('inverter', InverterShape);
+<<<<<<< Updated upstream
 	
+=======
+
+>>>>>>> Stashed changes
 	function OrShape()
 	{
 		mxActor.call(this);
@@ -170,7 +178,11 @@
 		return ports;
 	};
 	mxCellRenderer.registerShape('or', OrShape);
+<<<<<<< Updated upstream
 	
+=======
+
+>>>>>>> Stashed changes
 	function NorShape()
 	{
 		mxActor.call(this);
@@ -178,12 +190,21 @@
 	mxUtils.extend(NorShape, mxActor);
 	NorShape.prototype.redrawPath = function(c, x, y, w, h)
 	{
+<<<<<<< Updated upstream
 		
 		
 		
 		
 		
 		
+=======
+
+
+
+
+
+
+>>>>>>> Stashed changes
 		OrShape.prototype.redrawPath(c,x,y,3*w/4,h);
 		c.fillAndStroke();
 		c.ellipse(3*w/4,h/2-w/8,w/4,w/4);
@@ -204,7 +225,11 @@
 		return ports;
 	} ;
 	mxCellRenderer.registerShape('nor', NorShape);
+<<<<<<< Updated upstream
 	
+=======
+
+>>>>>>> Stashed changes
 	function AndShape()
 	{
 		mxActor.call(this);
@@ -218,8 +243,13 @@
 		c.close();
 		c.end();
 	};
+<<<<<<< Updated upstream
 			
 	
+=======
+
+
+>>>>>>> Stashed changes
 	AndShape.prototype.getPorts = function()
 	{
 		var ports=new Array();
@@ -235,7 +265,11 @@
 		return ports;
 	};
 	mxCellRenderer.registerShape('and', AndShape);
+<<<<<<< Updated upstream
 	
+=======
+
+>>>>>>> Stashed changes
 	function NandShape()
 	{
 		mxActor.call(this);
@@ -263,7 +297,11 @@
 		return ports;
 	};
 	mxCellRenderer.registerShape('nand', NandShape);
+<<<<<<< Updated upstream
 	
+=======
+
+>>>>>>> Stashed changes
 	function XorShape()
 	{
 		mxActor.call(this);
@@ -295,7 +333,11 @@
 		return ports;
 	};
 	mxCellRenderer.registerShape('xor', XorShape);
+<<<<<<< Updated upstream
 	
+=======
+
+>>>>>>> Stashed changes
 	function XnorShape()
 	{
 		mxActor.call(this);

@@ -79,8 +79,12 @@ function Sidebar(editorUi, container)
 Sidebar.prototype.init = function()
 {
 	var dir = STENCIL_PATH;
+<<<<<<< Updated upstream
 
 	this.addBasicGatesPalette(false);
+=======
+	this.addBasicGatesPalette(true);
+>>>>>>> Stashed changes
 	this.addComponentsPalette(true);
 	this.addMiscPalette(true);
 
@@ -789,19 +793,32 @@ Sidebar.prototype.addSearchPalette = function(expand)
 SIDE BAR SECTIONS START
 */
 
+<<<<<<< Updated upstream
 
 Sidebar.prototype.addBasicGatesPalette = function(expand)
 {
 	
+=======
+Sidebar.prototype.addBasicGatesPalette = function(expand)
+{
+
+>>>>>>> Stashed changes
 	this.addPaletteFunctions('basicgates', mxResources.get('basicgates'), true, this.createBasicGatesShapes());
 };
 
 Sidebar.prototype.createBasicGatesShapes = function()
 {
+<<<<<<< Updated upstream
 	
 	var sb = this;
 
 	
+=======
+
+	var sb = this;
+
+
+>>>>>>> Stashed changes
 	var field = new mxCell('List Item', new mxGeometry(0, 0, 60, 26), 'text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;');
 	field.vertex = true;
 	return [
@@ -813,7 +830,11 @@ Sidebar.prototype.createBasicGatesShapes = function()
 	 	this.createVertexTemplateEntry('shape=xnor;editable=0;', 40, 40, '', 'XnOr', null, null, 'logic Xnor'),
 	 	this.createVertexTemplateEntry('shape=buffer;editable=0;', 30, 30, '', 'Buffer', null, null, 'logic buffer'),
 	 	this.createVertexTemplateEntry('shape=inverter;editable=0;', 30, 30, '', 'Inverter', null, null, 'logic Invert'),
+<<<<<<< Updated upstream
 		
+=======
+
+>>>>>>> Stashed changes
 	];
 
 };
