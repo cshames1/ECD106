@@ -186,7 +186,7 @@ schematic.prototype.runDRC = function()
 	return Messages;
 };
 
-//Tomer's code for writing verilog
+//code for writing verilog
 schematic.prototype.createVerilog=function(moduleName)
 {
 	
