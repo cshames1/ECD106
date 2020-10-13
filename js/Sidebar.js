@@ -82,6 +82,7 @@ Sidebar.prototype.init = function()
 
 	this.addBasicGatesPalette(false);
 	this.addComponentsPalette(true);
+	this.addBusComponentPalette(false);
 	this.addMiscPalette(true);
 
 };
@@ -871,6 +872,35 @@ Sidebar.prototype.createMiscShapes = function()
 
 };
 
+
+Sidebar.prototype.addBusComponentPalette = function(expand)
+{
+	
+	this.addPaletteFunctions('buscomponents', mxResources.get('buscomponents'), true, this.createBusComponentShapes());
+};
+
+Sidebar.prototype.createBusComponentShapes = function()
+{
+	
+	var sb = this;
+
+	
+	var field = new mxCell('List Item', new mxGeometry(0, 0, 60, 26), 'text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;');
+	field.vertex = true;
+	return [
+		this.createVertexTemplateEntry('shape=busdecoder2;editable=0;', 40, 20, '', '1-to-2 Bus Decoder', null, null, 'Bus Decoder 2'),
+		this.createVertexTemplateEntry('shape=busencoder2;editable=0;', 40, 20, '', '2-to-1 Bus Encoder', null, null, 'Bus Encoder 2'),
+		this.createVertexTemplateEntry('shape=busdecoder4;editable=0;', 40, 40, '', '4-to-1 Bus Decoder', null, null, 'Bus Decoder 4'),
+		this.createVertexTemplateEntry('shape=busencoder4;editable=0;', 40, 40, '', '1-to-4 Bus Encoder', null, null, 'Bus Encoder 4'),
+		this.createVertexTemplateEntry('shape=busdecoder8;editable=0;', 40, 80, '', '8-to-1 Bus Decoder', null, null, 'Bus Decoder 8'),
+		this.createVertexTemplateEntry('shape=busencoder8;editable=0;', 40, 80, '', '1-to-8 Bus Encoder', null, null, 'Bus Encoder 8'),
+		this.createVertexTemplateEntry('shape=busdecoder16;editable=0;', 40, 160, '', '16-to-1 Bus Decoder', null, null, 'Bus Decoder 16'),
+		this.createVertexTemplateEntry('shape=busencoder16;editable=0;', 40, 160, '', '1-to-16 Bus Encoder', null, null, 'Bus Encoder 16'),
+		this.createVertexTemplateEntry('shape=busdecoder32;editable=0;', 40, 320, '', '32-to-1 Bus Decoder', null, null, 'Bus Decoder 32'),
+		this.createVertexTemplateEntry('shape=busencoder32;editable=0;', 40, 320, '', '1-to-32 Bus Encoder', null, null, 'Bus Encoder 32')
+	];
+
+};
 
 /*
 SIDE BAR SECTIONS END

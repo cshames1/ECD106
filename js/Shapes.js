@@ -178,12 +178,6 @@
 	mxUtils.extend(NorShape, mxActor);
 	NorShape.prototype.redrawPath = function(c, x, y, w, h)
 	{
-		
-		
-		
-		
-		
-		
 		OrShape.prototype.redrawPath(c,x,y,3*w/4,h);
 		c.fillAndStroke();
 		c.ellipse(3*w/4,h/2-w/8,w/4,w/4);
@@ -325,3 +319,94 @@
 	mxCellRenderer.registerShape('xnor', XnorShape);
 
 })();
+
+
+//Decoder Group
+var drawBusDecoder = function(n, c, x, y, w, h)
+{
+	c.setStrokeColor('black');
+	c.setFontSize(8);
+	c.setFontStyle(mxConstants.FONT_BOLD);
+	c.begin();
+	c.rect(0,0,w,h);
+	c.fillAndStroke();
+	c.text(w/2,h/2,0,0,''+1+'-to-'+n+'\nBus','center','middle');
+};
+
+function BusDecoderShape()
+{
+	mxActor.call(this);
+};
+mxUtils.extend(BusDecoderShape, mxActor);
+
+BusDecoderShape.prototype.redrawPath = function(c, x, y, w, h)
+{
+	var n=this.state.style["shape"].slice(10);
+	drawBusDecoder(n,c,x,y,w,h);
+};
+
+BusDecoderShape.prototype.getPorts = function()
+{
+	var number_of_wires=this.state.style["shape"].slice(10);
+	return getBusDecoderPorts(number_of_wires)
+};
+
+var getBusDecoderPorts=function(number_of_wires)
+{
+	var ports=new Array();
+	ports['Bus In'] = {x: 0, y: .5, perimeter: false};
+	for( var i=0; i<number_of_wires; i=i+1 )
+		ports['Wire '+i] = {x: 1, y: (i+.5)/(number_of_wires), perimeter: false};
+	return ports;
+};
+
+
+var drawBusEncoder = function(n, c, x, y, w, h)
+{
+	c.setStrokeColor('black');
+	c.setFontSize(8);
+	c.setFontStyle(mxConstants.FONT_BOLD);
+	c.begin();
+	c.rect(0,0,w,h);
+	c.fillAndStroke();
+	c.text(w/2,h/2,0,0,''+n+'-to-'+1+'\nBus','center','middle');
+};
+
+function BusEncoderShape()
+{
+	mxActor.call(this);
+};
+mxUtils.extend(BusEncoderShape, mxActor);
+
+BusEncoderShape.prototype.redrawPath = function(c, x, y, w, h)
+{
+	var n=this.state.style["shape"].slice(10);
+	drawBusEncoder(n,c,x,y,w,h);
+};
+
+BusEncoderShape.prototype.getPorts = function()
+{
+	var number_of_wires=this.state.style["shape"].slice(10);
+	return getBusEncoderPorts(number_of_wires)
+};
+
+var getBusEncoderPorts=function(number_of_wires)
+{
+	var ports=new Array();
+	for( var i=0; i<number_of_wires; i=i+1 )
+		ports['Wire '+i] = {x: 0, y: (i+.5)/(number_of_wires) , perimeter: false};
+	ports['Bus Out'] = {x: 1, y: .5, perimeter: false};
+	return ports;
+};
+
+
+mxCellRenderer.registerShape('busdecoder2', BusDecoderShape);
+mxCellRenderer.registerShape('busencoder2', BusEncoderShape);
+mxCellRenderer.registerShape('busdecoder4', BusDecoderShape);
+mxCellRenderer.registerShape('busencoder4', BusEncoderShape);
+mxCellRenderer.registerShape('busdecoder8', BusDecoderShape);
+mxCellRenderer.registerShape('busencoder8', BusEncoderShape);
+mxCellRenderer.registerShape('busdecoder16', BusDecoderShape);
+mxCellRenderer.registerShape('busencoder16', BusEncoderShape);
+mxCellRenderer.registerShape('busdecoder32', BusDecoderShape);
+mxCellRenderer.registerShape('busencoder32', BusEncoderShape);

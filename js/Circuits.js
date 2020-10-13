@@ -103,6 +103,7 @@ schematic.prototype.runDRC = function()
 			if( item.numLinksInto() < fan_in )
 				Messages.addError("Gate must have at least "+fan_in+" input(s) connected",item);
 			break;
+
 			/*
 		case "mux16":muxsize++;
 		case "mux8":muxsize++;
@@ -165,6 +166,17 @@ schematic.prototype.runDRC = function()
 				Messages.addWarning("Flip-Flop has an unconnected output",item);
 			break;
 			*/
+
+		case "busdecoder2":
+		case "busencoder2":
+		case "busdecoder4":
+		case "busencoder4":
+		case "busdecoder8":
+		case "busencoder8":
+		case "busdecoder16":
+		case "busencoder16":
+		case "busdecoder32":
+		case "busencoder32":	
 		}
 	},this);
 	if( numOutputs===0 )
