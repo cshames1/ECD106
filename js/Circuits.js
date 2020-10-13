@@ -310,14 +310,13 @@ schematic.prototype.createVerilog=function(moduleName)
 					else {
 						ports["input"].push("I" + input_counter++);	
 					}				
-						if (isBasicGate(module)) {
-							importedModules[module][importedModules[module].length - 1]["inputs"].push(ports["input"][ports["input"].length - 1]);
-						}
-						else {
-							targetPort = Edge["style"].match(/targetPort=(.*?);/)[1].split("_")[0];
-							importedModules[module][importedModules[module].length - 1]["inputs"].push("\n\t." + targetPort + "(" + ports["input"][ports["input"].length - 1] + ")");
-						}
-					
+					if (isBasicGate(module)) {
+						importedModules[module][importedModules[module].length - 1]["inputs"].push(ports["input"][ports["input"].length - 1]);
+					}
+					else {
+						targetPort = Edge["style"].match(/targetPort=(.*?);/)[1].split("_")[0];
+						importedModules[module][importedModules[module].length - 1]["inputs"].push("\n\t." + targetPort + "(" + ports["input"][ports["input"].length - 1] + ")");
+					}
 				}
 			}
 			//adds any edges connected to the imported component that are connected by a wire
