@@ -530,7 +530,6 @@ schematic.prototype.createVerilog=function(name)
 		case "xnor":
 		case "buffer":
 		case "inverter":
-		default:
 			//determine if output net name is port name
 			var linksout=item.linksOutOf();
 			if( linksout.length == 1 && 
@@ -543,6 +542,8 @@ schematic.prototype.createVerilog=function(name)
 			else
 				//wireList+= ' '+gateName(item,"X") + ',';
 				wireSet.add(gateName(item,"X") );
+			break;
+		default:
 			break;
 		}
 	});
