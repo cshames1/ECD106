@@ -184,7 +184,7 @@
 		c.fillAndStroke();
 	}
 	NorShape.prototype.getPorts = function()
-{
+	{
 		var ports=new Array();
 		ports['in1__w'] = {x: 0.078, y: 0.11, perimeter: false};
 		ports['in2__w'] = {x: 0.13, y: 0.22, perimeter: false};
