@@ -185,276 +185,7 @@ schematic.prototype.runDRC = function()
 		Messages.addWarning("Schematic has not connected inputs",null);
 	return Messages;
 };
-/*
-//Tomer's code for writing verilog
-schematic.prototype.createVerilog=function(moduleName)
-{
-	
-	var verilogCode="";
-	var assignList="";
-	//used to reference the current schematic
-	var graph=this.graph;
 
-	//variables used to hold input/output port names
-	var input_counter = 0;
-	var output_counter = 0;
-	var ports = new Object();
-	ports["output"] = new Array();
-	ports["input"] = new Array();
-
-	//variables to hold information and write instatiations for importedModules
-	var sourcePort = "";
-	var targetPort = "";
-	var importedModules = new Object();
-
-	//variable used to hold wires
-	var wire_counter = 0;
-	var wire_connections = 0
-	var wires = new Array();
-
-	//variable used to name module
-	//var moduleName= name; //name will always be schematic1
-
-	//holds Id that MxGraph has assigned current node
-	var node_Id;
-
-	//retrieves all nodes in the current schematic
-	nodes=graph.getChildVertices(graph.getDefaultParent());
-
-	//iterate over all nodes in the schematic
-	if( nodes ) nodes.forEach(function(node){
-
-		var style=graph.getCellStyle(node);
-		var module = style["shape"];	
-		node_Id = node.getId();
-
-		if( module == "inputport" || module == "outputport" )
-			return;
-		//the importedModules object holds the instations for imported modules
-		if (module in importedModules)
-		{
-			var info = {}
-			importedModules[module].push(info);
-			importedModules[module][importedModules[module].length - 1]["inputs"] = [];
-			importedModules[module][importedModules[module].length - 1]["outputs"] = [];
-		}
-		else
-		{
-			importedModules[module] = [];
-			var info = {}
-			importedModules[module].push(info);
-			importedModules[module][importedModules[module].length - 1]["inputs"] = [];
-			importedModules[module][importedModules[module].length - 1]["outputs"] = [];
-		}
-
-
-
-		//find all edges connected to this node in the graph and iterate over each edge
-		Edges = graph.getEdges(node, graph.getDefaultParent());
-		if( Edges ) Edges.forEach(function(Edge){
-
-			//find the source of this edge
-			var sourceStyle = Edge["source"]["style"];
-			var start = sourceStyle.search(/=/);
-			var end = sourceStyle.search(/;|$/);
-			sourceStyle = sourceStyle.substring(start+1, end)
-
-			//find the target of this edge
-			var targetStyle = Edge["target"]["style"];
-			var start = targetStyle.search(/=/);
-			var end = targetStyle.search(/;|$/);
-			targetStyle = targetStyle.substring(start+1, end)
-
-
-			//start building instations for the imported modules
-
-			//adds any edges connected to the imported component that are connected to an output port or input port
-			if ( sourceStyle === "inputport" || targetStyle === "outputport" )
-			{
-				
-				//if imported module is the source
-				if( targetStyle == "outputport" )
-				{
-					if( Edge["target"]["value"] ) {
-						ports["output"].push(Edge["target"]["value"])
-					}
-					else {
-						ports["output"].push("O" + output_counter++);
-					}
-					var links = node.numLinksOutOf();
-					if (links>1 && isBasicGate(module)) {
-						var wire = importedModules[module][importedModules[module].length - 1]["outputs"].pop();
-						if (wires.includes(wire)) {
-							importedModules[module][importedModules[module].length - 1]["outputs"].push(wire);
-						}
-						else {
-							wires.push("wire" + wire_counter);
-							importedModules[module][importedModules[module].length - 1]["outputs"].push(wires[wires.length-1]);
-						}
-						assignList += ("\nassign " + ports["output"][ports["output"].length-1] + " = " + importedModules[module][importedModules[module].length - 1]["outputs"] + ";");
-					}
-					else if (isBasicGate(module)) {
-						importedModules[module][importedModules[module].length - 1]["outputs"].push(ports["output"][ports["output"].length - 1]);
-					}
-					else {
-						sourcePort = Edge["style"].match(/sourcePort=(.*?);/)[1].split("_")[0];
-						importedModules[module][importedModules[module].length - 1]["outputs"].push("\n\t." + sourcePort + "(" + ports["output"][ports["output"].length - 1] + ")");
-					}
-				}
-				// if imported module is the target
-				else if( sourceStyle === "inputport" )
-				{
-					if( Edge["source"]["value"] ) {
-						ports["input"].push(Edge["source"]["value"])
-					}
-					else {
-						ports["input"].push("I" + input_counter++);	
-					}				
-					if (isBasicGate(module)) {
-						importedModules[module][importedModules[module].length - 1]["inputs"].push(ports["input"][ports["input"].length - 1]);
-					}
-					else {
-						targetPort = Edge["style"].match(/targetPort=(.*?);/)[1].split("_")[0];
-						importedModules[module][importedModules[module].length - 1]["inputs"].push("\n\t." + targetPort + "(" + ports["input"][ports["input"].length - 1] + ")");
-					}
-				}
-			}
-			//adds any edges connected to the imported component that are connected by a wire
-			else
-			{
-				//remove issues that causes a wire in running between two modules to have
-				//different values. This forces wires between modules to have the same name
-				if ((wire_connections) % 2 != 0)
-				{
-					wires.push("wire" + (wire_counter - 1));
-				}
-				else
-				{
-					wires.push("wire" + wire_counter);
-					wire_counter++;
-				}
-				wire_connections++;
-				//TODO: Is there an else case for when the wire does not match the current node at all?
-				if (Edge["source"].getId() === node_Id){
-					if (isBasicGate(module)) {
-						if (importedModules[module][importedModules[module].length - 1]["outputs"].includes(wires[wires.length-1])==false) {
-							importedModules[module][importedModules[module].length - 1]["outputs"].push(wires[wires.length-1]);
-						}
-					}
-					else {
-						sourcePort = Edge["style"].match(/sourcePort=(.*?);/)[1].split("_")[0];
-						importedModules[module][importedModules[module].length - 1]["outputs"].push("\n\t." + sourcePort + "(" + wires[wires.length - 1] + ")");
-					}
-				}
-				else if ( Edge["target"].getId() === node_Id){
-					if ( isBasicGate(module)){
-						if (importedModules[module][importedModules[module].length - 1]["inputs"].includes(wires[wires.length-1])==false) {
-							//TODO: the bug is the argument to the push function below
-							importedModules[module][importedModules[module].length - 1]["inputs"].push(wires[wires.length-1]);
-						}
-					}
-					else {
-						targetPort = Edge["style"].match(/targetPort=(.*?);/)[1].split("_")[0];
-						importedModules[module][importedModules[module].length - 1]["inputs"].push("\n\t." + targetPort + "(" + wires[wires.length - 1] + ")");
-					}
-				}
-			}
-
-		});
-	});
-	function isBasicGate(moduleType) {
-		return     moduleType == "and" 
-				|| moduleType == "nand"
-				|| moduleType == "or"
-				|| moduleType == "nor"
-				|| moduleType == "xor"
-				|| moduleType == "xnor"
-				|| moduleType == "inverter"
-				|| moduleType == "buffer";
-	}
-	function objNameToVerilog(objName) {
-		if (isBasicGate(objName)) {
-			var gateNames={and:"and", nand:"nand",or:"or",nor:"nor",xor:"xor",xnor:"xnor",buffer:"buf", inverter:"not"};
-			verilogWord = gateNames[objName];
-		}
-		else {
-			verilogWord = objName;
-		}
-		return verilogWord;
-	}
-
-
-	wires = [...new Set(wires)];
-
-	//creat verilog code for export
-	verilogCode+="module ";
-	verilogCode+=(moduleName!=="")?moduleName:"mymodule";
-	verilogCode+= "(" ;
-	//adds outputs and inputs for the current schematic to verilogCode
-	ports["input"].forEach( function(item){
-		verilogCode+="\n\tinput " + item + ',';
-	});
-	ports["output"].forEach( function(item){
-		verilogCode+="\n\toutput " + item + ',';
-	});
-	verilogCode=verilogCode.replace(/, *$/gi, '');
-	verilogCode+="\n);";
-	//adds all wires needed in the current schematic to verilogCode
-	if( wires.length )
-		verilogCode+="\n\nwire "+(wires).join(", ")+";";
-	//adds all assigns
-	if( assignList != '' )
-		verilogCode+="\n"+assignList;
-	//adds all imported modules in the current scehmatic to verilogCode
-	if( importedModules )
-	{
-
-		// list of all node shapes in order
-		var modules = [];
-
-		// for each node, create an instantiation
-		if( nodes ) nodes.forEach(function(node){
-
-			//push newest node style into array
-			var style = graph.getCellStyle(node);
-			var module = style["shape"];
-			modules.push(module);
-
-			// how many times this node has been instantiated
-			var iter = 0;
-			// list of nodes styles must be greater than 1 to do a comparison
-			if (modules.length > 1)
-			{
-				// THIS IS INNEFICIENT, FIND A BETTER WAY TO DO IT
-				for(var i = 0; i < modules.length-1; i++)
-				{
-					if (modules[i] === modules[modules.length-1])
-						iter++;
-				}
-			}
-
-			//do not create an instantiation for a port
-			if( modules[modules.length-1] == "inputport" || modules[modules.length-1] == "outputport" )
-				return;
-
-			//begin adding instantiation to verilogCode
-			verilogCode+="\n\n" + objNameToVerilog(modules[modules.length-1]) + " " + objNameToVerilog(modules[modules.length-1]) + "_" + (iter) + "(";
-			for (var inputport of importedModules[module][iter]["inputs"]){
-				verilogCode+=inputport + ", ";
-			}
-			for (var outputport of importedModules[module][iter]["outputs"]){
-				verilogCode+=outputport + ", ";
-			}
-			// remove last comma and trailing space to correct syntax, due to a comma being placed after every output
-			verilogCode = verilogCode.slice(0, verilogCode.length-2);
-			verilogCode+=");";
-		});
-	}
-	verilogCode+="\n\nendmodule\n";
-	//returns complete verilog code ready for synthesis
-	return verilogCode;
-};
-*/
 schematic.prototype.createVerilog=function(name)
 {
 	var netList="";
@@ -522,6 +253,11 @@ schematic.prototype.createVerilog=function(name)
 		var style=graph.getCellStyle(item); 
 		switch( style["shape"] )
 		{
+		case "inputport":
+		case "outputport":
+		case "constant0":
+		case "constant1":
+			break;
 		case "and":
 		case "nand":
 		case "or":
@@ -530,6 +266,7 @@ schematic.prototype.createVerilog=function(name)
 		case "xnor":
 		case "buffer":
 		case "inverter":
+		default:
 			//determine if output net name is port name
 			var linksout=item.linksOutOf();
 			if( linksout.length == 1 && 
@@ -543,11 +280,10 @@ schematic.prototype.createVerilog=function(name)
 				//wireList+= ' '+gateName(item,"X") + ',';
 				wireSet.add(gateName(item,"X") );
 			break;
-		default:
-			break;
 		}
+
 	});
-	//dump Verilog
+	//create Verilog
 	if( nodes )
 	nodes.forEach(function(item){
 		var muxsize=0;
@@ -610,20 +346,19 @@ schematic.prototype.createVerilog=function(name)
 			netList=netList+");";
 			break; 
 		default: 
-			netList += "\n\n" + gateNames[style["shape"]] + ' ' + gateName(item,"C") + " ("; 
+			netList += "\n\n" + style["shape"] + ' ' + gateName(item,"C") + " ("; 
+			var links=item.linksInto();
+			if( links.length )
+				links.forEach( function(link){ netList += ("\n\t.in(" + getNameOrAlias(link) + '), ');});
+			else
+				netList += '1\'bx,';
 			var links=item.linksOutOf();
 			if( links.length )
 				netList += getNameOrAlias(links[0]);
 			else
-				netList += gateName(item,"X");
-			netList+=',';
-			var links=item.linksInto();
-			if( links.length )
-				links.forEach( function(link){ netList += getNameOrAlias(link) + ', ';});
-			else
-				netList += '1\'bx,';
+				netList += ("\n\t.out(" + gateName(item,"X") + "),");
 			netList=netList.replace(/, *$/gi, '');
-			netList=netList+");";
+			netList=netList+"\n);";
 			break; 
 		}
 	});
