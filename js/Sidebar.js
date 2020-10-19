@@ -1,6 +1,19 @@
 /**
  * Copyright (c) 2018, Douglas H. Summerville, Binghamton University
  * (see license.txt for attributions)
+ * 
+ * 
+ * 
+ * ===================		TO-DO LIST		=======================================================================
+	1) Figure out how to have palettes started unexpanded.
+	2) Figure out how to properly orient the pop-ups when you hover over a shape. (Rotate tick marks and change left/right/up/down bias of names)
+	3) 
+	4) 
+	5) 
+	6) 
+ * ========================================================================================================
+ * 
+ * 
  */
 function Sidebar(editorUi, container)
 {
@@ -80,10 +93,14 @@ Sidebar.prototype.init = function()
 {
 	var dir = STENCIL_PATH;
 
+	//this.addSearchPalette(true);			DOES NOT WORK!!!
 	this.addBasicGatesPalette(false);
 	this.addComponentsPalette(true);
+	this.addMuxComponentPalette(false);
+	this.addDecoderComponentPalette(false);
+	this.addLatchComponentPalette(false);
 	this.addBusComponentPalette(false);
-	this.addMiscPalette(true);
+	this.addMiscPalette(false);
 
 };
 
@@ -786,14 +803,11 @@ Sidebar.prototype.addSearchPalette = function(expand)
 
 ;
 
-/*
-SIDE BAR SECTIONS START
-*/
-
-
+//====================================================================================
+//	SIDE BAR SECTIONS
+//====================================================================================
 Sidebar.prototype.addBasicGatesPalette = function(expand)
 {
-	
 	this.addPaletteFunctions('basicgates', mxResources.get('basicgates'), true, this.createBasicGatesShapes());
 };
 
@@ -818,7 +832,6 @@ Sidebar.prototype.createBasicGatesShapes = function()
 	];
 
 };
-
 
 
 Sidebar.prototype.addComponentsPalette = function(expand)
@@ -850,41 +863,74 @@ Sidebar.prototype.createComponentsShapes = function()
 
 };
 
-Sidebar.prototype.addMiscPalette = function(expand)
-{
 
-	this.addPaletteFunctions('misc', mxResources.get('misc'), true, this.createMiscShapes());
+Sidebar.prototype.addMuxComponentPalette = function(expand)
+{
+	
+	this.addPaletteFunctions('muxcomponents', mxResources.get('muxcomponents'), true, this.createMuxComponentShapes());
 };
 
-Sidebar.prototype.createMiscShapes = function()
+Sidebar.prototype.createMuxComponentShapes = function()
 {
-
 	var sb = this;
 	var field = new mxCell('List Item', new mxGeometry(0, 0, 60, 26), 'text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;');
 	field.vertex = true;
 	return [
-	 	this.createVertexTemplateEntry('shape=inputport;', 60, 20, '', 'Input', null, null, 'Input Port'),
-	 	this.createVertexTemplateEntry('shape=outputport', 60, 20, '', 'Output', null, null, 'Output Port'),
-		this.createVertexTemplateEntry('shape=constant0;editable=0;', 30, 30, '0', 'Constant 0', null, null, 'Binary Constant 0'),
-		this.createVertexTemplateEntry('shape=constant1;editable=0;', 30, 30, '1', 'Constant 1', null, null, 'Binary Constant 1'),
-
+		this.createVertexTemplateEntry('shape=mux2;editable=0;', 100, 50, '', '2-to-1 Mux', null, null, '2 Input Mux'),
+		this.createVertexTemplateEntry('shape=mux4;editable=0;', 100, 80, '', '4-to-1 Mux', null, null, '4 Input Mux'),
+		this.createVertexTemplateEntry('shape=mux8;editable=0;', 100, 110, '', '8-to-1 Mux', null, null, '8 Input Mux'),
+		this.createVertexTemplateEntry('shape=mux16;editable=0;', 100, 160, '', '16-to-1 Mux', null, null, '16 Input Mux')
 	];
+};
 
+
+Sidebar.prototype.addDecoderComponentPalette = function(expand)
+{
+	this.addPaletteFunctions('decodercomponents', mxResources.get('decodercomponents'), true, this.createDecoderComponentShapes());
+};
+
+Sidebar.prototype.createDecoderComponentShapes = function()
+{
+	var sb = this;
+	var field = new mxCell('List Item', new mxGeometry(0, 0, 60, 26), 'text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;');
+	field.vertex = true;
+	return [
+		this.createVertexTemplateEntry('shape=decoder2;editable=0;', 100, 60, '', '2-to-4 Decoder', null, null, 'Decoder 2'),
+		this.createVertexTemplateEntry('shape=decoder3;editable=0;', 100, 100, '', '3-to-8 Decoder', null, null, 'Decoder 3'),
+		this.createVertexTemplateEntry('shape=decoder4;editable=0;', 100, 160, '', '4-to-16 Decoder', null, null, 'Decoder 4')
+	];
+};
+
+
+Sidebar.prototype.addLatchComponentPalette = function(expand)
+{
+	this.addPaletteFunctions('latchcomponents', mxResources.get('latchcomponents'), true, this.createLatchComponentShapes());
+};
+
+Sidebar.prototype.createLatchComponentShapes = function()
+{
+	var sb = this;
+	var field = new mxCell('List Item', new mxGeometry(0, 0, 60, 26), 'text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;');
+	field.vertex = true;
+	return [
+		this.createVertexTemplateEntry('shape=srlatch;editable=0;', 80, 80, '', 'SR Latch', null, null, 'SR Latch'),
+		this.createVertexTemplateEntry('shape=srlatch_en;editable=0;', 80, 80, '', 'SR Latch with EN', null, null, 'SR Latch with EN'),
+		this.createVertexTemplateEntry('shape=dlatch;editable=0;', 80, 80, '', 'D Latch', null, null, 'D Latch'),
+		this.createVertexTemplateEntry('shape=dlatch_en;editable=0;', 80, 80, '', 'D Latch with EN', null, null, 'D Latch with EN'),
+		this.createVertexTemplateEntry('shape=dff;editable=0;', 80, 80, '', 'Flip Flop', null, null, 'Flip Flop'),
+		this.createVertexTemplateEntry('shape=dff_en;editable=0;', 80, 80, '', 'Flip Flop with EN', null, null, 'Flip Flop with EN')
+	];
 };
 
 
 Sidebar.prototype.addBusComponentPalette = function(expand)
 {
-	
 	this.addPaletteFunctions('buscomponents', mxResources.get('buscomponents'), true, this.createBusComponentShapes());
 };
 
 Sidebar.prototype.createBusComponentShapes = function()
 {
-	
 	var sb = this;
-
-	
 	var field = new mxCell('List Item', new mxGeometry(0, 0, 60, 26), 'text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;');
 	field.vertex = true;
 	return [
@@ -899,12 +945,32 @@ Sidebar.prototype.createBusComponentShapes = function()
 		this.createVertexTemplateEntry('shape=busdecoder32;editable=0;', 40, 320, '', '32-to-1 Bus Decoder', null, null, 'Bus Decoder 32'),
 		this.createVertexTemplateEntry('shape=busencoder32;editable=0;', 40, 320, '', '1-to-32 Bus Encoder', null, null, 'Bus Encoder 32')
 	];
-
 };
 
-/*
-SIDE BAR SECTIONS END
-*/
+
+Sidebar.prototype.addMiscPalette = function(expand)
+{
+
+	this.addPaletteFunctions('misc', mxResources.get('misc'), true, this.createMiscShapes());
+};
+
+Sidebar.prototype.createMiscShapes = function()
+{
+	var sb = this;
+	var field = new mxCell('List Item', new mxGeometry(0, 0, 60, 26), 'text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;');
+	field.vertex = true;
+	return [
+	 	this.createVertexTemplateEntry('shape=inputport;', 60, 20, '', 'Input', null, null, 'Input Port'),
+	 	this.createVertexTemplateEntry('shape=outputport', 60, 20, '', 'Output', null, null, 'Output Port'),
+		this.createVertexTemplateEntry('shape=constant0;editable=0;', 30, 30, '0', 'Constant 0', null, null, 'Binary Constant 0'),
+		this.createVertexTemplateEntry('shape=constant1;editable=0;', 30, 30, '1', 'Constant 1', null, null, 'Binary Constant 1'),
+
+	];
+
+};
+//====================================================================================
+//	END SIDE BAR SECTIONS
+//====================================================================================
 
 Sidebar.prototype.createTitle = function(label)
 {
