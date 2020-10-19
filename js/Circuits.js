@@ -200,7 +200,7 @@ schematic.prototype.createVerilog=function(name)
 	var moduleName= name;
 	var verilogCode="";
 	var graph=this.graph;
-	var gateNames={and:"and", nand:"nand",or:"or",nor:"nor",xor:"xor",xnor:"xnor",buffer:"buf", inverter:"not",mux2:"mux #(2,1)", mux4:"mux #(4,1)", mux8:"mux #(8,1)", mux16:"mux #(16,1)",decoder2:"decoder #(2,1)",decoder3:"decoder #(3,1)",decoder4:"decoder #(4,1)",dlatch:"d_latch",dlatch_en:"d_latch_en",dff:"dff",dff_en:"dff_en",srlatch:"sr_latch",srlatch_en:"sr_latch_en"};
+	var gateNames={and:"and", nand:"nand",or:"or",nor:"nor",xor:"xor",xnor:"xnor",buffer:"buf", inverter:"not",decoder2:"decoder #(2,1)",decoder3:"decoder #(3,1)",decoder4:"decoder #(4,1)"};
 	function gateName( node, prefix){ return prefix+node.id;}
 	function portName( node, prefix ){ return node.value ? node.value : gateName(node,prefix);}
 	function netName( link ){
@@ -266,6 +266,11 @@ schematic.prototype.createVerilog=function(name)
 		case "xnor":
 		case "buffer":
 		case "inverter":
+		case "decoder2":
+		case "decoder4":
+		case "decoder8":
+		case "decoder16":	
+		case "decoder32":
 		default:
 			//determine if output net name is port name
 			var linksout=item.linksOutOf();
@@ -345,13 +350,18 @@ schematic.prototype.createVerilog=function(name)
 			netList=netList.replace(/, *$/gi, '');
 			netList=netList+");";
 			break; 
+		case "decoder2":
+		case "decoder4":
+		case "decoder8":
+		case "decoder16":	
+	    case "decoder32":
 		default: 
 			netList += "\n\n" + style["shape"] + ' ' + gateName(item,"C") + " ("; 
 			var links=item.linksInto();
 			if( links.length )
 				links.forEach( function(link){ netList += ("\n\t.in(" + getNameOrAlias(link) + '), ');});
 			else
-				netList += '1\'bx,';
+				netList += "\n\t.in(" + '1\'bx),';
 			var links=item.linksOutOf();
 			if( links.length )
 				netList += getNameOrAlias(links[0]);
