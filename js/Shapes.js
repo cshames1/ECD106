@@ -287,15 +287,15 @@
 		var ports=new Array();
 		for( var i=0; i<n; i=i+1)
 		{
-			ports['Input '+i] = {x: 0, y: [(i+1)/(1+n)], perimeter: false};
+			ports['in'+'_i'+ i + '_w'] = {x: 0, y: [(i+1)/(1+n)], perimeter: false};
 			if( i < s )
 			{
 				var x= 1- (1+i)/ ((s<2) ? (1+s) : (2+s));
 				var y=1-(.25*x);
-				ports['Select '+i] = {x: [x], y:[y] , perimeter: false};
+				ports['in_s'+i+'_s'] = {x: [x], y:[y] , perimeter: false};
 			}
 		}
-		ports['Output'] = {x: 1, y: 0.5, perimeter: true};
+		ports['out_o_e'] = {x: 1, y: 0.5, perimeter: true};
 		return ports;
 	};
 	function MuxShape()
@@ -339,10 +339,10 @@
 	{
 		var ports=new Array();
 		for( var i=0; i<s; i=i+1)
-			ports['Output '+(i+1)] = {x: 1, y: [(i+1)/(1+s)], perimeter: false};
+			ports['out'+(i+1)+'_d'+i+'_e'] = {x: 1, y: [(i+1)/(1+s)], perimeter: false};
 		for( var i=0; i<n; i=i+1 )
-			ports['Input '+i] = {x: 0, y: [(i+1)/(1+s)], perimeter: false};
-		ports['Enable']={x: 0, y: [s/(1+s)], perimeter:false};
+			ports['in'+'_a'+i+'_w'] = {x: 0, y: [(i+1)/(1+s)], perimeter: false};
+		ports['in_en_w']={x: 0, y: [s/(1+s)], perimeter:false};
 		return ports;
 	};
 
@@ -394,11 +394,11 @@
 		var style=this.state.style["shape"];
 		var is_enable=style.endsWith("_en");
 		var clock_name=style.startsWith("dff") ? ">" : "G";
-		ports['Data In']={x: 0, y: 0.25, perimeter:false};
-		ports['CLK']={x: 0, y: 0.75, perimeter:false};
-		ports['Data Out']={x: 1, y: 0.25, perimeter:false};
+		ports['in_D_w']={x: 0, y: 0.25, perimeter:false};
+		ports['in_'+clock_name+'_w']={x: 0, y: 0.75, perimeter:false};
+		ports['out_Q_e']={x: 1, y: 0.25, perimeter:false};
 		if( is_enable )
-			ports['Enable']={x: 0, y: 0.5, perimeter:false};
+			ports['in_en_w']={x: 0, y: 0.5, perimeter:false};
 		return ports;
 	};
 	mxCellRenderer.registerShape('dlatch', DLatchShape);
@@ -427,11 +427,11 @@
 		var ports=new Array();
 		var style=this.state.style["shape"];
 		var is_enable=style.endsWith("_en");
-		ports['S In']={x: 0, y: 0.25, perimeter:false};
-		ports['R In']={x: 0, y: 0.75, perimeter:false};
-		ports['Data Out']={x: 1, y: 0.25, perimeter:false};
+		ports['in_S_w']={x: 0, y: 0.25, perimeter:false};
+		ports['in_R_w']={x: 0, y: 0.75, perimeter:false};
+		ports['out_Q_e']={x: 1, y: 0.25, perimeter:false};
 		if( is_enable )
-			ports['Enable']={x: 0, y: 0.5, perimeter:false};
+			ports['in_en_w']={x: 0, y: 0.5, perimeter:false};
 		return ports;
 	};
 	mxCellRenderer.registerShape('srlatch', SRLatchShape);
@@ -475,9 +475,9 @@
 	var getBusDecoderPorts=function(number_of_wires)
 	{
 		var ports=new Array();
-		ports['Bus In'] = {x: 0, y: .5, perimeter: false};
+		ports['in_w'] = {x: 0, y: .5, perimeter: false};
 		for( var i=0; i<number_of_wires; i=i+1 )
-			ports['Wire '+i] = {x: 1, y: (i+.5)/(number_of_wires), perimeter: false};
+			ports['out_e'+i] = {x: 1, y: (i+.5)/(number_of_wires), perimeter: false};
 		return ports;
 	};
 
@@ -515,8 +515,8 @@
 	{
 		var ports=new Array();
 		for( var i=0; i<number_of_wires; i=i+1 )
-			ports['Wire '+i] = {x: 0, y: (i+.5)/(number_of_wires) , perimeter: false};
-		ports['Bus Out'] = {x: 1, y: .5, perimeter: false};
+			ports[('in_w'+i)] = {x: 0, y: (i+.5)/(number_of_wires) , perimeter: false};
+		ports['out_w'] = {x: 1, y: .5, perimeter: false};
 		return ports;
 	};
 

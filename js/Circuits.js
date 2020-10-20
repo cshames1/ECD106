@@ -200,7 +200,7 @@ schematic.prototype.createVerilog=function(name)
 	var moduleName= name;
 	var verilogCode="";
 	var graph=this.graph;
-	var gateNames={and:"and", nand:"nand",or:"or",nor:"nor",xor:"xor",xnor:"xnor",buffer:"buf", inverter:"not",decoder2:"decoder #(2,1)",decoder3:"decoder #(3,1)",decoder4:"decoder #(4,1)"};
+	var gateNames={and:"and", nand:"nand",or:"or",nor:"nor",xor:"xor",xnor:"xnor",buffer:"buf", inverter:"not",mux2:"mux #(2,1)", mux4:"mux #(4,1)", mux8:"mux #(8,1)", mux16:"mux #(16,1)",decoder2:"decoder #(2,1)",decoder3:"decoder #(3,1)",decoder4:"decoder #(4,1)",dlatch:"d_latch",dlatch_en:"d_latch_en",dff:"dff",dff_en:"dff_en",srlatch:"sr_latch",srlatch_en:"sr_latch_en"};
 	function gateName( node, prefix){ return prefix+node.id;}
 	function portName( node, prefix ){ return node.value ? node.value : gateName(node,prefix);}
 	function netName( link ){
@@ -266,11 +266,48 @@ schematic.prototype.createVerilog=function(name)
 		case "xnor":
 		case "buffer":
 		case "inverter":
-		case "decoder2":
-		case "decoder4":
-		case "decoder8":
-		case "decoder16":	
-		case "decoder32":
+		case "mux2":
+		case "mux4":
+		case "mux8":
+		case "mux16":
+		case "dlatch":
+		case "dlatch_en":
+		case "srlatch":
+		case "srlatch_en":
+		case "dff":
+		case "dff_en":
+			//determine if output net name is port name
+			var linksout=item.linksOutOf();
+			if( linksout.length == 1 && 
+				graph.getCellStyle(linksout[0].target)["shape"] == "outputport" ) 
+				netAliases[netName(linksout[0])] = portName(linksout[0].target,"O");
+			//else add net name to wire list
+			else if( linksout.length )
+				//wireList+=' '+netName(linksout[0],"X") + ',';
+				wireSet.add(netName(linksout[0],"X"));
+			else
+				//wireList+= ' '+gateName(item,"X") + ',';
+				wireSet.add(gateName(item,"X") );
+			break;
+		case "decoder4":decodersize++;
+		case "decoder3":decodersize++;
+		case "decoder2":decodersize++;
+			for( var i=0; i<(1<<decodersize); i=i+1 )
+			{
+				var linksout=item.getLinks( 'out'+(i+1)+'_d',true);
+				if( linksout.length == 1 && 
+					graph.getCellStyle(linksout[0].target)["shape"] == "outputport" )
+				{
+					netAliases[netName(linksout[0])] = portName(linksout[0].target,"O");
+				}
+				else if( linksout.length )
+					//wireList+=' '+netName(linksout[0],"X") + ',';
+					wireSet.add(netName(linksout[0],"X"));
+				else
+					//wireList+= ' '+gateName(item,"X")+'_'+i + ',';
+					wireSet.add(gateName(item,"X")+'_'+i);
+			}
+			break;
 		default:
 			//determine if output net name is port name
 			var linksout=item.linksOutOf();
@@ -350,16 +387,245 @@ schematic.prototype.createVerilog=function(name)
 			netList=netList.replace(/, *$/gi, '');
 			netList=netList+");";
 			break; 
-		case "decoder2":
-		case "decoder4":
-		case "decoder8":
-		case "decoder16":	
-	    case "decoder32":
-		default: 
+		case "mux16": muxsize++;
+		case "mux8": muxsize++;
+		case "mux4": muxsize++;
+		case "mux2": muxsize++;
+			netList += "\n\n" + gateNames[style["shape"]] + ' ' + gateName(item,"U") + " ("; 
+			netList += '\n\t.data_out(';
+			var links=item.linksOutOf();
+			if( links.length )
+				netList += getNameOrAlias(links[0]);
+			else
+				netList += gateName(item,"X");
+			netList += '),\n\t.select_in( {';
+			for( var i=muxsize-1; i>=0; i=i-1 )
+			{
+				var lnk=item.getLink( 'in_s'+i,false);
+				if( lnk ) netList+=getNameOrAlias(lnk);
+				else netList+='1\'bx';
+				netList+=',';
+			}
+			netList=netList.replace(/, *$/gi, '');
+
+			netList=netList+"} ),\n\t.data_in( {";
+			for( var i=(1<<muxsize)-1; i>=0; i=i-1 )
+			{
+				var lnk=item.getLink( 'in_i'+i,false);
+				if( lnk ) netList+=getNameOrAlias(lnk);
+				else netList+='1\'bx';
+				netList+=',';
+			}
+			netList=netList.replace(/, *$/gi, '');
+			netList=netList+"} )\n);";
+			break; 
+		case "dlatch":
+			netList += "\n\n" + gateNames[style["shape"]] + ' ' + gateName(item,"U") + " ("; 
+			netList += '\n\t.data_out(';
+			var links=item.linksOutOf();
+			if( links.length )
+				netList += getNameOrAlias(links[0]);
+			else
+				netList += gateName(item,"X");
+			netList += '),\n\t.in_D( ';
+			{
+				var lnk=item.getLink( 'in_D',false);
+				if( lnk ) netList+=getNameOrAlias(lnk);
+				else netList+='1\'bx';
+			}
+			netList=netList+" ),\n\t.in_G( ";
+			{
+				var lnk=item.getLink( 'in_G',false);
+				if( lnk ) netList+=getNameOrAlias(lnk);
+				else netList+='1\'bx';
+			}
+			netList=netList+" )\n);";
+			break;
+		case "srlatch":
+			netList += "\n\n" + gateNames[style["shape"]] + ' ' + gateName(item,"U") + " ("; 
+			netList += '\n\t.data_out(';
+			var links=item.linksOutOf();
+			if( links.length )
+				netList += getNameOrAlias(links[0]);
+			else
+				netList += gateName(item,"X");
+			netList += '),\n\t.in_S( ';
+			{
+				var lnk=item.getLink( 'in_S',false);
+				if( lnk ) netList+=getNameOrAlias(lnk);
+				else netList+='1\'bx';
+			}
+			netList=netList+" ),\n\t.in_R( ";
+			{
+				var lnk=item.getLink( 'in_R',false);
+				if( lnk ) netList+=getNameOrAlias(lnk);
+				else netList+='1\'bx';
+			}
+			netList=netList+" )\n);";
+			break;
+		case "srlatch_en":
+			netList += "\n\n" + gateNames[style["shape"]] + ' ' + gateName(item,"U") + " ("; 
+			netList += '\n\t.data_out(';
+			var links=item.linksOutOf();
+			if( links.length )
+				netList += getNameOrAlias(links[0]);
+			else
+				netList += gateName(item,"X");
+			netList += '),\n\t.in_S( ';
+			{
+				var lnk=item.getLink( 'in_S',false);
+				if( lnk ) netList+=getNameOrAlias(lnk);
+				else netList+='1\'bx';
+			}
+			netList=netList+" ),\n\t.in_R( ";
+			{
+				var lnk=item.getLink( 'in_R',false);
+				if( lnk ) netList+=getNameOrAlias(lnk);
+				else netList+='1\'bx';
+			}
+			netList=netList+" ),\n\t.in_EN( ";
+			{
+				var lnk=item.getLink( 'in_en',false);
+				if( lnk ) netList+=getNameOrAlias(lnk);
+				else netList+='1\'bx';
+			}
+			netList=netList+" )\n);";
+			break;
+		case "dlatch_en":
+			netList += "\n\n" + gateNames[style["shape"]] + ' ' + gateName(item,"U") + " ("; 
+			netList += '\n\t.data_out(';
+			var links=item.linksOutOf();
+			if( links.length )
+				netList += getNameOrAlias(links[0]);
+			else
+				netList += gateName(item,"X");
+			netList += '),\n\t.in_D( ';
+			{
+				var lnk=item.getLink( 'in_D',false);
+				if( lnk ) netList+=getNameOrAlias(lnk);
+				else netList+='1\'bx';
+			}
+			netList=netList+" ),\n\t.in_G( ";
+			{
+				var lnk=item.getLink( 'in_G',false);
+				if( lnk ) netList+=getNameOrAlias(lnk);
+				else netList+='1\'bx';
+			}
+			netList=netList+" ),\n\t.in_EN( ";
+			{
+				var lnk=item.getLink( 'in_en',false);
+				if( lnk ) netList+=getNameOrAlias(lnk);
+				else netList+='1\'bx';
+			}
+			netList=netList+" )\n);";
+			break;
+		case "dff":
+			netList += "\n\n" + gateNames[style["shape"]] + ' ' + gateName(item,"U") + " ("; 
+			netList += '\n\t.data_out(';
+			var links=item.linksOutOf();
+			if( links.length )
+				netList += getNameOrAlias(links[0]);
+			else
+				netList += gateName(item,"X");
+			netList += '),\n\t.in_D( ';
+			{
+				var lnk=item.getLink( 'in_D',false);
+				if( lnk ) netList+=getNameOrAlias(lnk);
+				else netList+='1\'bx';
+			}
+			netList=netList+" ),\n\t.in_CLK( ";
+			{
+				var lnk=item.getLink( 'in_>',false);
+				if( lnk ) netList+=getNameOrAlias(lnk);
+				else netList+='1\'bx';
+			}
+			netList=netList+" )\n);";
+			break;
+		case "dff_en":
+			netList += "\n\n" + gateNames[style["shape"]] + ' ' + gateName(item,"U") + " ("; 
+			netList += '\n\t.data_out(';
+			var links=item.linksOutOf();
+			if( links.length )
+				netList += getNameOrAlias(links[0]);
+			else
+				netList += gateName(item,"X");
+			netList += '),\n\t.in_D( ';
+			{
+				var lnk=item.getLink( 'in_D',false);
+				if( lnk ) netList+=getNameOrAlias(lnk);
+				else netList+='1\'bx';
+			}
+			netList=netList+" ),\n\t.in_CLK( ";
+			{
+				var lnk=item.getLink( 'in_>',false);
+				if( lnk ) netList+=getNameOrAlias(lnk);
+				else netList+='1\'bx';
+			}
+			netList=netList+" ),\n\t.in_EN( ";
+			{
+				var lnk=item.getLink( 'in_en',false);
+				if( lnk ) netList+=getNameOrAlias(lnk);
+				else netList+='1\'bx';
+			}
+			netList=netList+" )\n);";
+			break;
+		case "decoder4": decodersize++;
+		case "decoder3": decodersize++;
+		case "decoder2": decodersize++;
+			netList += "\n\n" + gateNames[style["shape"]] + ' ' + gateName(item,"U") + " ("; 
+			netList += '\n\t.data_out( {';
+			for( var i=(1<<decodersize)-1; i>=0; i=i-1 )
+			{
+				var lnk=item.getLink( 'out'+(i+1)+'_d'+i,true);
+				if( lnk ) netList+=getNameOrAlias(lnk);
+				else netList+='1\'bx';
+				netList+=',';
+			}
+			netList=netList.replace(/, *$/gi, '');
+			netList = netList+ '} ),\n\t.address_in( {';
+			for( var i=decodersize-1; i>=0; i=i-1 )
+			{
+				var lnk=item.getLink( 'in_a'+i,false);
+				if( lnk ) netList+=getNameOrAlias(lnk);
+				else netList+='1\'bx';
+				netList+=',';
+			}
+			netList=netList.replace(/, *$/gi, '');
+			netList=netList+"} ),\n\t.en_in( ";
+			var lnk=item.getLink( 'in_en',false);
+				if( lnk ) netList+=getNameOrAlias(lnk);
+				else netList+='1\'bx';
+			netList+=")\n);";
+			break; 
+		case "busencoder2":
+		case "busencoder4":
+		case "busencoder8":
+		case "busencoder16":
+		case "busencoder32":
+		case "busdecoder2":
+		case "busdecoder4":
+		case "busdecoder8":
+		case "busdecoder16":
+		case "busdecoder32":
 			netList += "\n\n" + style["shape"] + ' ' + gateName(item,"C") + " ("; 
 			var links=item.linksInto();
 			if( links.length )
 				links.forEach( function(link){ netList += ("\n\t.in(" + getNameOrAlias(link) + '), ');});
+			else
+				netList += "\n\t.in(" + '1\'bx),';
+			var links=item.linksOutOf();
+			if( links.length )
+				netList += ("\n\t.out(" + getNameOrAlias(links[0]) + ")");
+			else
+				netList += ("\n\t.out(" + gateName(item,"X") + "),");
+			netList=netList.replace(/, *$/gi, '');
+			netList=netList+"\n);";
+			break;
+		default: 
+			netList += "\n\n" + style["shape"] + ' ' + gateName(item,"C") + " ("; 
+			var links=item.linksInto();
+			if( links.length )
+				links.forEach( function(link){ netList += ("\n\t.in(" + getNameOrAlias(link) + ') ');});
 			else
 				netList += "\n\t.in(" + '1\'bx),';
 			var links=item.linksOutOf();
