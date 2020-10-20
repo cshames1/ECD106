@@ -615,7 +615,7 @@ schematic.prototype.createVerilog=function(name)
 				netList += "\n\t.in(" + '1\'bx),';
 			var links=item.linksOutOf();
 			if( links.length )
-				netList += ("\n\t.out(" + getNameOrAlias(links[0]) + ")");
+				links.forEach( function(link){ netList += ("\n\t.out(" + getNameOrAlias(link) + '), ');});
 			else
 				netList += ("\n\t.out(" + gateName(item,"X") + "),");
 			netList=netList.replace(/, *$/gi, '');
@@ -630,7 +630,7 @@ schematic.prototype.createVerilog=function(name)
 				netList += "\n\t.in(" + '1\'bx),';
 			var links=item.linksOutOf();
 			if( links.length )
-				netList += getNameOrAlias(links[0]);
+			links.forEach( function(link){ netList += ("\n\t.out(" + getNameOrAlias(link) + '), ');});
 			else
 				netList += ("\n\t.out(" + gateName(item,"X") + "),");
 			netList=netList.replace(/, *$/gi, '');
