@@ -287,12 +287,12 @@
 		var ports=new Array();
 		for( var i=0; i<n; i=i+1)
 		{
-			ports['in'+'_i'+ i + '_w'] = {x: 0, y: [(i+1)/(1+n)], perimeter: false};
+			ports['i'+ i + '_w'] = {x: 0, y: [(i+1)/(1+n)], perimeter: false};
 			if( i < s )
 			{
 				var x= 1- (1+i)/ ((s<2) ? (1+s) : (2+s));
 				var y=1-(.25*x);
-				ports['in_s'+i+'_s'] = {x: [x], y:[y] , perimeter: false};
+				ports['sel'+i+'_s'] = {x: [x], y:[y] , perimeter: false};
 			}
 		}
 		ports['out_o_e'] = {x: 1, y: 0.5, perimeter: true};

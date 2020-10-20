@@ -401,7 +401,7 @@ schematic.prototype.createVerilog=function(name)
 			netList += '),\n\t.select_in( {';
 			for( var i=muxsize-1; i>=0; i=i-1 )
 			{
-				var lnk=item.getLink( 'in_s'+i,false);
+				var lnk=item.getLink( 'sel'+i,false);
 				if( lnk ) netList+=getNameOrAlias(lnk);
 				else netList+='1\'bx';
 				netList+=',';
@@ -411,7 +411,7 @@ schematic.prototype.createVerilog=function(name)
 			netList=netList+"} ),\n\t.data_in( {";
 			for( var i=(1<<muxsize)-1; i>=0; i=i-1 )
 			{
-				var lnk=item.getLink( 'in_i'+i,false);
+				var lnk=item.getLink( 'i'+i,false);
 				if( lnk ) netList+=getNameOrAlias(lnk);
 				else netList+='1\'bx';
 				netList+=',';
