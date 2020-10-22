@@ -477,7 +477,7 @@
 		var ports=new Array();
 		ports['in_w'] = {x: 0, y: .5, perimeter: false};
 		for( var i=0; i<number_of_wires; i=i+1 )
-			ports['out' + i + '_e'] = {x: 1, y: (i+.5)/(number_of_wires), perimeter: false};
+			ports['out'+ i + '_d'+i+'_e'] = {x: 1, y: (i+.5)/(number_of_wires), perimeter: false};
 		return ports;
 	};
 
