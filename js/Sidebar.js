@@ -1,6 +1,19 @@
 /**
  * Copyright (c) 2018, Douglas H. Summerville, Binghamton University
  * (see license.txt for attributions)
+ * 
+ * 
+ * 
+ * ===================		TO-DO LIST		=======================================================================
+	1) Figure out why port labels are wrong
+	2) Figure out how to properly orient the pop-ups when you hover over a shape. (Rotate tick marks and change left/right/up/down bias of names)
+	3) 
+	4) 
+	5) 
+	6) 
+ * ========================================================================================================
+ * 
+ * 
  */
 function Sidebar(editorUi, container)
 {
@@ -80,8 +93,15 @@ Sidebar.prototype.init = function()
 {
 	var dir = STENCIL_PATH;
 
+	//this.addSearchPalette(true);			DOES NOT WORK!!!
+	this.addBasicGatesPalette(false);
 	this.addComponentsPalette(true);
-	this.addMiscPalette(true);
+	this.addMuxComponentPalette(false);
+	this.addDecoderComponentPalette(false);
+	this.addLatchComponentPalette(false);
+	this.addBusComponentPalette(false);
+	this.addMiscPalette(false);
+
 };
 
 Sidebar.prototype.collapsedImage = (!mxClient.IS_SVG) ? IMAGE_PATH + '/collapsed.gif' : 'data:image/gif;base64,R0lGODlhDQANAIABAJmZmf///yH/C1hNUCBEYXRhWE1QPD94cGFja2V0IGJlZ2luPSLvu78iIGlkPSJXNU0wTXBDZWhpSHpyZVN6TlRjemtjOWQiPz4gPHg6eG1wbWV0YSB4bWxuczp4PSJhZG9iZTpuczptZXRhLyIgeDp4bXB0az0iQWRvYmUgWE1QIENvcmUgNS4wLWMwNjAgNjEuMTM0Nzc3LCAyMDEwLzAyLzEyLTE3OjMyOjAwICAgICAgICAiPiA8cmRmOlJERiB4bWxuczpyZGY9Imh0dHA6Ly93d3cudzMub3JnLzE5OTkvMDIvMjItcmRmLXN5bnRheC1ucyMiPiA8cmRmOkRlc2NyaXB0aW9uIHJkZjphYm91dD0iIiB4bWxuczp4bXA9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC8iIHhtbG5zOnhtcE1NPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvbW0vIiB4bWxuczpzdFJlZj0iaHR0cDovL25zLmFkb2JlLmNvbS94YXAvMS4wL3NUeXBlL1Jlc291cmNlUmVmIyIgeG1wOkNyZWF0b3JUb29sPSJBZG9iZSBQaG90b3Nob3AgQ1M1IE1hY2ludG9zaCIgeG1wTU06SW5zdGFuY2VJRD0ieG1wLmlpZDozNUQyRTJFNjZGNUYxMUU1QjZEOThCNDYxMDQ2MzNCQiIgeG1wTU06RG9jdW1lbnRJRD0ieG1wLmRpZDozNUQyRTJFNzZGNUYxMUU1QjZEOThCNDYxMDQ2MzNCQiI+IDx4bXBNTTpEZXJpdmVkRnJvbSBzdFJlZjppbnN0YW5jZUlEPSJ4bXAuaWlkOjFERjc3MEUxNkY1RjExRTVCNkQ5OEI0NjEwNDYzM0JCIiBzdFJlZjpkb2N1bWVudElEPSJ4bXAuZGlkOjFERjc3MEUyNkY1RjExRTVCNkQ5OEI0NjEwNDYzM0JCIi8+IDwvcmRmOkRlc2NyaXB0aW9uPiA8L3JkZjpSREY+IDwveDp4bXBtZXRhPiA8P3hwYWNrZXQgZW5kPSJyIj8+Af/+/fz7+vn49/b19PPy8fDv7u3s6+rp6Ofm5eTj4uHg397d3Nva2djX1tXU09LR0M/OzczLysnIx8bFxMPCwcC/vr28u7q5uLe2tbSzsrGwr66trKuqqainpqWko6KhoJ+enZybmpmYl5aVlJOSkZCPjo2Mi4qJiIeGhYSDgoGAf359fHt6eXh3dnV0c3JxcG9ubWxramloZ2ZlZGNiYWBfXl1cW1pZWFdWVVRTUlFQT05NTEtKSUhHRkVEQ0JBQD8+PTw7Ojk4NzY1NDMyMTAvLi0sKyopKCcmJSQjIiEgHx4dHBsaGRgXFhUUExIREA8ODQwLCgkIBwYFBAMCAQAAIfkEAQAAAQAsAAAAAA0ADQAAAhSMj6lrwAjcC1GyahV+dcZJgeIIFgA7';
@@ -783,9 +803,37 @@ Sidebar.prototype.addSearchPalette = function(expand)
 
 ;
 
-/*
-SIDE BAR SECTIONS START
-*/
+//====================================================================================
+//	SIDE BAR SECTIONS
+//====================================================================================
+Sidebar.prototype.addBasicGatesPalette = function(expand)
+{
+	this.addPaletteFunctions('basicgates', mxResources.get('basicgates'), true, this.createBasicGatesShapes());
+};
+
+Sidebar.prototype.createBasicGatesShapes = function()
+{
+	
+	var sb = this;
+
+	
+	var field = new mxCell('List Item', new mxGeometry(0, 0, 60, 26), 'text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;');
+	field.vertex = true;
+	return [
+	 	this.createVertexTemplateEntry('shape=and;editable=0;', 30, 40, '', 'And', null, null, 'logic and'),
+	 	this.createVertexTemplateEntry('shape=nand;editable=0;', 40, 40, '', 'Nand', null, null, 'logic nand'),
+	 	this.createVertexTemplateEntry('shape=or;editable=0;', 30, 40, '', 'Or', null, null, 'logic or'),
+	 	this.createVertexTemplateEntry('shape=nor;editable=0;', 40, 40, '', 'Nor', null, null, 'logic nor'),
+	 	this.createVertexTemplateEntry('shape=xor;editable=0;', 30, 40, '', 'Xor', null, null, 'logic Xor'),
+	 	this.createVertexTemplateEntry('shape=xnor;editable=0;', 40, 40, '', 'XnOr', null, null, 'logic Xnor'),
+	 	this.createVertexTemplateEntry('shape=buffer;editable=0;', 30, 30, '', 'Buffer', null, null, 'logic buffer'),
+	 	this.createVertexTemplateEntry('shape=inverter;editable=0;', 30, 30, '', 'Inverter', null, null, 'logic Invert'),
+		
+	];
+
+};
+
+
 Sidebar.prototype.addComponentsPalette = function(expand)
 {
 
@@ -815,15 +863,99 @@ Sidebar.prototype.createComponentsShapes = function()
 
 };
 
+
+Sidebar.prototype.addMuxComponentPalette = function(expand)
+{
+	
+	this.addPaletteFunctions('muxcomponents', mxResources.get('muxcomponents'), false, this.createMuxComponentShapes());
+};
+
+Sidebar.prototype.createMuxComponentShapes = function()
+{
+	var sb = this;
+	var field = new mxCell('List Item', new mxGeometry(0, 0, 60, 26), 'text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;');
+	field.vertex = true;
+	return [
+		this.createVertexTemplateEntry('shape=mux2;editable=0;', 40, 80, '', 'Multiplexer 2-to-1', null, null, 'Mux 2'),
+	 	this.createVertexTemplateEntry('shape=mux4;editable=0;', 60, 120, '', 'Multiplexer 4-to-1', null, null, 'Mux 4'),
+	 	this.createVertexTemplateEntry('shape=mux8;editable=0;', 60, 160, '', 'Multiplexer 8-to-1', null, null, 'Mux 8'),
+	 	this.createVertexTemplateEntry('shape=mux16;editable=0;', 80, 320, '', 'Multiplexer 16-to-1', null, null, 'Mux 16')
+	];
+};
+
+
+Sidebar.prototype.addDecoderComponentPalette = function(expand)
+{
+	this.addPaletteFunctions('decodercomponents', mxResources.get('decodercomponents'), false, this.createDecoderComponentShapes());
+};
+
+Sidebar.prototype.createDecoderComponentShapes = function()
+{
+	var sb = this;
+	var field = new mxCell('List Item', new mxGeometry(0, 0, 60, 26), 'text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;');
+	field.vertex = true;
+	return [
+		this.createVertexTemplateEntry('shape=decoder2;editable=0;', 100, 60, '', '2-to-4 Decoder', null, null, 'Decoder 2'),
+		this.createVertexTemplateEntry('shape=decoder3;editable=0;', 100, 100, '', '3-to-8 Decoder', null, null, 'Decoder 3'),
+		this.createVertexTemplateEntry('shape=decoder4;editable=0;', 100, 160, '', '4-to-16 Decoder', null, null, 'Decoder 4')
+	];
+};
+
+
+Sidebar.prototype.addLatchComponentPalette = function(expand)
+{
+	this.addPaletteFunctions('latchcomponents', mxResources.get('latchcomponents'), false, this.createLatchComponentShapes());
+};
+
+Sidebar.prototype.createLatchComponentShapes = function()
+{
+	var sb = this;
+	var field = new mxCell('List Item', new mxGeometry(0, 0, 60, 26), 'text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;');
+	field.vertex = true;
+	return [
+		this.createVertexTemplateEntry('shape=srlatch;editable=0;', 80, 80, '', 'SR Latch', null, null, 'SR Latch'),
+		this.createVertexTemplateEntry('shape=srlatch_en;editable=0;', 80, 80, '', 'SR Latch with EN', null, null, 'SR Latch with EN'),
+		this.createVertexTemplateEntry('shape=dlatch;editable=0;', 80, 80, '', 'D Latch', null, null, 'D Latch'),
+		this.createVertexTemplateEntry('shape=dlatch_en;editable=0;', 80, 80, '', 'D Latch with EN', null, null, 'D Latch with EN'),
+		this.createVertexTemplateEntry('shape=dff;editable=0;', 80, 80, '', 'Flip Flop', null, null, 'Flip Flop'),
+		this.createVertexTemplateEntry('shape=dff_en;editable=0;', 80, 80, '', 'Flip Flop with EN', null, null, 'Flip Flop with EN')
+	];
+};
+
+
+Sidebar.prototype.addBusComponentPalette = function(expand)
+{
+	this.addPaletteFunctions('buscomponents', mxResources.get('buscomponents'), false, this.createBusComponentShapes());
+};
+
+Sidebar.prototype.createBusComponentShapes = function()
+{
+	var sb = this;
+	var field = new mxCell('List Item', new mxGeometry(0, 0, 60, 26), 'text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;');
+	field.vertex = true;
+	return [
+		this.createVertexTemplateEntry('shape=busdecoder2;editable=0;', 50, 40, '', '1-to-2 Bus Decoder', null, null, 'Bus Decoder 2'),
+		this.createVertexTemplateEntry('shape=busencoder2;editable=0;', 50, 40, '', '2-to-1 Bus Encoder', null, null, 'Bus Encoder 2'),
+		this.createVertexTemplateEntry('shape=busdecoder4;editable=0;', 50, 40, '', '4-to-1 Bus Decoder', null, null, 'Bus Decoder 4'),
+		this.createVertexTemplateEntry('shape=busencoder4;editable=0;', 50, 40, '', '1-to-4 Bus Encoder', null, null, 'Bus Encoder 4'),
+		this.createVertexTemplateEntry('shape=busdecoder8;editable=0;', 50, 160, '', '8-to-1 Bus Decoder', null, null, 'Bus Decoder 8'),
+		this.createVertexTemplateEntry('shape=busencoder8;editable=0;', 50, 160, '', '1-to-8 Bus Encoder', null, null, 'Bus Encoder 8'),
+		this.createVertexTemplateEntry('shape=busdecoder16;editable=0;', 50, 220, '', '16-to-1 Bus Decoder', null, null, 'Bus Decoder 16'),
+		this.createVertexTemplateEntry('shape=busencoder16;editable=0;', 50, 220, '', '1-to-16 Bus Encoder', null, null, 'Bus Encoder 16'),
+		this.createVertexTemplateEntry('shape=busdecoder32;editable=0;', 50, 400, '', '32-to-1 Bus Decoder', null, null, 'Bus Decoder 32'),
+		this.createVertexTemplateEntry('shape=busencoder32;editable=0;', 50, 400, '', '1-to-32 Bus Encoder', null, null, 'Bus Encoder 32')
+	];
+};
+
+
 Sidebar.prototype.addMiscPalette = function(expand)
 {
 
-	this.addPaletteFunctions('misc', mxResources.get('misc'), true, this.createMiscShapes());
+	this.addPaletteFunctions('misc', mxResources.get('misc'), false, this.createMiscShapes());
 };
 
 Sidebar.prototype.createMiscShapes = function()
 {
-
 	var sb = this;
 	var field = new mxCell('List Item', new mxGeometry(0, 0, 60, 26), 'text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;');
 	field.vertex = true;
@@ -836,11 +968,9 @@ Sidebar.prototype.createMiscShapes = function()
 	];
 
 };
-
-
-/*
-SIDE BAR SECTIONS END
-*/
+//====================================================================================
+//	END SIDE BAR SECTIONS
+//====================================================================================
 
 Sidebar.prototype.createTitle = function(label)
 {

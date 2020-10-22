@@ -19,7 +19,13 @@ addLayer=Add Layer
 addProperty=Add Property
 addToExistingDrawing=Add to Existing Drawing
 addWaypoint=Add Waypoint
+basicgates=Basic Gates
+buscomponents=Bus Components
+
 components=Components
+muxcomponents=Mux Components
+decodercomponents=Decoder Components
+latchcomponents= Latch Components
 bistable=Bistable Gates
 align=Align
 alignment=Alignment
