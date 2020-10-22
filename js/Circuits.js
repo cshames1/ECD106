@@ -670,7 +670,7 @@ schematic.prototype.createVerilog=function(name)
 			netList=netList+"} )\n);";
 			break; 
 		default: 
-			netList += "\n\n" + gateNames[style["shape"]] + ' ' + gateName(item,"C") + " ("; 
+			netList += "\n\n" + style["shape"] + ' ' + gateName(item,"C") + " ("; 
 			var links=item.linksInto();
 			if( links.length )
 				links.forEach( function(link){ netList += ("\n\t.in(" + getNameOrAlias(link) + ') ');});
