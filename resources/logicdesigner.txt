@@ -21,6 +21,7 @@ addToExistingDrawing=Add to Existing Drawing
 addWaypoint=Add Waypoint
 basicgates=Basic Gates
 buscomponents=Bus Components
+
 components=Components
 muxcomponents=Mux Components
 decodercomponents=Decoder Components
