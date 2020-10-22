@@ -335,6 +335,7 @@ schematic.prototype.createVerilog=function(name)
 		case "busencoder8":
 		case "busencoder4":
 		case "busencoder2":
+			//something in here. probably copy default case and modify it to work
 		default:
 			//determine if output net name is port name
 			var linksout=item.linksOutOf();

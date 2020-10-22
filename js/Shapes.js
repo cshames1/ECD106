@@ -5,7 +5,7 @@
  * 
  * 
  * ===================		KEY		=======================================================================
- c =>	Pointer to the shape object itself
+ c =>	identifier for the shape object itself
  x =>	X coordinate of the shape no matter what size it is. 0 if left border, 1 is right border.
  y =>	Y coordinate of the shape no matter what size it is. 0 if top border, 1 is bottom border.
  w =>	Width of the full size shape when added to the canvas.
@@ -41,10 +41,10 @@
 			var s=thisShape.signals.output.length;\
 			var ports=new Array();\
 			for( var i=0; i<s; i++) {\
-				ports['out' + i + '_' + thisShape.signals.output[i] + '_e'] = {x: 1, y: [(i+1)/(1+s)], perimeter: false};\
+				ports['out' + i + '' + thisShape.signals.output[i] + '_e'] = {x: 1, y: [(i+1)/(1+s)], perimeter: false};\
 			}\
 			for( var i=0; i<n; i++ ) {\
-				ports['in' + i + '_' + thisShape.signals.input[i] + '_w'] = {x: 0, y: [(i+1)/(1+n)], perimeter: false};\
+				ports['in' + i + '' + thisShape.signals.input[i] + '_w'] = {x: 0, y: [(i+1)/(1+n)], perimeter: false};\
 			}\
 			return ports;");
 
