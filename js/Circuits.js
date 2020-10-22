@@ -678,7 +678,7 @@ schematic.prototype.createVerilog=function(name)
 				netList += "\n\t.in(" + '1\'bx),';
 			var links=item.linksOutOf();
 			if( links.length )
-			links.forEach( function(link){ netList += ("\n\t.out(" + getNameOrAlias(link) + '), ');});
+				links.forEach( function(link){ netList += ("\n\t.out(" + getNameOrAlias(link) + '), ');});
 			else
 				netList += ("\n\t.out(" + gateName(item,"X") + "),");
 			netList=netList.replace(/, *$/gi, '');
