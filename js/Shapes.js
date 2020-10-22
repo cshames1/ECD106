@@ -29,11 +29,24 @@
 		mxUtils.extend(Shape, mxActor);
 
 		//create the svg of the component
-		Shape.prototype.redrawPath = new Function('c', 'x', 'y', 'w', 'h', "c.setStrokeColor('black');c.setFontSize(8);\
-		c.setFontStyle(mxConstants.FONT_BOLD);c.begin();c.rect(0,0,w,h);c.fillAndStroke();c.text(w/2,h/2,0,0,'"+storedShapes[k].componentName+"','center','middle');");
+		Shape.prototype.redrawPath = new Function('c', 'x', 'y', 'w', 'h', "c.setStrokeColor('black');\
+			c.setFontSize(8);\
+			c.setFontStyle(mxConstants.FONT_BOLD);\
+			c.begin();c.rect(0,0,w,h);c.fillAndStroke();\
+			c.text(w/2,h/2,0,0,'"+storedShapes[k].componentName+"','center','middle');");
 
 		//create component ports
-		Shape.prototype.getPorts = new Function("var thisShape = "+JSON.stringify(storedShapes[k])+"; var n=thisShape.signals.input.length; var s=thisShape.signals.output.length; var ports=new Array(); for( var i=0; i<s; i++) { ports[thisShape.signals.output[i]] = {x: 1, y: [(i+1)/(1+s)], perimeter: false}; } for( var i=0; i<n; i++ ) { ports[thisShape.signals.input[i]] = {x: 0, y: [(i+1)/(1+n)], perimeter: false}; } return ports;")
+		Shape.prototype.getPorts = new Function("var thisShape = "+JSON.stringify(storedShapes[k])+";\
+			var n=thisShape.signals.input.length;\
+			var s=thisShape.signals.output.length;\
+			var ports=new Array();\
+			for( var i=0; i<s; i++) {\
+				ports['out' + i + '_' + thisShape.signals.output[i] + '_e'] = {x: 1, y: [(i+1)/(1+s)], perimeter: false};\
+			}\
+			for( var i=0; i<n; i++ ) {\
+				ports['in' + i + '_' + thisShape.signals.input[i] + '_w'] = {x: 0, y: [(i+1)/(1+n)], perimeter: false};\
+			}\
+			return ports;");
 
 		mxCellRenderer.registerShape(storedShapes[k].componentName, Shape);
 

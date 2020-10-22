@@ -1,4 +1,3 @@
-
 /**
  * Copyright (c) 2018, Douglas H. Summerville, Binghamton University
  *
@@ -670,7 +669,7 @@ schematic.prototype.createVerilog=function(name)
 			netList=netList+"} )\n);";
 			break; 
 		default: 
-			netList += "\n\n" + gateNames[style["shape"]] + ' ' + gateName(item,"C") + " ("; 
+			netList += "\n\n" + style["shape"] + ' ' + gateName(item,"C") + " ("; 
 			var links=item.linksInto();
 			if( links.length )
 				links.forEach( function(link){ netList += ("\n\t.in(" + getNameOrAlias(link) + ') ');});
@@ -678,7 +677,7 @@ schematic.prototype.createVerilog=function(name)
 				netList += "\n\t.in(" + '1\'bx),';
 			var links=item.linksOutOf();
 			if( links.length )
-			links.forEach( function(link){ netList += ("\n\t.out(" + getNameOrAlias(link) + '), ');});
+				links.forEach( function(link){ netList += ("\n\t.out(" + getNameOrAlias(link) + '), ');});
 			else
 				netList += ("\n\t.out(" + gateName(item,"X") + "),");
 			netList=netList.replace(/, *$/gi, '');
@@ -690,7 +689,6 @@ schematic.prototype.createVerilog=function(name)
 	verilogCode="module ";
 	verilogCode+=(moduleName!=="")?moduleName:"mymodule";
 	verilogCode+= "(" ;
-	//inputSet.forEach( function(item){ inputList+="\n\tinput " + item + ',';});
 	if( inputList != '' || outputList != '')
 	{
 		verilogCode += inputList;

@@ -5,7 +5,7 @@
  * 
  * 
  * ===================		TO-DO LIST		=======================================================================
-	1) Figure out why port labels are wrong
+	1) 
 	2) Figure out how to properly orient the pop-ups when you hover over a shape. (Rotate tick marks and change left/right/up/down bias of names)
 	3) 
 	4) 
@@ -93,7 +93,6 @@ Sidebar.prototype.init = function()
 {
 	var dir = STENCIL_PATH;
 
-	//this.addSearchPalette(true);			DOES NOT WORK!!!
 	this.addBasicGatesPalette(false);
 	this.addComponentsPalette(true);
 	this.addMuxComponentPalette(false);
