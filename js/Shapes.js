@@ -451,7 +451,7 @@
 		c.begin();
 		c.rect(0,0,w,h);
 		c.fillAndStroke();
-		c.text(w/2,h/2,0,0,''+1+'-to-'+n+'\nBus','center','middle');
+		c.text(w/2,h/2,0,0,''+1+'-to-'+n+'\nBus \nDecoder','center','middle');
 	};
 
 	function BusDecoderShape()
@@ -490,7 +490,7 @@
 		c.begin();
 		c.rect(0,0,w,h);
 		c.fillAndStroke();
-		c.text(w/2,h/2,0,0,''+n+'-to-'+1+'\nBus','center','middle');
+		c.text(w/2,h/2,0,0,''+n+'-to-'+1+'\nBus \nEncoder','center','middle');
 	};
 
 	function BusEncoderShape()
