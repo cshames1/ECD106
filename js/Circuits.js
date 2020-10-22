@@ -200,7 +200,13 @@ schematic.prototype.createVerilog=function(name)
 	var moduleName= name;
 	var verilogCode="";
 	var graph=this.graph;
-	var gateNames={and:"and", nand:"nand",or:"or",nor:"nor",xor:"xor",xnor:"xnor",buffer:"buf", inverter:"not",mux2:"mux #(2,1)", mux4:"mux #(4,1)", mux8:"mux #(8,1)", mux16:"mux #(16,1)",decoder2:"decoder #(2,1)",decoder3:"decoder #(3,1)",decoder4:"decoder #(4,1)",dlatch:"d_latch",dlatch_en:"d_latch_en",dff:"dff",dff_en:"dff_en",srlatch:"sr_latch",srlatch_en:"sr_latch_en"};
+	var gateNames={and:"and", nand:"nand",or:"or",nor:"nor",xor:"xor",xnor:"xnor",buffer:"buf", inverter:"not",
+					mux2:"mux #(2,1)", mux4:"mux #(4,1)", mux8:"mux #(8,1)", mux16:"mux #(16,1)",
+					decoder2:"decoder #(2,1)",decoder3:"decoder #(3,1)",decoder4:"decoder #(4,1)",
+					dlatch:"d_latch",dlatch_en:"d_latch_en",dff:"dff",dff_en:"dff_en",srlatch:"sr_latch",srlatch_en:"sr_latch_en",
+					busencoder2: "busencoder2", busencoder4: "busencoder4", busencoder8: "busencoder8", busencoder16: "busencoder16", busencoder32: "busencoder32",
+					busdecoder2: "busdecoder2", busdecoder4: "busdecoder4", busdecoder8: "busdecoder8", busdecoder16: "busdecoder16", busdecoder32: "busdecoder32", 
+				};
 	function gateName( node, prefix){ return prefix+node.id;}
 	function portName( node, prefix ){ return node.value ? node.value : gateName(node,prefix);}
 	function netName( link ){
@@ -623,7 +629,7 @@ schematic.prototype.createVerilog=function(name)
 		case "busdecoder8": bus_decoder_size++;
 		case "busdecoder4": bus_decoder_size++;
 		case "busdecoder2": bus_decoder_size++;
-			netList += "\n\n" + style["shape"] + ' ' + gateName(item,"U") + " ("; 
+			netList += "\n\n" + gateNames[style["shape"]] + ' ' + gateName(item,"U") + " ("; 
 			netList += '\n\t.bits_out( {';
 			for( var i=(1<<bus_decoder_size)-1; i>=0; i=i-1 )
 			{
@@ -644,7 +650,7 @@ schematic.prototype.createVerilog=function(name)
 		case "busencoder8": bus_encoder_size++;
 		case "busencoder4": bus_encoder_size++;
 		case "busencoder2": bus_encoder_size++;
-			netList += "\n\n" + style["shape"] + ' ' + gateName(item,"U") + " ("; 
+			netList += "\n\n" + gateNames[style["shape"]] + ' ' + gateName(item,"U") + " ("; 
 			netList += '\n\t.bus_out(';
 			var links=item.linksOutOf();
 			if( links.length )
@@ -663,7 +669,7 @@ schematic.prototype.createVerilog=function(name)
 			netList=netList+"} )\n);";
 			break; 
 		default: 
-			netList += "\n\n" + style["shape"] + ' ' + gateName(item,"C") + " ("; 
+			netList += "\n\n" + gateNames[style["shape"]] + ' ' + gateName(item,"C") + " ("; 
 			var links=item.linksInto();
 			if( links.length )
 				links.forEach( function(link){ netList += ("\n\t.in(" + getNameOrAlias(link) + ') ');});
