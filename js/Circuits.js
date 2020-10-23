@@ -188,6 +188,7 @@ schematic.prototype.runDRC = function()
 
 schematic.prototype.createVerilog=function(name)
 {
+	var check = "$$$\n";
 	var netList="";
 	var inputList="";
 	var inputSet=new Set();
@@ -254,11 +255,11 @@ schematic.prototype.createVerilog=function(name)
 	});
 	//map the netlist
 	if( nodes ) nodes.forEach(function(item){
-		var muxsize=0;
 		var decodersize=1;
 		var bus_decoder_size=0;
 		var style=graph.getCellStyle(item); 
-		switch( style["shape"] )
+		var module = style["shape"];
+		switch( module )
 		{
 		case "inputport":
 		case "outputport":
@@ -316,8 +317,8 @@ schematic.prototype.createVerilog=function(name)
 		case "busdecoder8": bus_decoder_size++;
 		case "busdecoder4": bus_decoder_size++;
 		case "busdecoder2": bus_decoder_size++;
-		for( var i=0; i<(1<<bus_decoder_size); i=i+1 )
-			{
+			for( var i=0; i<(1<<bus_decoder_size); i=i+1 )
+				{
 				var linksout=item.getLinks( 'out'+i+'_d',true);
 				if( linksout.length == 1 && 
 					graph.getCellStyle(linksout[0].target)["shape"] == "outputport" )
@@ -335,8 +336,6 @@ schematic.prototype.createVerilog=function(name)
 		case "busencoder8":
 		case "busencoder4":
 		case "busencoder2":
-			//something in here. probably copy default case and modify it to work
-		default:
 			//determine if output net name is port name
 			var linksout=item.linksOutOf();
 			if( linksout.length == 1 && 
@@ -348,8 +347,22 @@ schematic.prototype.createVerilog=function(name)
 			else
 				wireSet.add(gateName(item,"X") );
 			break;
+		default:
+			for( var i=0; i<item.numLinksOutOf(); i=i+1 )
+				{
+				var linksout=item.getLinks( 'out'+i,true);
+				if( linksout.length == 1 && 
+					graph.getCellStyle(linksout[0].target)["shape"] == "outputport" )
+				{
+					netAliases[netName(linksout[0])] = portName(linksout[0].target,"O");
+				}
+				else if( linksout.length )
+					wireSet.add(netName(linksout[0],"X"));
+				else
+					wireSet.add(gateName(item,"X")+'_'+i);
+			}
+			break;
 		}
-
 	});
 	//create Verilog
 	if( nodes )
@@ -359,7 +372,8 @@ schematic.prototype.createVerilog=function(name)
 		var bus_decoder_size = 0;
 		var decodersize=1;
 		var style=graph.getCellStyle(item); 
-		switch( style["shape"] )
+		var module = style["shape"];
+		switch( module )
 		{
 		case "inputport":
 			inputList+="\n\tinput " + portName(item,'I') + ',';
@@ -613,7 +627,7 @@ schematic.prototype.createVerilog=function(name)
 			netList = netList+ '} ),\n\t.address_in( {';
 			for( var i=decodersize-1; i>=0; i=i-1 )
 			{
-				var lnk=item.getLink( 'in_a'+i,false);
+				var lnk=item.getLink( 'in'+i,false);
 				if( lnk ) netList+=getNameOrAlias(lnk);
 				else netList+='1\'bx';
 				netList+=',';
@@ -683,7 +697,8 @@ schematic.prototype.createVerilog=function(name)
 				netList += ("\n\t.out(" + gateName(item,"X") + "),");
 			netList=netList.replace(/, *$/gi, '');
 			netList=netList+"\n);";
-			break; 
+		
+			break;
 		}
 	});
 
@@ -708,6 +723,7 @@ schematic.prototype.createVerilog=function(name)
 	if( netList != '' )
 		verilogCode+="\n"+netList;
 	verilogCode+="\n\nendmodule\n";
+	verilogCode += check;
 	return verilogCode;
 };
 

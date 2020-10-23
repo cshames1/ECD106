@@ -177,8 +177,8 @@ EditorUi = function(editor, container, lightbox)
 				//var icon = new mxImageShape(bounds, src);
 				//icon=new mxText('s0',bounds);
 				//icon=new mxLine(bounds,'black',1);
-				var constraintName=this.constraints[i].id;
-				icon=new portShape(bounds,constraintName.split('_')[0],constraintName.split('_')[1]);//decoding shape naming convention
+				var constraintName=this.constraints[i].label;
+				icon=new portShape(bounds,constraintName,constraintName);//decoding shape naming convention
 				icon.dialect = (this.graph.dialect != mxConstants.DIALECT_SVG) ?
 						mxConstants.DIALECT_MIXEDHTML : mxConstants.DIALECT_SVG;
 				icon.preserveImageAspect = false;
@@ -255,9 +255,9 @@ EditorUi = function(editor, container, lightbox)
 				for (var id in ports)
 				{
 					var port = ports[id];
-
 					var cstr = new mxConnectionConstraint(new mxPoint(port.x, port.y), port.perimeter);
 					cstr.id = id;
+					cstr.label = port.label;
 					cstrs.push(cstr);
 				}
 
