@@ -316,20 +316,20 @@ schematic.prototype.createVerilog=function(name)
 		case "busdecoder8": bus_decoder_size++;
 		case "busdecoder4": bus_decoder_size++;
 		case "busdecoder2": bus_decoder_size++;
-			for( var i=0; i<(1<<bus_decoder_size); i=i+1 )
-				{
-				var linksout=item.getLinks( 'out'+i+'_',true);
-				if( linksout.length == 1 && 
-					graph.getCellStyle(linksout[0].target)["shape"] == "outputport" )
-				{
-					netAliases[netName(linksout[0])] = portName(linksout[0].target,"O");
-				}
-				else if( linksout.length )
-					wireSet.add(netName(linksout[0],"X"));
-				else
-					wireSet.add(gateName(item,"X")+'_'+i);
+		for( var i=0; i<(1<<bus_decoder_size); i=i+1 )
+		{
+			var linksout=item.getLinks( 'out'+ i + '_',true);
+			if( linksout.length == 1 && 
+				graph.getCellStyle(linksout[0].target)["shape"] == "outputport" )
+			{
+				netAliases[netName(linksout[0])] = portName(linksout[0].target,"O");
 			}
-			break;
+			else if( linksout.length )
+				wireSet.add(netName(linksout[0],"X"));
+			//else
+			//	wireSet.add(gateName(item,"X")+'_'+i);
+		}
+		break;
 		case "busencoder32":
 		case "busencoder16":
 		case "busencoder8":

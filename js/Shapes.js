@@ -534,9 +534,9 @@
 	BusDecoderShape.prototype.getPorts = function()
 	{
 		var ports=new Array();
-		ports['in'] = {x: 0, y: .5, perimeter: false, label: 'in'};
+		ports['in_w'] = {x: 0, y: .5, perimeter: false, label: 'in'};
 		for( var i=0; i<this.numOutputs(); i=i+1 )
-			ports['out'+ i + '_d'] = {x: 1, y: (i+.5)/(this.numOutputs()), perimeter: false, label: 'out'+i};
+			ports['out'+ i + '_d' + i + '_e'] = {x: 1, y: (i+.5)/(this.numOutputs()), perimeter: false, label: 'out'+i};
 		return ports;
 	};
 
@@ -571,7 +571,7 @@
 		var ports=new Array();
 		for( var i=0; i<this.numInputs(); i=i+1 )
 			ports['in'+i+'_w'] = {x: 0, y: (i+.5)/(this.numInputs()) , perimeter: false, label: 'in'+i};
-		ports['out'] = {x: 1, y: .5, perimeter: false, label: 'out'};
+		ports['out_e'] = {x: 1, y: .5, perimeter: false, label: 'out'};
 		return ports;
 	};
 
