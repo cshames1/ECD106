@@ -178,6 +178,9 @@ EditorUi = function(editor, container, lightbox)
 				//icon=new mxText('s0',bounds);
 				//icon=new mxLine(bounds,'black',1);
 				var constraintName=this.constraints[i].label;
+				//===============================================================================================
+				// Port labels created here
+				//===============================================================================================
 				icon=new portShape(bounds,constraintName,constraintName);//decoding shape naming convention
 				icon.dialect = (this.graph.dialect != mxConstants.DIALECT_SVG) ?
 						mxConstants.DIALECT_MIXEDHTML : mxConstants.DIALECT_SVG;
@@ -254,6 +257,9 @@ EditorUi = function(editor, container, lightbox)
 
 				for (var id in ports)
 				{
+				//===============================================================================================
+				// Port labels passed to constraint here
+				//===============================================================================================
 					var port = ports[id];
 					var cstr = new mxConnectionConstraint(new mxPoint(port.x, port.y), port.perimeter);
 					cstr.id = id;

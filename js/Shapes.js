@@ -42,11 +42,11 @@
 			var n=thisShape.signals.input.length;\
 			var s=thisShape.signals.output.length;\
 			var ports=new Array();\
-			for( var i=0; i<s; i++) {\
-				ports['out' + i + '__e'] = {x: 1, y: [(i+1)/(1+s)], perimeter: false, label: thisShape.signals.output[i]};\
+			for( var i=0; i<s; i=i+1) {\
+				ports['out' + i  + '_' + thisShape.signals.output[i] + '_e'] = {x: 1, y: [(i+1)/(1+s)], perimeter: false, label: thisShape.signals.output[i]};\
 			}\
-			for( var i=0; i<n; i++ ) {\
-				ports['in' + i + '__w'] = {x: 0, y: [(i+1)/(1+n)], perimeter: false, label: thisShape.signals.input[i]};\
+			for( var i=0; i<n; i=i+1 ) {\
+				ports['in' + i + '_' + thisShape.signals.input[i] + '_w'] = {x: 0, y: [(i+1)/(1+n)], perimeter: false, label: thisShape.signals.input[i]};\
 			}\
 			return ports;"
 		);
@@ -79,8 +79,8 @@
 	BufferShape.prototype.getPorts = function()
 	{
 		var ports=new Array();
-		ports['in1__w'] = {x: 0, y: 0.5, perimeter: true, label:'in'};
-		ports['out__e'] = {x: 0.67, y: 0.5, perimeter: false, label:'out'};
+		ports['in1_w'] = {x: 0, y: 0.5, perimeter: true, label:'in'};
+		ports['out_e'] = {x: 0.67, y: 0.5, perimeter: false, label:'out'};
 		return ports;
 	};
 	
@@ -111,8 +111,8 @@
 	InverterShape.prototype.getPorts = function()
 	{
 		var ports=new Array();
-		ports['in1__w'] = {x: 0, y: 0.5, perimeter: true, label: 'in__w'};
-		ports['out__e'] = {x: 1, y: 0.5, perimeter: true, label: 'out__e'};
+		ports['in1_w'] = {x: 0, y: 0.5, perimeter: true, label: 'in'};
+		ports['out_e'] = {x: 1, y: 0.5, perimeter: true, label: 'out'};
 		return ports;
 	};
 	
@@ -143,9 +143,9 @@
 		var y_val = [0.11, 0.22, 0.33, 0.44, 0.56, 0.67, 0.78, 0.89];
 		var ports=new Array();
 		for (var i=0; i<this.numInputs(); i++) {
-			ports['in' + i + '__w'] = {x: x_val[i], y: y_val[i], perimeter: false, label: 'in'+i};
+			ports['in' + i + '_w'] = {x: x_val[i], y: y_val[i], perimeter: false, label: 'in'+i};
 		}
-		ports['out__e'] = {x: 1, y: 0.5, perimeter: true, label: 'out'};
+		ports['out_e'] = {x: 1, y: 0.5, perimeter: true, label: 'out'};
 		return ports;
 	};
 
@@ -175,9 +175,9 @@
 		var y_val = [0.11, 0.22, 0.33, 0.44, 0.56, 0.67, 0.78, 0.89];
 		var ports=new Array();
 		for (var i=0; i<this.numInputs(); i++) {
-			ports['in' + i + '__w'] = {x: x_val[i], y: y_val[i], perimeter: false, label: 'in'+i};
+			ports['in' + i + '_w'] = {x: x_val[i], y: y_val[i], perimeter: false, label: 'in'+i};
 		}
-		ports['out__e'] = {x: 1, y: 0.5, perimeter: true, label: 'out'};
+		ports['out_e'] = {x: 1, y: 0.5, perimeter: true, label: 'out'};
 		return ports;
 	};
 	
@@ -208,9 +208,9 @@
 		var y_val = [0.11, 0.22, 0.33, 0.44, 0.56, 0.67, 0.78, 0.89];
 		var ports=new Array();
 		for (var i=0; i<this.numInputs(); i++) {
-			ports['in' + (i+1) + '__w'] = {x: x_val[i], y: y_val[i], perimeter: true, label: 'in'+i};
+			ports['in' + i + '_w'] = {x: x_val[i], y: y_val[i], perimeter: true, label: 'in'+i};
 		}
-		ports['out__e'] = {x: 1, y: 0.5, perimeter: true, label: 'out'};
+		ports['out_e'] = {x: 1, y: 0.5, perimeter: true, label: 'out'};
 		return ports;
 	};
 
@@ -240,9 +240,9 @@
 		var y_val = [0.11, 0.22, 0.33, 0.44, 0.56, 0.67, 0.78, 0.89];
 		var ports=new Array();
 		for (var i=0; i<this.numInputs(); i++) {
-			ports['in' + (i+1) + '__w'] = {x: x_val[i], y: y_val[i], perimeter: true, label: 'in'+i};
+			ports['in' + i + '_w'] = {x: x_val[i], y: y_val[i], perimeter: true, label: 'in'+i};
 		}
-		ports['out__e'] = {x: 1, y: 0.5, perimeter: true, label: 'out'};
+		ports['out_e'] = {x: 1, y: 0.5, perimeter: true, label: 'out'};
 		return ports;
 	};
 	
@@ -276,9 +276,9 @@
 		var y_val = [0.11, 0.22, 0.33, 0.44, 0.56, 0.67, 0.78, 0.89];
 		var ports=new Array();
 		for (var i=0; i<this.numInputs(); i++) {
-			ports['in' + (i+1) + '__w'] = {x: x_val[i], y: y_val[i], perimeter: false, label: 'in'+i};
+			ports['in' + i + '_w'] = {x: x_val[i], y: y_val[i], perimeter: false, label: 'in'+i};
 		}
-		ports['out__e'] = {x: 1, y: 0.5, perimeter: true, label: 'out'};
+		ports['out_e'] = {x: 1, y: 0.5, perimeter: true, label: 'out'};
 		return ports;
 	};
 
@@ -308,9 +308,9 @@
 		var y_val = [0.11, 0.22, 0.33, 0.44, 0.56, 0.67, 0.78, 0.89];
 		var ports=new Array();
 		for (var i=0; i<this.numInputs(); i++) {
-			ports['in' + (i+1) + '__w'] = {x: x_val[i], y: y_val[i], perimeter: false, label: 'in'+i};
+			ports['in' + i + '_w'] = {x: x_val[i], y: y_val[i], perimeter: false, label: 'in'+i};
 		}
-		ports['out__e'] = {x: 1, y: 0.5, perimeter: true, label: 'out'};
+		ports['out_e'] = {x: 1, y: 0.5, perimeter: true, label: 'out'};
 		return ports;
 	};
 
@@ -399,7 +399,7 @@
 	{
 		var ports=new Array();
 		for( var i=0; i<s; i=i+1)
-			ports['out'+(i+1)+'_d'+i+'_e'] = {x: 1, y: [(i+1)/(1+s)], perimeter: false, label: 'out'+i};
+			ports['out'+ i +'_d'+i+'_e'] = {x: 1, y: [(i+1)/(1+s)], perimeter: false, label: 'out'+i};
 		for( var i=0; i<n; i=i+1 )
 			ports['in' + i +'_a'+i+'_w'] = {x: 0, y: [(i+1)/(1+s)], perimeter: false, label: 'in'+i};
 		ports['in_en_w']={x: 0, y: [s/(1+s)], perimeter:false, label: 'en'};
