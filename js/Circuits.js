@@ -307,8 +307,6 @@ schematic.prototype.createVerilog=function(name)
 				}
 				else if( linksout.length )
 					wireSet.add(netName(linksout[0],"X"));
-				else
-					wireSet.add(gateName(item,"X")+'_'+i);
 			}
 			break;
 		case "busdecoder32": bus_decoder_size++;
@@ -326,8 +324,6 @@ schematic.prototype.createVerilog=function(name)
 			}
 			else if( linksout.length )
 				wireSet.add(netName(linksout[0],"X"));
-			//else
-			//	wireSet.add(gateName(item,"X")+'_'+i);
 		}
 		break;
 		case "busencoder32":
