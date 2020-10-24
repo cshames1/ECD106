@@ -677,7 +677,10 @@ schematic.prototype.createVerilog=function(name)
 			netList=netList+"} )\n);";
 			break; 
 		default: 
-			netList += "\n\n" + style["shape"] + ' ' + gateName(item,"C") + " (";
+			
+
+			netList += "\n\n" + style["shape"] + ' ' + gateName(item,"C") + " ("; 
+ 
 			var links=item.linksInto();
 			if( links.length )
 				links.forEach( function(link){ 
@@ -686,12 +689,11 @@ schematic.prototype.createVerilog=function(name)
 				});
 			var links=item.linksOutOf();
 			if( links.length )
-				links.forEach( function(link){ 
-					sourcePort = link["style"].match(/sourcePort=(.*?);/)[1].split("_")[1];
-					var portInstantiation = "\n\t." + sourcePort + "(" + getNameOrAlias(link) + '),' 
-					if (!netList.includes(portInstantiation)) 
-						netList += (portInstantiation);
-				});
+				
+
+				links.forEach( function(link){ netList += ("\n\t.out(" + getNameOrAlias(link) + '), ');});
+			else
+				netList += ("\n\t.out(" + gateName(item,"X") + "),");
 			netList=netList.replace(/, *$/gi, '');
 			netList=netList+"\n);";
 			break;
