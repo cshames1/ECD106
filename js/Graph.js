@@ -1567,28 +1567,6 @@ Graph.prototype.init = function(container)
 				{
 					try
 					{
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 						if (mxClient.IS_EDGE)
 						{
 
