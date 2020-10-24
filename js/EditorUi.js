@@ -181,7 +181,7 @@ EditorUi = function(editor, container, lightbox)
 				//===============================================================================================
 				// Port labels created here
 				//===============================================================================================
-				icon=new portShape(bounds,constraintName,constraintName);//decoding shape naming convention
+				icon=new portShape(bounds,constraintName,constraintName);
 				icon.dialect = (this.graph.dialect != mxConstants.DIALECT_SVG) ?
 						mxConstants.DIALECT_MIXEDHTML : mxConstants.DIALECT_SVG;
 				icon.preserveImageAspect = false;

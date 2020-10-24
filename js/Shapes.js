@@ -401,7 +401,7 @@
 		for( var i=0; i<s; i=i+1)
 			ports['out'+ i +'_d'+i+'_e'] = {x: 1, y: [(i+1)/(1+s)], perimeter: false, label: 'out'+i};
 		for( var i=0; i<n; i=i+1 )
-			ports['in' + i +'_a'+i+'_w'] = {x: 0, y: [(i+1)/(1+s)], perimeter: false, label: 'in'+i};
+			ports['in' + i +'_a'+i+'_w'] = {x: 0, y: [(i+1)/(1+s)], perimeter: false, label: 'addr'+i};
 		ports['in_en_w']={x: 0, y: [s/(1+s)], perimeter:false, label: 'en'};
 		return ports;
 	};
