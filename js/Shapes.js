@@ -52,9 +52,9 @@
 		);
 
 		mxCellRenderer.registerShape(storedShapes[k].componentName, Shape);
-
 	}
 	
+
 	//====================================================================================
 	//	BASIC GATE GROUP
 	//====================================================================================
@@ -72,10 +72,8 @@
 		c.fillAndStroke();
 		c.end();
 	};
-
 	BufferShape.prototype.numInputs = function(){return 1};
 	BufferShape.prototype.numOutputs = function(){return 1};
-
 	BufferShape.prototype.getPorts = function()
 	{
 		var ports=new Array();
@@ -83,15 +81,14 @@
 		ports['out_e'] = {x: 0.67, y: 0.5, perimeter: false, label:'out'};
 		return ports;
 	};
-	
 	mxCellRenderer.registerShape('buffer', BufferShape);
 	
+	//-------------------- INVERTER --------------------
 	function InverterShape()
 	{
 		mxActor.call(this);
 	};
 	mxUtils.extend(InverterShape, mxActor);
-
 	InverterShape.prototype.redrawPath = function(c, x, y, w, h)
 	{
 		c.moveTo(0,0);
@@ -104,10 +101,8 @@
 		c.fillAndStroke();
 		c.end();
 	};
-	
 	InverterShape.prototype.numInputs = function(){return 1};
 	InverterShape.prototype.numOutputs = function(){return 1};
-	
 	InverterShape.prototype.getPorts = function()
 	{
 		var ports=new Array();
@@ -115,16 +110,14 @@
 		ports['out_e'] = {x: 1, y: 0.5, perimeter: true, label: 'out'};
 		return ports;
 	};
-	
 	mxCellRenderer.registerShape('inverter', InverterShape);
 	
-
+	//-------------------- OR GATE --------------------
 	function OrShape()
 	{
 		mxActor.call(this);
 	};
 	mxUtils.extend(OrShape, mxActor);
-
 	OrShape.prototype.redrawPath = function(c, x, y, w, h)
 	{
 		c.moveTo(0,0);
@@ -133,10 +126,8 @@
 		c.quadTo(w/2,h/2,0,0);
 		c.end();
 	};
-	
 	OrShape.prototype.numInputs = function(){return 8};
 	OrShape.prototype.numOutputs = function(){return 1};
-	
 	OrShape.prototype.getPorts = function()
 	{
 		var x_val = [0.095, 0.17, 0.22, 0.248, 0.248, 0.22, 0.17, 0.095];
@@ -148,16 +139,14 @@
 		ports['out_e'] = {x: 1, y: 0.5, perimeter: true, label: 'out'};
 		return ports;
 	};
-
 	mxCellRenderer.registerShape('or', OrShape);
 	
-
+	//-------------------- NOR GATE --------------------
 	function NorShape()
 	{
 		mxActor.call(this);
 	};
 	mxUtils.extend(NorShape, mxActor);
-
 	NorShape.prototype.redrawPath = function(c, x, y, w, h)
 	{
 		OrShape.prototype.redrawPath(c,x,y,3*w/4,h);
@@ -165,10 +154,8 @@
 		c.ellipse(3*w/4,h/2-w/8,w/4,w/4);
 		c.fillAndStroke();
 	}
-
 	NorShape.prototype.numInputs = function(){return 8};
 	NorShape.prototype.numOutputs = function(){return 1};
-
 	NorShape.prototype.getPorts = function()
 	{
 		var x_val = [0.078, 0.13, 0.165, 0.185, 0.185, 0.165, 0.13, 0.078];
@@ -180,16 +167,14 @@
 		ports['out_e'] = {x: 1, y: 0.5, perimeter: true, label: 'out'};
 		return ports;
 	};
-	
 	mxCellRenderer.registerShape('nor', NorShape);
 	
-
+	//-------------------- AND GATE --------------------
 	function AndShape()
 	{
 		mxActor.call(this);
 	};
 	mxUtils.extend(AndShape, mxActor);
-
 	AndShape.prototype.redrawPath = function(c, x, y, w, h)
 	{
 		c.moveTo(0, 0);
@@ -198,10 +183,8 @@
 		c.close();
 		c.end();
 	};
-	
 	AndShape.prototype.numInputs = function(){return 8};
 	AndShape.prototype.numOutputs = function(){return 1};
-
 	AndShape.prototype.getPorts = function()
 	{
 		var x_val = [0, 0, 0, 0, 0, 0, 0, 0];
@@ -213,16 +196,14 @@
 		ports['out_e'] = {x: 1, y: 0.5, perimeter: true, label: 'out'};
 		return ports;
 	};
-
 	mxCellRenderer.registerShape('and', AndShape);
 
-	
+	//-------------------- NAND GATE --------------------
 	function NandShape()
 	{
 		mxActor.call(this);
 	};
 	mxUtils.extend(NandShape, mxActor);
-
 	NandShape.prototype.redrawPath = function(c, x, y, w, h)
 	{
 		AndShape.prototype.redrawPath(c,x,y,3*w/4,h);
@@ -233,7 +214,6 @@
 
 	NandShape.prototype.numInputs = function(){return 8};
 	NandShape.prototype.numOutputs = function(){return 1};
-
 	NandShape.prototype.getPorts = function()
 	{
 		var x_val = [0, 0, 0, 0, 0, 0, 0, 0];
@@ -245,16 +225,14 @@
 		ports['out_e'] = {x: 1, y: 0.5, perimeter: true, label: 'out'};
 		return ports;
 	};
-	
 	mxCellRenderer.registerShape('nand', NandShape);
 
-	
+	//-------------------- XOR GATE --------------------
 	function XorShape()
 	{
 		mxActor.call(this);
 	};
 	mxUtils.extend(XorShape, mxActor);
-
 	XorShape.prototype.redrawPath = function(c, x, y, w, h)
 	{
 		c.moveTo(0,h);
@@ -266,10 +244,8 @@
 		c.quadTo(5*w/8,h/2,w/8,0);
 		c.end();
 	};
-
 	XorShape.prototype.numInputs = function(){return 8};
 	XorShape.prototype.numOutputs = function(){return 1};
-
 	XorShape.prototype.getPorts = function()
 	{
 		var x_val = [0.095, 0.17, 0.22, 0.248, 0.248, 0.22, 0.17, 0.095];
@@ -281,16 +257,14 @@
 		ports['out_e'] = {x: 1, y: 0.5, perimeter: true, label: 'out'};
 		return ports;
 	};
-
 	mxCellRenderer.registerShape('xor', XorShape);
 	
-
+	//-------------------- XNOR GATE --------------------
 	function XnorShape()
 	{
 		mxActor.call(this);
 	};
 	mxUtils.extend(XnorShape, mxActor);
-
 	XnorShape.prototype.redrawPath = function(c, x, y, w, h)
 	{
 		XorShape.prototype.redrawPath(c,x,y,3*w/4,h);
@@ -298,7 +272,6 @@
 		c.ellipse(3*w/4,h/2-w/8,w/4,w/4);
 		c.fillAndStroke();
 	};
-
 	XnorShape.prototype.numInputs = function(){return 8};
 	XnorShape.prototype.numOutputs = function(){return 1};
 
@@ -313,12 +286,14 @@
 		ports['out_e'] = {x: 1, y: 0.5, perimeter: true, label: 'out'};
 		return ports;
 	};
-
 	mxCellRenderer.registerShape('xnor', XnorShape);
-	
 	//====================================================================================
 	//	END BASIC GATE GROUP
 	//====================================================================================
+
+
+
+
 
 	//====================================================================================
 	//	MUX GROUP
@@ -364,16 +339,13 @@
 		var n=this.state.style["shape"].slice(3);
 		drawMux(n,c,x,y,w,h);
 	};
-	
 	MuxShape.prototype.numInputs = function(){return parseInt(this.state.style["shape"].substr(3),10);};
 	MuxShape.prototype.numSel = function(){return Math.log2(this.numInputs());};
 	MuxShape.prototype.numOutputs = function(){return 1};
-
 	MuxShape.prototype.getPorts = function()
 	{
 		return getMuxPorts(this.numInputs(),this.numSel());
 	};
-
 	mxCellRenderer.registerShape('mux2', MuxShape);
 	mxCellRenderer.registerShape('mux4', MuxShape);
 	mxCellRenderer.registerShape('mux8', MuxShape);
@@ -381,6 +353,10 @@
 	//====================================================================================
 	//	END MUX GROUP
 	//====================================================================================
+
+
+
+
 
 	//====================================================================================
 	//	DECODER GROUP
@@ -416,21 +392,22 @@
 		var n=this.state.style["shape"].substr(-1);
 		drawDecoder(n,c,x,y,w,h);
 	};
-
 	DecoderShape.prototype.numInputs = function(){return this.state.style["shape"].substr(-1);};
 	DecoderShape.prototype.numOutputs = function(){return (1<<this.numInputs());};
-	
 	DecoderShape.prototype.getPorts = function()
 	{
 		return getDecoderPorts(this.numInputs(),this.numOutputs());
 	};
-
 	mxCellRenderer.registerShape('decoder2', DecoderShape);
 	mxCellRenderer.registerShape('decoder3', DecoderShape);
 	mxCellRenderer.registerShape('decoder4', DecoderShape);
 	//====================================================================================
 	//	END DECODER GROUP
 	//====================================================================================
+
+
+
+
 
 	//====================================================================================
 	//	LATCH GROUP
@@ -469,6 +446,7 @@
 	mxCellRenderer.registerShape('dff', DLatchShape);
 	mxCellRenderer.registerShape('dff_en', DLatchShape);
 
+
 	function SRLatchShape()
 	{
 		mxActor.call(this);
@@ -503,70 +481,30 @@
 	//	END LATCH GROUP
 	//====================================================================================
 
+
+
+
+
 	//====================================================================================
 	//	BUS GROUP
 	//====================================================================================
-	var drawBusDecoder = function(n, c, x, y, w, h)
-	{
-		c.setStrokeColor('black');
-		c.setFontSize(8);
-		c.setFontStyle(mxConstants.FONT_BOLD);
-		c.begin();
-		c.rect(0,0,w,h);
-		c.fillAndStroke();
-		c.text(w/2,h/2,0,0,''+1+'-to-'+n+'\nBus \nDecoder','center','middle');
-	};
-
-	function BusDecoderShape()
+	function FanIn()
 	{
 		mxActor.call(this);
 	};
-	mxUtils.extend(BusDecoderShape, mxActor);
-
-	BusDecoderShape.prototype.redrawPath = function(c, x, y, w, h)
+	mxUtils.extend(FanIn, mxActor);
+	FanIn.prototype.redrawPath = function(c, x, y, w, h)
 	{
-		drawBusDecoder(this.numOutputs(),c,x,y,w,h);
+		c.moveTo(0, 0);
+		c.lineTo(0, h);
+		c.moveTo(0, h/2);
+		c.lineTo(w, h/2);
+		c.close();
+		c.end();
 	};
-
-	BusDecoderShape.prototype.numInputs = function(){return 1;};
-	BusDecoderShape.prototype.numOutputs = function(){return this.state.style["shape"].slice(10);};
-
-	BusDecoderShape.prototype.getPorts = function()
-	{
-		var ports=new Array();
-		ports['in_w'] = {x: 0, y: .5, perimeter: false, label: 'in'};
-		for( var i=0; i<this.numOutputs(); i=i+1 )
-			ports['out'+ i + '_d' + i + '_e'] = {x: 1, y: (i+.5)/(this.numOutputs()), perimeter: false, label: 'out'+i};
-		return ports;
-	};
-
-	
-	var drawBusEncoder = function(n, c, x, y, w, h)
-	{
-		c.setStrokeColor('black');
-		c.setFontSize(8);
-		c.setFontStyle(mxConstants.FONT_BOLD);
-		c.begin();
-		c.rect(0,0,w,h);
-		c.fillAndStroke();
-		c.text(w/2,h/2,0,0,''+n+'-to-'+1+'\nBus \nEncoder','center','middle');
-	};
-
-	function BusEncoderShape()
-	{
-		mxActor.call(this);
-	};
-	mxUtils.extend(BusEncoderShape, mxActor);
-
-	BusEncoderShape.prototype.redrawPath = function(c, x, y, w, h)
-	{
-		drawBusEncoder(this.numInputs(),c,x,y,w,h);
-	};
-
-	BusEncoderShape.prototype.numInputs = function(){return this.state.style["shape"].slice(10);};
-	BusEncoderShape.prototype.numOutputs = function(){return 1;};
-
-	BusEncoderShape.prototype.getPorts = function()
+	FanIn.prototype.numInputs = function(){return this.state.style["shape"].slice(5);};
+	FanIn.prototype.numOutputs = function(){return 1;};
+	FanIn.prototype.getPorts = function()
 	{
 		var ports=new Array();
 		for( var i=0; i<this.numInputs(); i=i+1 )
@@ -575,19 +513,39 @@
 		return ports;
 	};
 
-	mxCellRenderer.registerShape('busdecoder2', BusDecoderShape);
-	mxCellRenderer.registerShape('busencoder2', BusEncoderShape);
-	mxCellRenderer.registerShape('busdecoder4', BusDecoderShape);
-	mxCellRenderer.registerShape('busencoder4', BusEncoderShape);
-	mxCellRenderer.registerShape('busdecoder8', BusDecoderShape);
-	mxCellRenderer.registerShape('busencoder8', BusEncoderShape);
-	mxCellRenderer.registerShape('busdecoder16', BusDecoderShape);
-	mxCellRenderer.registerShape('busencoder16', BusEncoderShape);
-	mxCellRenderer.registerShape('busdecoder32', BusDecoderShape);
-	mxCellRenderer.registerShape('busencoder32', BusEncoderShape);
+
+	function FanOut()
+	{
+		mxActor.call(this);
+	};
+	mxUtils.extend(FanOut, mxActor);
+	FanOut.prototype.redrawPath = function(c, x, y, w, h)
+	{
+		c.moveTo(w, 0);
+		c.lineTo(w, h);
+		c.moveTo(w, h/2);
+		c.lineTo(0, h/2);
+		c.close();
+		c.end();
+	};
+	FanOut.prototype.numInputs = function(){return 1;};
+	FanOut.prototype.numOutputs = function(){return this.state.style["shape"].slice(6);};
+	FanOut.prototype.getPorts = function()
+	{
+		var ports=new Array();
+		ports['in_w'] = {x: 0, y: .5, perimeter: false, label: 'in'};
+		for( var i=0; i<this.numOutputs(); i=i+1 )
+			ports['out'+ i + '_d' + i + '_e'] = {x: 1, y: (i+.5)/(this.numOutputs()), perimeter: false, label: 'out'+i};
+		return ports;
+	};
+	mxCellRenderer.registerShape('fanIn8', FanIn);
+	mxCellRenderer.registerShape('fanOut8', FanOut);
 	//====================================================================================
 	//	END BUS GROUP
 	//====================================================================================
+
+
+
 
 
 	//====================================================================================
