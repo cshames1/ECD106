@@ -51,6 +51,10 @@
 			return ports;"
 		);
 
+		Shape.prototype.numOutputs = new Function("var thisShape = "+JSON.stringify(storedShapes[k])+";\
+			return thisShape.signals.output.length;"
+		);
+
 		mxCellRenderer.registerShape(storedShapes[k].componentName, Shape);
 
 	}
@@ -139,11 +143,11 @@
 	
 	OrShape.prototype.getPorts = function()
 	{
-		var x_val = [0.095, 0.17, 0.22, 0.248, 0.248, 0.22, 0.17, 0.095];
-		var y_val = [0.11, 0.22, 0.33, 0.44, 0.56, 0.67, 0.78, 0.89];
+		var x_loc = [0.095, 0.17, 0.22, 0.248, 0.248, 0.22, 0.17, 0.095];
+		var y_loc = [0.11, 0.22, 0.33, 0.44, 0.56, 0.67, 0.78, 0.89];
 		var ports=new Array();
 		for (var i=0; i<this.numInputs(); i++) {
-			ports['in' + i + '_w'] = {x: x_val[i], y: y_val[i], perimeter: false, label: 'in'+i};
+			ports['in' + i + '_w'] = {x: x_loc[i], y: y_loc[i], perimeter: false, label: 'in'+i};
 		}
 		ports['out_e'] = {x: 1, y: 0.5, perimeter: true, label: 'out'};
 		return ports;
@@ -171,11 +175,11 @@
 
 	NorShape.prototype.getPorts = function()
 	{
-		var x_val = [0.078, 0.13, 0.165, 0.185, 0.185, 0.165, 0.13, 0.078];
-		var y_val = [0.11, 0.22, 0.33, 0.44, 0.56, 0.67, 0.78, 0.89];
+		var x_loc = [0.078, 0.13, 0.165, 0.185, 0.185, 0.165, 0.13, 0.078];
+		var y_loc = [0.11, 0.22, 0.33, 0.44, 0.56, 0.67, 0.78, 0.89];
 		var ports=new Array();
 		for (var i=0; i<this.numInputs(); i++) {
-			ports['in' + i + '_w'] = {x: x_val[i], y: y_val[i], perimeter: false, label: 'in'+i};
+			ports['in' + i + '_w'] = {x: x_loc[i], y: y_loc[i], perimeter: false, label: 'in'+i};
 		}
 		ports['out_e'] = {x: 1, y: 0.5, perimeter: true, label: 'out'};
 		return ports;
@@ -204,11 +208,11 @@
 
 	AndShape.prototype.getPorts = function()
 	{
-		var x_val = [0, 0, 0, 0, 0, 0, 0, 0];
-		var y_val = [0.11, 0.22, 0.33, 0.44, 0.56, 0.67, 0.78, 0.89];
+		var x_loc = [0, 0, 0, 0, 0, 0, 0, 0];
+		var y_loc = [0.11, 0.22, 0.33, 0.44, 0.56, 0.67, 0.78, 0.89];
 		var ports=new Array();
 		for (var i=0; i<this.numInputs(); i++) {
-			ports['in' + i + '_w'] = {x: x_val[i], y: y_val[i], perimeter: true, label: 'in'+i};
+			ports['in' + i + '_w'] = {x: x_loc[i], y: y_loc[i], perimeter: true, label: 'in'+i};
 		}
 		ports['out_e'] = {x: 1, y: 0.5, perimeter: true, label: 'out'};
 		return ports;
@@ -236,11 +240,11 @@
 
 	NandShape.prototype.getPorts = function()
 	{
-		var x_val = [0, 0, 0, 0, 0, 0, 0, 0];
-		var y_val = [0.11, 0.22, 0.33, 0.44, 0.56, 0.67, 0.78, 0.89];
+		var x_loc = [0, 0, 0, 0, 0, 0, 0, 0];
+		var y_loc = [0.11, 0.22, 0.33, 0.44, 0.56, 0.67, 0.78, 0.89];
 		var ports=new Array();
 		for (var i=0; i<this.numInputs(); i++) {
-			ports['in' + i + '_w'] = {x: x_val[i], y: y_val[i], perimeter: true, label: 'in'+i};
+			ports['in' + i + '_w'] = {x: x_loc[i], y: y_loc[i], perimeter: true, label: 'in'+i};
 		}
 		ports['out_e'] = {x: 1, y: 0.5, perimeter: true, label: 'out'};
 		return ports;
@@ -272,11 +276,11 @@
 
 	XorShape.prototype.getPorts = function()
 	{
-		var x_val = [0.095, 0.17, 0.22, 0.248, 0.248, 0.22, 0.17, 0.095];
-		var y_val = [0.11, 0.22, 0.33, 0.44, 0.56, 0.67, 0.78, 0.89];
+		var x_loc = [0.095, 0.17, 0.22, 0.248, 0.248, 0.22, 0.17, 0.095];
+		var y_loc = [0.11, 0.22, 0.33, 0.44, 0.56, 0.67, 0.78, 0.89];
 		var ports=new Array();
 		for (var i=0; i<this.numInputs(); i++) {
-			ports['in' + i + '_w'] = {x: x_val[i], y: y_val[i], perimeter: false, label: 'in'+i};
+			ports['in' + i + '_w'] = {x: x_loc[i], y: y_loc[i], perimeter: false, label: 'in'+i};
 		}
 		ports['out_e'] = {x: 1, y: 0.5, perimeter: true, label: 'out'};
 		return ports;
@@ -304,11 +308,11 @@
 
 	XnorShape.prototype.getPorts = function()
 	{
-		var x_val = [0.078, 0.13, 0.165, 0.185, 0.185, 0.165, 0.13, 0.078];
-		var y_val = [0.11, 0.22, 0.33, 0.44, 0.56, 0.67, 0.78, 0.89];
+		var x_loc = [0.078, 0.13, 0.165, 0.185, 0.185, 0.165, 0.13, 0.078];
+		var y_loc = [0.11, 0.22, 0.33, 0.44, 0.56, 0.67, 0.78, 0.89];
 		var ports=new Array();
 		for (var i=0; i<this.numInputs(); i++) {
-			ports['in' + i + '_w'] = {x: x_val[i], y: y_val[i], perimeter: false, label: 'in'+i};
+			ports['in' + i + '_w'] = {x: x_loc[i], y: y_loc[i], perimeter: false, label: 'in'+i};
 		}
 		ports['out_e'] = {x: 1, y: 0.5, perimeter: true, label: 'out'};
 		return ports;

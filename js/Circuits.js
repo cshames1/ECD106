@@ -192,18 +192,12 @@ schematic.prototype.createVerilog=function(name)
 	var inputList="";
 	var inputSet=new Set();
 	var assignList="";
-	var wireList="";
-	var wireList2 = "";
-	var wireList4 = "";
-	var wireList8 = "";
-	var wireList16 = "";
-	var wireList32 = "";
-	var wireSet=new Set();
-	var wireSet2=new Set();
-	var wireSet4=new Set();
-	var wireSet8=new Set();
-	var wireSet16=new Set();
-	var wireSet32=new Set();
+	var wireList = new Array();
+	var wireSet = new Array();
+	for (var i=0; i<=5; i++) {
+		wireList[i] = "";
+		wireSet[i] = new Set();
+	}
 	var outputList="";
 	var netAliases={};
 	var gateInputs={};
@@ -266,6 +260,7 @@ schematic.prototype.createVerilog=function(name)
 	if( nodes ) nodes.forEach(function(item){
 		var decodersize=1;
 		var bus_decoder_size=0;
+		var bus_encoder_size=0;
 		var style=graph.getCellStyle(item); 
 		var module = style["shape"];
 		switch( module )
@@ -295,14 +290,15 @@ schematic.prototype.createVerilog=function(name)
 		case "dff_en":
 			//determine if output net name is port name
 			var linksout=item.linksOutOf();
-			if( linksout.length == 1 && 
-				graph.getCellStyle(linksout[0].target)["shape"] == "outputport" ) 
+			if( linksout.length == 1 && graph.getCellStyle(linksout[0].target)["shape"] == "outputport" ) 
+			{
 				netAliases[netName(linksout[0])] = portName(linksout[0].target,"O");
+			}
 			//else add net name to wire list
 			else if( linksout.length )
-				wireSet.add(netName(linksout[0],"X"));
+				wireSet[0].add(netName(linksout[0],"X"));
 			else
-				wireSet.add(gateName(item,"X") );
+				wireSet[0].add(gateName(item,"X") );
 			break;
 		case "decoder4":decodersize++;
 		case "decoder3":decodersize++;
@@ -310,13 +306,12 @@ schematic.prototype.createVerilog=function(name)
 			for( var i=0; i<(1<<decodersize); i=i+1 )
 			{
 				var linksout=item.getLinks( 'out'+ i +'_d',true);
-				if( linksout.length == 1 && 
-					graph.getCellStyle(linksout[0].target)["shape"] == "outputport" )
+				if( linksout.length == 1 && graph.getCellStyle(linksout[0].target)["shape"] == "outputport" )
 				{
 					netAliases[netName(linksout[0])] = portName(linksout[0].target,"O");
 				}
 				else if( linksout.length )
-					wireSet.add(netName(linksout[0],"X"));
+					wireSet[0].add(netName(linksout[0],"X"));
 			}
 			break;
 		case "busdecoder32": bus_decoder_size++;
@@ -324,89 +319,44 @@ schematic.prototype.createVerilog=function(name)
 		case "busdecoder8": bus_decoder_size++;
 		case "busdecoder4": bus_decoder_size++;
 		case "busdecoder2": bus_decoder_size++;
-		for( var i=0; i<(1<<bus_decoder_size); i=i+1 )
-		{
-			var linksout=item.getLinks( 'out'+ i + '_',true);
-			if( linksout.length == 1 && 
-				graph.getCellStyle(linksout[0].target)["shape"] == "outputport" )
+			for( var i=0; i<(1<<bus_decoder_size); i=i+1 )
+			{
+				var linksout=item.getLinks( 'out'+ i + '_',true);
+				if( linksout.length == 1 && graph.getCellStyle(linksout[0].target)["shape"] == "outputport" )
+				{
+					netAliases[netName(linksout[0])] = portName(linksout[0].target,"O");
+				}
+				else if( linksout.length )
+					wireSet[0].add(netName(linksout[0],"X"));
+			}
+			break;
+		case "busencoder32": bus_encoder_size++;
+		case "busencoder16": bus_encoder_size++;
+		case "busencoder8": bus_encoder_size++;
+		case "busencoder4": bus_encoder_size++;
+		case "busencoder2": bus_encoder_size++;
+			//determine if output net name is port name
+			var linksout=item.linksOutOf();
+			if( linksout.length == 1 && graph.getCellStyle(linksout[0].target)["shape"] == "outputport" ) 
 			{
 				netAliases[netName(linksout[0])] = portName(linksout[0].target,"O");
 			}
-			else if( linksout.length )
-				wireSet.add(netName(linksout[0],"X"));
-		}
-		break;
-		case "busencoder32":
-			//determine if output net name is port name
-			var linksout=item.linksOutOf();
-			if( linksout.length == 1 && 
-				graph.getCellStyle(linksout[0].target)["shape"] == "outputport" ) 
-				netAliases[netName(linksout[0])] = portName(linksout[0].target,"O");
 			//else add net name to wire list
 			else if( linksout.length )
-				wireSet32.add(netName(linksout[0],"X"));
-			else
-				wireSet32.add(gateName(item,"X") );
-			break;
-		case "busencoder16":
-			//determine if output net name is port name
-			var linksout=item.linksOutOf();
-			if( linksout.length == 1 && 
-				graph.getCellStyle(linksout[0].target)["shape"] == "outputport" ) 
-				netAliases[netName(linksout[0])] = portName(linksout[0].target,"O");
-			//else add net name to wire list
-			else if( linksout.length )
-				wireSet16.add(netName(linksout[0],"X"));
-			else
-				wireSet16.add(gateName(item,"X") );
-			break;
-		case "busencoder8":
-			//determine if output net name is port name
-			var linksout=item.linksOutOf();
-			if( linksout.length == 1 && 
-				graph.getCellStyle(linksout[0].target)["shape"] == "outputport" ) 
-				netAliases[netName(linksout[0])] = portName(linksout[0].target,"O");
-			//else add net name to wire list
-			else if( linksout.length )
-				wireSet8.add(netName(linksout[0],"X"));
-			else
-				wireSet8.add(gateName(item,"X") );
-			break;
-		case "busencoder4":
-			//determine if output net name is port name
-			var linksout=item.linksOutOf();
-			if( linksout.length == 1 && 
-				graph.getCellStyle(linksout[0].target)["shape"] == "outputport" ) 
-				netAliases[netName(linksout[0])] = portName(linksout[0].target,"O");
-			//else add net name to wire list
-			else if( linksout.length )
-				wireSet4.add(netName(linksout[0],"X"));
-			else
-				wireSet4.add(gateName(item,"X") );
-			break;
-		case "busencoder2":
-			//determine if output net name is port name
-			var linksout=item.linksOutOf();
-			if( linksout.length == 1 && 
-				graph.getCellStyle(linksout[0].target)["shape"] == "outputport" ) 
-				netAliases[netName(linksout[0])] = portName(linksout[0].target,"O");
-			//else add net name to wire list
-			else if( linksout.length )
-				wireSet2.add(netName(linksout[0],"X"));
-			else
-				wireSet2.add(gateName(item,"X") );
+			{
+				wireSet[bus_encoder_size].add(netName(linksout[0],"X"));
+			}
 			break;
 		default:
 			for( var i=0; i<item.numLinksOutOf(); i=i+1 )
 			{
 				var linksout=item.getLinks( 'out'+ i + '_',true);
-				if( linksout.length == 1 && 
-					graph.getCellStyle(linksout[0].target)["shape"] == "outputport" )
+				if( linksout.length == 1 && graph.getCellStyle(linksout[0].target)["shape"] == "outputport" )
 				{
 					netAliases[netName(linksout[0])] = portName(linksout[0].target,"O");
 				}
 				else if( linksout.length )
-					wireSet.add(netName(linksout[0],"X"));
+					wireSet[0].add(netName(linksout[0],"X"));
 			}
 			break;
 		}
@@ -763,46 +713,20 @@ schematic.prototype.createVerilog=function(name)
 	}
 	verilogCode+="\n);";
 	//Print 1-bit Wires
-	wireSet.forEach( function(item){ wireList += item + ", "; } );
-	if( wireList != "" )
+	wireSet[0].forEach( function(item){ wireList[0] += item + ", "; } );
+	if( wireList[0] != "" )
 	{
-		wireList=wireList.replace(/, *$/gi, '');
-		verilogCode+="\n\nwire "+wireList+";";
+		wireLis[0]=wireList[0].replace(/, *$/gi, '');
+		verilogCode+="\n\nwire "+wireList[0]+";";
 	}
-	//Print 2-bit Wires
-	wireSet2.forEach( function(item){ wireList2 += item + ", "; } );
-	if( wireList2 != "" )
-	{
-		wireList2=wireList2.replace(/, *$/gi, '');
-		verilogCode+="\n\nwire [1:0] "+wireList2+";";
-	}
-	//Print 4-bit Wires
-	wireSet4.forEach( function(item){ wireList4 += item + ", "; } );
-	if( wireList4 != "" )
-	{
-		wireList4=wireList4.replace(/, *$/gi, '');
-		verilogCode+="\n\nwire [3:0] "+wireList4+";";
-	}
-	//Print 8-bit Wires
-	wireSet8.forEach( function(item){ wireList8 += item + ", "; } );
-	if( wireList8 != "" )
-	{
-		wireList8=wireList8.replace(/, *$/gi, '');
-		verilogCode+="\n\nwire [7:0] "+wireList8+";";
-	}
-	//Print 16-bit Wires
-	wireSet16.forEach( function(item){ wireList16 += item + ", "; } );
-	if( wireList16 != "" )
-	{
-		wireList16=wireList16.replace(/, *$/gi, '');
-		verilogCode+="\n\nwire [15:0] "+wireList16+";";
-	}
-	//Print 32-bit Wires
-	wireSet32.forEach( function(item){ wireList32 += item + ", "; } );
-	if( wireList32 != "" )
-	{
-		wireList32=wireList32.replace(/, *$/gi, '');
-		verilogCode+="\n\nwire [31:0] "+wireList32+";";
+	//Print busses
+	for (var i=1; i<5; i++) {
+		wireSet[i].forEach( function(item){ wireList[i] += item + ", "; } );
+		if( wireList[i] != "" )
+		{
+			wireList[i]=wireList[i].replace(/, *$/gi, '');
+			verilogCode+="\n\nwire [" + (1<<i) + ":0] "+wireList[i]+";";
+		}
 	}
 	if( assignList != '' )
 		verilogCode+="\n"+assignList;
