@@ -720,7 +720,7 @@ schematic.prototype.createVerilog=function(name)
 		verilogCode+="\n\nwire "+wireList[0]+";";
 	}
 	//Print busses
-	for (var i=1; i<5; i++) {
+	for (var i=1; i<=5; i++) {
 		wireSet[i].forEach( function(item){ wireList[i] += item + ", "; } );
 		if( wireList[i] != "" )
 		{
