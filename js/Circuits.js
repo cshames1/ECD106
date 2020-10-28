@@ -716,7 +716,7 @@ schematic.prototype.createVerilog=function(name)
 	wireSet[0].forEach( function(item){ wireList[0] += item + ", "; } );
 	if( wireList[0] != "" )
 	{
-		wireLis[0]=wireList[0].replace(/, *$/gi, '');
+		wireList[0]=wireList[0].replace(/, *$/gi, '');
 		verilogCode+="\n\nwire "+wireList[0]+";";
 	}
 	//Print busses
@@ -725,7 +725,7 @@ schematic.prototype.createVerilog=function(name)
 		if( wireList[i] != "" )
 		{
 			wireList[i]=wireList[i].replace(/, *$/gi, '');
-			verilogCode+="\n\nwire [" + (1<<i) + ":0] "+wireList[i]+";";
+			verilogCode+="\n\nwire [" + ((1<<i)-1) + ":0] "+wireList[i]+";";
 		}
 	}
 	if( assignList != '' )
