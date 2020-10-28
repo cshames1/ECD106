@@ -93,8 +93,8 @@ Sidebar.prototype.init = function()
 {
 	var dir = STENCIL_PATH;
 
-	this.addBasicGatesPalette(false);
 	this.addComponentsPalette(true);
+	this.addBasicGatesPalette(false);
 	this.addMuxComponentPalette(false);
 	this.addDecoderComponentPalette(false);
 	this.addLatchComponentPalette(false);
@@ -805,33 +805,6 @@ Sidebar.prototype.addSearchPalette = function(expand)
 //====================================================================================
 //	SIDE BAR SECTIONS
 //====================================================================================
-Sidebar.prototype.addBasicGatesPalette = function(expand)
-{
-	this.addPaletteFunctions('basicgates', mxResources.get('basicgates'), true, this.createBasicGatesShapes());
-};
-
-Sidebar.prototype.createBasicGatesShapes = function()
-{
-	
-	var sb = this;
-
-	
-	var field = new mxCell('List Item', new mxGeometry(0, 0, 60, 26), 'text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;');
-	field.vertex = true;
-	return [
-	 	this.createVertexTemplateEntry('shape=and;editable=0;', 30, 40, '', 'And', null, null, 'logic and'),
-	 	this.createVertexTemplateEntry('shape=nand;editable=0;', 40, 40, '', 'Nand', null, null, 'logic nand'),
-	 	this.createVertexTemplateEntry('shape=or;editable=0;', 30, 40, '', 'Or', null, null, 'logic or'),
-	 	this.createVertexTemplateEntry('shape=nor;editable=0;', 40, 40, '', 'Nor', null, null, 'logic nor'),
-	 	this.createVertexTemplateEntry('shape=xor;editable=0;', 30, 40, '', 'Xor', null, null, 'logic Xor'),
-	 	this.createVertexTemplateEntry('shape=xnor;editable=0;', 40, 40, '', 'XnOr', null, null, 'logic Xnor'),
-	 	this.createVertexTemplateEntry('shape=buffer;editable=0;', 30, 30, '', 'Buffer', null, null, 'logic buffer'),
-	 	this.createVertexTemplateEntry('shape=inverter;editable=0;', 30, 30, '', 'Inverter', null, null, 'logic Invert'),
-		
-	];
-
-};
-
 
 Sidebar.prototype.addComponentsPalette = function(expand)
 {
@@ -862,6 +835,32 @@ Sidebar.prototype.createComponentsShapes = function()
 
 };
 
+Sidebar.prototype.addBasicGatesPalette = function(expand)
+{
+	this.addPaletteFunctions('basicgates', mxResources.get('basicgates'), false, this.createBasicGatesShapes());
+};
+
+Sidebar.prototype.createBasicGatesShapes = function()
+{
+	
+	var sb = this;
+
+	
+	var field = new mxCell('List Item', new mxGeometry(0, 0, 60, 26), 'text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;');
+	field.vertex = true;
+	return [
+	 	this.createVertexTemplateEntry('shape=and;editable=0;', 30, 40, '', 'And', null, null, 'logic and'),
+	 	this.createVertexTemplateEntry('shape=nand;editable=0;', 40, 40, '', 'Nand', null, null, 'logic nand'),
+	 	this.createVertexTemplateEntry('shape=or;editable=0;', 30, 40, '', 'Or', null, null, 'logic or'),
+	 	this.createVertexTemplateEntry('shape=nor;editable=0;', 40, 40, '', 'Nor', null, null, 'logic nor'),
+	 	this.createVertexTemplateEntry('shape=xor;editable=0;', 30, 40, '', 'Xor', null, null, 'logic Xor'),
+	 	this.createVertexTemplateEntry('shape=xnor;editable=0;', 40, 40, '', 'XnOr', null, null, 'logic Xnor'),
+	 	this.createVertexTemplateEntry('shape=buffer;editable=0;', 30, 30, '', 'Buffer', null, null, 'logic buffer'),
+	 	this.createVertexTemplateEntry('shape=inverter;editable=0;', 30, 30, '', 'Inverter', null, null, 'logic Invert'),
+		
+	];
+
+};
 
 Sidebar.prototype.addMuxComponentPalette = function(expand)
 {
@@ -912,10 +911,10 @@ Sidebar.prototype.createLatchComponentShapes = function()
 	var field = new mxCell('List Item', new mxGeometry(0, 0, 60, 26), 'text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;');
 	field.vertex = true;
 	return [
-		this.createVertexTemplateEntry('shape=srlatch;editable=0;', 80, 80, '', 'SR Latch', null, null, 'SR Latch'),
-		this.createVertexTemplateEntry('shape=srlatch_en;editable=0;', 80, 80, '', 'SR Latch with EN', null, null, 'SR Latch with EN'),
-		this.createVertexTemplateEntry('shape=dlatch;editable=0;', 80, 80, '', 'D Latch', null, null, 'D Latch'),
-		this.createVertexTemplateEntry('shape=dlatch_en;editable=0;', 80, 80, '', 'D Latch with EN', null, null, 'D Latch with EN'),
+		//this.createVertexTemplateEntry('shape=srlatch;editable=0;', 80, 80, '', 'SR Latch', null, null, 'SR Latch'),
+		//this.createVertexTemplateEntry('shape=srlatch_en;editable=0;', 80, 80, '', 'SR Latch with EN', null, null, 'SR Latch with EN'),
+		//this.createVertexTemplateEntry('shape=dlatch;editable=0;', 80, 80, '', 'D Latch', null, null, 'D Latch'),
+		//this.createVertexTemplateEntry('shape=dlatch_en;editable=0;', 80, 80, '', 'D Latch with EN', null, null, 'D Latch with EN'),
 		this.createVertexTemplateEntry('shape=dff;editable=0;', 80, 80, '', 'Flip Flop', null, null, 'Flip Flop'),
 		this.createVertexTemplateEntry('shape=dff_en;editable=0;', 80, 80, '', 'Flip Flop with EN', null, null, 'Flip Flop with EN')
 	];
