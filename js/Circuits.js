@@ -224,7 +224,10 @@ schematic.prototype.createVerilog=function(name)
 		var x= netAliases[netName(link)] ;
 		return x ? x : netName(link);
 	}
-	
+	function getPortID ( link ) {
+		var oPortName=/sourcePort=out([^_]*)/.exec(link.style);
+		return oPortName[0].split('=')[1];
+	}
 	nodes=graph.getChildVertices(graph.getDefaultParent());
 	
 	//name the nets
@@ -340,14 +343,20 @@ schematic.prototype.createVerilog=function(name)
 				wireSet[bus_encoder_size].add(gateName(item,"X") );
 			break;
 		default:
-			for( var i=0; i<item.numLinksOutOf(); i=i+1 )
-			{
-				var linksout=item.getLinks( 'out'+ i + '_', true);
+			var linksout=item.linksOutOf();
+			var outputs = new Set();
+			//find each output being used
+			linksout.forEach(function(link){
+				outputs.add( getPortID(link) );
+			});
+			//for each used output, map the net
+			outputs.forEach(function(output){
+				var linksout=item.getLinks( output + '_', true);
 				if( linksout.length == 1 && graph.getCellStyle(linksout[0].target)["shape"] == "outputport" )
 					netAliases[netName(linksout[0])] = portName(linksout[0].target,"O");
 				else if( linksout.length )
 					wireSet[0].add(netName(linksout[0],"X"));
-			}
+			});
 			break;
 		}
 	});
