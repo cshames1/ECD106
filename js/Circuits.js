@@ -224,7 +224,7 @@ schematic.prototype.createVerilog=function(name)
 		var x= netAliases[netName(link)] ;
 		return x ? x : netName(link);
 	}
-	function getPortID ( link ) {
+	function getSrcPortID ( link ) {
 		var oPortName=/sourcePort=out([^_]*)/.exec(link.style);
 		return oPortName[0].split('=')[1];
 	}
@@ -347,7 +347,7 @@ schematic.prototype.createVerilog=function(name)
 			var outputs = new Set();
 			//find each output being used
 			linksout.forEach(function(link){
-				outputs.add( getPortID(link) );
+				outputs.add( getSrcPortID(link) );
 			});
 			//for each used output, map the net
 			outputs.forEach(function(output){

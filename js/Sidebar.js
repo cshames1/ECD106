@@ -99,7 +99,8 @@ Sidebar.prototype.init = function()
 	this.addDecoderComponentPalette(false);
 	this.addLatchComponentPalette(false);
 	this.addBusComponentPalette(false);
-	this.addMiscPalette(false);
+	this.addIOPalette(false);
+	this.addConstantPalette(false);
 
 };
 
@@ -946,23 +947,38 @@ Sidebar.prototype.createBusComponentShapes = function()
 };
 
 
-Sidebar.prototype.addMiscPalette = function(expand)
+Sidebar.prototype.addIOPalette = function(expand)
 {
 
-	this.addPaletteFunctions('misc', mxResources.get('misc'), false, this.createMiscShapes());
+	this.addPaletteFunctions('io', mxResources.get('io'), false, this.createIOShapes());
 };
 
-Sidebar.prototype.createMiscShapes = function()
+Sidebar.prototype.createIOShapes = function()
 {
 	var sb = this;
 	var field = new mxCell('List Item', new mxGeometry(0, 0, 60, 26), 'text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;');
 	field.vertex = true;
 	return [
-	 	this.createVertexTemplateEntry('shape=inputport;', 60, 20, '', 'Input', null, null, 'Input Port'),
-	 	this.createVertexTemplateEntry('shape=outputport', 60, 20, '', 'Output', null, null, 'Output Port'),
-		this.createVertexTemplateEntry('shape=constant0;editable=0;', 30, 30, '0', 'Constant 0', null, null, 'Binary Constant 0'),
-		this.createVertexTemplateEntry('shape=constant1;editable=0;', 30, 30, '1', 'Constant 1', null, null, 'Binary Constant 1'),
+	 	this.createVertexTemplateEntry('shape=inputport;', 60, 20, '', "Input 1'b", null, null, 'Input Port'),
+	 	this.createVertexTemplateEntry('shape=outputport;', 60, 20, '', "Output 1'b", null, null, 'Output Port')
 
+	];
+
+};
+Sidebar.prototype.addConstantPalette = function(expand)
+{
+
+	this.addPaletteFunctions('constants', mxResources.get('constants'), false, this.createConstantShapes());
+};
+
+Sidebar.prototype.createConstantShapes = function()
+{
+	var sb = this;
+	var field = new mxCell('List Item', new mxGeometry(0, 0, 60, 26), 'text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;');
+	field.vertex = true;
+	return [
+		this.createVertexTemplateEntry('shape=constant0;editable=0;', 30, 30, '0', 'Constant 0', null, null, 'Binary Constant 0'),
+		this.createVertexTemplateEntry('shape=constant1;editable=0;', 30, 30, '1', 'Constant 1', null, null, 'Binary Constant 1')
 	];
 
 };
