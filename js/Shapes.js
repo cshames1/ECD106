@@ -619,7 +619,12 @@
 		ports['out_e'] = {x: 1, y: 0.5, perimeter: true, label:'out'};
 		return ports;
 	};
-	mxCellRenderer.registerShape('inputport', InputPortShape);
+	mxCellRenderer.registerShape('inputport1', InputPortShape);
+	mxCellRenderer.registerShape('inputport2', InputPortShape);
+	mxCellRenderer.registerShape('inputport4', InputPortShape);
+	mxCellRenderer.registerShape('inputport8', InputPortShape);
+	mxCellRenderer.registerShape('inputport16', InputPortShape);
+	mxCellRenderer.registerShape('inputport32', InputPortShape);
 
 	function OutputPortShape()
 	{
@@ -643,7 +648,12 @@
 		ports['in_w'] = {x: 0, y: 0.5, perimeter: true, label: 'in'};
 		return ports;
 	};
-	mxCellRenderer.registerShape('outputport', OutputPortShape);
+	mxCellRenderer.registerShape('outputport1', OutputPortShape);
+	mxCellRenderer.registerShape('outputport2', OutputPortShape);
+	mxCellRenderer.registerShape('outputport4', OutputPortShape);
+	mxCellRenderer.registerShape('outputport8', OutputPortShape);
+	mxCellRenderer.registerShape('outputport16', OutputPortShape);
+	mxCellRenderer.registerShape('outputport32', OutputPortShape);
 
 	//====================================================================================
 	//	END IO GROUP

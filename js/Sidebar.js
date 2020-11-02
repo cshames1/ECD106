@@ -959,9 +959,18 @@ Sidebar.prototype.createIOShapes = function()
 	var field = new mxCell('List Item', new mxGeometry(0, 0, 60, 26), 'text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;');
 	field.vertex = true;
 	return [
-	 	this.createVertexTemplateEntry('shape=inputport;', 60, 20, '', "Input 1'b", null, null, 'Input Port'),
-	 	this.createVertexTemplateEntry('shape=outputport;', 60, 20, '', "Output 1'b", null, null, 'Output Port')
-
+		this.createVertexTemplateEntry('shape=inputport1;', 60, 20, '', "Input 1'b", null, null, 'Input Port'),
+		this.createVertexTemplateEntry('shape=outputport1;', 60, 20, '', "Output 1'b", null, null, 'Output Port'),
+		this.createVertexTemplateEntry('shape=inputport2;', 60, 25, '', "Input 2'b", null, null, 'Input Port'),
+		this.createVertexTemplateEntry('shape=outputport2;', 60, 25, '', "Output 2'b", null, null, 'Output Port'),
+		this.createVertexTemplateEntry('shape=inputport4;', 60, 30, '', "Input 4'b", null, null, 'Input Port'),
+		this.createVertexTemplateEntry('shape=outputport4;', 60, 30, '', "Output 4'b", null, null, 'Output Port'),
+		this.createVertexTemplateEntry('shape=inputport8;', 60, 35, '', "Input 8'b", null, null, 'Input Port'),
+		this.createVertexTemplateEntry('shape=outputport8;', 60, 35, '', "Output 8'b", null, null, 'Output Port'),
+		this.createVertexTemplateEntry('shape=inputport16;', 60, 40, '', "Input 16'b", null, null, 'Input Port'),
+		this.createVertexTemplateEntry('shape=outputport16;', 60, 40, '', "Output 16'b", null, null, 'Output Port'),
+		this.createVertexTemplateEntry('shape=inputport32;', 60, 45, '', "Input 32'b", null, null, 'Input Port'),
+	 	this.createVertexTemplateEntry('shape=outputport32;', 60, 45, '', "Output 32'b", null, null, 'Output Port')
 	];
 
 };
