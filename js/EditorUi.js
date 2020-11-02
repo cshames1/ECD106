@@ -42,11 +42,7 @@ EditorUi = function(editor, container, lightbox)
 	var style = graph.getCellStyle(edge);
 	var srcPortId = style[mxConstants.STYLE_SOURCE_PORT];
 	var trgPortId = style[mxConstants.STYLE_TARGET_PORT];
-	if (edge.source.size>0)
-	{
-		deleteEdge(edge);
-		return;
-	}
+
 	if( edge.source == edge.target )
 	{
 		deleteEdge(edge);

@@ -282,10 +282,6 @@ schematic.prototype.createVerilog=function(name)
 		case "inputport4": input_size++;
 		case "inputport2": input_size++;
 		case "inputport1":
-			var linksout=item.linksOutOf();
-			if (linksout.length && input_size>0){
-				linksout[0].source.size=(1<<input_size);
-			}
 			break;
 		case "outputport32":
 		case "outputport16":
@@ -390,22 +386,35 @@ schematic.prototype.createVerilog=function(name)
 		var muxsize=0;
 		var bus_encoder_size = 0;
 		var bus_decoder_size = 0;
+		var input_size=0;
+		var output_size=0;
 		var decodersize=1;
 		var style=graph.getCellStyle(item); 
 		var module = style["shape"];
 		switch( module )
 		{
-		case "inputport1": 
-		case "inputport2": 
-		case "inputport4": 
-		case "inputport8": 
-		case "inputport16": 
-		case "inputport32":
-			inputList+="\n\tinput " + portName(item,'I') + ',';
+		case "inputport32": input_size++;
+		case "inputport16": input_size++;
+		case "inputport8": input_size++;
+		case "inputport4": input_size++;
+		case "inputport2": input_size++;
+		case "inputport1":
+			if (input_size==0) 
+				inputList+="\n\tinput " + portName(item,'I') +',';
+			else
+				inputList+="\n\tinput [" + ((1<<input_size)-1) + ':0] ' + portName(item,'I') +',';
 			inputSet.add( portName(item,'I') );
 			break;
+		case "outputport32": output_size++;
+		case "outputport16": output_size++;
+		case "outputport8": output_size++;
+		case "outputport4": output_size++;
+		case "outputport2": output_size++;
 		case "outputport1":
-			outputList+="\n\toutput " + portName(item,'O') + ',';
+			if (output_size==0)
+				outputList+="\n\toutput " + portName(item,'O') + ',';
+			else
+				outputList+="\n\toutput [" + ((1<<output_size)-1) + ':0] ' + portName(item,'O') +',';
 			var link=item.linksInto();
 			if( link.length == 0 )
 			{
