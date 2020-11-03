@@ -43,11 +43,11 @@
 			var s=thisShape.signals.output.length;\
 			var ports=new Array();\
 			for( var i=0; i<s; i=i+1) {\
-				var portLabel = (thisShape.signal_size.output[i]==1)? thisShape.signals.output[i] : thisShape.signals.output[i]+' ['+(thisShape.signal_size.output[i]-1)+':0]';\
+				var portLabel = (thisShape.signal_size.output[i]==1)? thisShape.signals.output[i] : '['+(thisShape.signal_size.output[i]-1)+':0] ' + thisShape.signals.output[i];\
 				ports['out' + i  + '_e'] = {x: 1, y: [(i+1)/(1+s)], perimeter: false, label: portLabel};\
 			}\
 			for( var i=0; i<n; i=i+1 ) {\
-				var portLabel = (thisShape.signal_size.input[i]==1)? thisShape.signals.input[i] : thisShape.signals.input[i]+' ['+(thisShape.signal_size.input[i]-1)+':0]';\
+				var portLabel = (thisShape.signal_size.input[i]==1)? thisShape.signals.input[i] : ' ['+(thisShape.signal_size.input[i]-1)+':0] ' + thisShape.signals.input[i];\
 				ports['in' + i + '_w'] = {x: 0, y: [(i+1)/(1+n)], perimeter: false, label: portLabel};\
 			}\
 			return ports;"
@@ -461,9 +461,8 @@
 		var ports=new Array();
 		var style=this.state.style["shape"];
 		var is_enable=style.endsWith("_en");
-		var clock_name=style.startsWith("dff") ? ">" : "G";
 		ports['in_D_w']={x: 0, y: 0.25, perimeter:false, label:'D'};
-		ports['in_'+clock_name+'_w']={x: 0, y: 0.75, perimeter:false, label:'clk'};
+		ports['in_clk_w']={x: 0, y: 0.75, perimeter:false, label:'clk'};
 		ports['out_Q_e']={x: 1, y: 0.25, perimeter:false, label:'Q'};
 		if( is_enable )
 			ports['in_en_w']={x: 0, y: 0.5, perimeter:false, label:'en'};

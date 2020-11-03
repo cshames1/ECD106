@@ -161,13 +161,7 @@ Actions.prototype.init = function()
 					signals[direction].push(port_name);
 					signal_size[direction].push(port_size);
 				}
-				//print decoded results
-				/*console.log("Module: " + SymbolName);
-				console.log("Inputs:" );
-				console.log(signals.input);
-				console.log("outputs:" );
-				console.log(signals.output);*/
-
+				
 				//save the decoded shape to localstorage
 				var storedShapes = JSON.parse(localStorage.getItem('storedShapes'));
 				if(storedShapes == null)
