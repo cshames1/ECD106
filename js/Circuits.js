@@ -154,7 +154,7 @@ schematic.prototype.runDRC = function()
 			if( item.numLinksOutOf() == 0 )
 				Messages.addWarning("Latch has an unconnected output",item);
 			break;
-		case "dff_en":
+		case "register_en":
 			if( item.getLinks("in_en",false).length == 0)
 				Messages.addError("Flip-Flop enable (en) input must be connected",item);
 		case "dff":
@@ -209,7 +209,7 @@ schematic.prototype.createVerilog=function(name)
 	var gateNames={and:"and", nand:"nand",or:"or",nor:"nor",xor:"xor",xnor:"xnor",buffer:"buf", inverter:"not",
 					mux2:"mux2", mux4:"mux4", mux8:"", mux16:"mux16",
 					decoder2:"decoder #(2,1)",decoder3:"decoder #(3,1)",decoder4:"decoder #(4,1)",
-					dlatch:"d_latch",dlatch_en:"d_latch_en",dff:"dff",dff_en:"dff_en",srlatch:"sr_latch",srlatch_en:"sr_latch_en",
+					dlatch:"d_latch",dlatch_en:"d_latch_en",register:"register",register_en:"register_en",srlatch:"sr_latch",srlatch_en:"sr_latch_en",
 					busencoder2: "busencoder2", busencoder4: "busencoder4", busencoder8: "busencoder8", busencoder16: "busencoder16", busencoder32: "busencoder32",
 					busdecoder2: "busdecoder2", busdecoder4: "busdecoder4", busdecoder8: "busdecoder8", busdecoder16: "busdecoder16", busdecoder32: "busdecoder32" 
 				};
@@ -332,8 +332,8 @@ schematic.prototype.createVerilog=function(name)
 		case "dlatch_en":
 		case "srlatch":
 		case "srlatch_en":
-		case "dff":
-		case "dff_en":
+		case "register":
+		case "register_en":
 			//determine if output net name is port name
 			var linksout=item.linksOutOf();
 			if( linksout.length == 1 && graph.getCellStyle(linksout[0].target)["shape"].includes('outputport')) 
@@ -549,7 +549,7 @@ schematic.prototype.createVerilog=function(name)
 				netList += gateName(item,"X");
 			netList += ')\n);';
 			break; 
-		case "dff":
+		case "register":
 			netList += "\n\n" + gateNames[style["shape"]] + ' ' + gateName(item,"U") + " ("; 
 			netList += '\n\t.data_out(';
 			var links=item.linksOutOf();
@@ -571,7 +571,7 @@ schematic.prototype.createVerilog=function(name)
 			}
 			netList=netList+" )\n);";
 			break;
-		case "dff_en":
+		case "register_en":
 			netList += "\n\n" + gateNames[style["shape"]] + ' ' + gateName(item,"U") + " ("; 
 			netList += '\n\t.data_out(';
 			var links=item.linksOutOf();
@@ -722,7 +722,7 @@ schematic.prototype.createVerilog=function(name)
 		verilogCode+="\n"+assignList;
 	if( netList != '' )
 		verilogCode+="\n"+netList;
-	verilogCode+="\n\nendmodule\n"+teststr;
+	verilogCode+="\n\nendmodule\n";//+teststr;
 	return verilogCode;
 };
 
@@ -883,7 +883,7 @@ schematic.prototype.updateGateOutput=function(node)
 		if( ckt.linkIsHigh(node.getLink("in_G")))
 			ckt.setGateOutput( node,ckt.linkIsHigh( node.getLink("in_D")),);
 		break;
-	case "dff_en":
+	case "register_en":
 		if( !ckt.linkIsHigh(node.getLink("in_en")))
 			break;
 	case "dff":

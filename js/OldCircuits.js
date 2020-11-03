@@ -138,7 +138,7 @@ schematic.prototype.runDRC = function()
 			if( item.numLinksOutOf() == 0 )
 				Messages.addWarning("Latch has an unconnected output",item);
 			break;
-		case "dff_en":
+		case "register_en":
 			if( item.getLinks("in_en",false).length == 0)
 				Messages.addError("Flip-Flop enable input must be connected",item);
 		case "dff":
@@ -553,7 +553,7 @@ schematic.prototype.updateGateOutput=function(node)
 		if( ckt.linkIsHigh(node.getLink("in_G")))
 			ckt.setGateOutput( node,ckt.linkIsHigh( node.getLink("in_D")),);
 		break;
-	case "dff_en":
+	case "register_en":
 		if( !ckt.linkIsHigh(node.getLink("in_en")))
 			break;
 	case "dff":

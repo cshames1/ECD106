@@ -441,23 +441,22 @@
 	//====================================================================================
 	//	REGISTER GROUP
 	//====================================================================================
-	function DLatchShape()
+	function RegisterShape()
 	{
 		mxActor.call(this);
 	};
-	mxUtils.extend(DLatchShape, mxActor);
-	DLatchShape.prototype.redrawPath = function(c, x, y, w, h)
+	mxUtils.extend(RegisterShape, mxActor);
+	RegisterShape.prototype.redrawPath = function(c, x, y, w, h)
 	{
-		var name= this.state.style["shape"].startsWith("dff")? "Flip-Flop" : "D-Latch";
 		c.setStrokeColor('black');
 		c.begin();
 		c.rect(0,0,w,h);
 		c.fillAndStroke();
 		c.setFontSize(8);
 		c.setFontStyle(mxConstants.FONT_BOLD);
-		c.text(w/2,2*h/5,0,0,name,'center','middle');
+		c.text(w/2,2*h/5,0,0,'Register','center','middle');
 	};
-	DLatchShape.prototype.getPorts = function()
+	RegisterShape.prototype.getPorts = function()
 	{
 		var ports=new Array();
 		var style=this.state.style["shape"];
@@ -470,8 +469,8 @@
 			ports['in_en_w']={x: 0, y: 0.5, perimeter:false, label:'en'};
 		return ports;
 	};
-	mxCellRenderer.registerShape('dff', DLatchShape);
-	mxCellRenderer.registerShape('dff_en', DLatchShape);
+	mxCellRenderer.registerShape('register', RegisterShape);
+	mxCellRenderer.registerShape('register_en', RegisterShape);
 
 	//====================================================================================
 	//	END REGISTER GROUP
@@ -649,8 +648,6 @@
 	function ConstantOneShape(){ ConstantShape.call(this);};
 	mxUtils.extend(ConstantOneShape, ConstantShape);
 	mxCellRenderer.registerShape('constant1', ConstantOneShape);
-
-
 
 	//====================================================================================
 	//	END CONSTANT GROUP
