@@ -916,8 +916,8 @@ Sidebar.prototype.createLatchComponentShapes = function()
 		//this.createVertexTemplateEntry('shape=srlatch_en;editable=0;', 80, 80, '', 'SR Latch with EN', null, null, 'SR Latch with EN'),
 		//this.createVertexTemplateEntry('shape=dlatch;editable=0;', 80, 80, '', 'D Latch', null, null, 'D Latch'),
 		//this.createVertexTemplateEntry('shape=dlatch_en;editable=0;', 80, 80, '', 'D Latch with EN', null, null, 'D Latch with EN'),
-		this.createVertexTemplateEntry('shape=dff;editable=0;', 80, 80, '', 'Flip Flop', null, null, 'Flip Flop'),
-		this.createVertexTemplateEntry('shape=dff_en;editable=0;', 80, 80, '', 'Flip Flop with EN', null, null, 'Flip Flop with EN')
+		this.createVertexTemplateEntry('shape=dff;editable=0;', 80, 80, '', 'Register', null, null, 'Register'),
+		this.createVertexTemplateEntry('shape=dff_en;editable=0;', 80, 80, '', 'Register with EN', null, null, 'Register with EN')
 	];
 };
 

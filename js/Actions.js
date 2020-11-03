@@ -118,7 +118,6 @@ Actions.prototype.init = function()
 				mxUtils.alert(mxResources.get('invalidOrMissingFile') + ': ' + e.message);
 			}
 
-//Tomer's code for parsing verilog:
 			function parseVerilog(file,compName)
 			{
 				remove_whitespace = function(text) {
@@ -151,6 +150,7 @@ Actions.prototype.init = function()
 					if (lines[i].includes('[')) {
 						port_size = lines[i].split('[')[1];
 						port_size = port_size.split(':')[0];
+						port_size++;
 					}
 					else	
 						port_size=1;

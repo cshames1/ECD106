@@ -186,6 +186,7 @@ schematic.prototype.runDRC = function()
 	return Messages;
 };
 
+
 schematic.prototype.createVerilog=function(name)
 {
 	var teststr = "";
@@ -227,8 +228,29 @@ schematic.prototype.createVerilog=function(name)
 	}
 	function getSrcPortID ( link ) {
 		var oPortName=/sourcePort=out([^_]*)/.exec(link.style);
-		return oPortName[0].split('=')[1];
+		return oPortName[1];
 	}
+	function getTrgtPortID ( link ) {
+		var oPortName=/targetPort=in([^_]*)/.exec(link.style);
+		return oPortName[1];
+	}
+	function getModulePortSizes (moduleName) {
+		var storedShapes = JSON.parse(localStorage.getItem('storedShapes'));
+		var currentModule;
+		storedShapes.forEach(function(shape){
+			if (shape.componentName==moduleName) currentModule = shape;
+		});
+		return currentModule.signal_size;
+	}
+	function getModulePorts (moduleName){
+		var storedShapes = JSON.parse(localStorage.getItem('storedShapes'));
+		var currentModule;
+		storedShapes.forEach(function(shape){
+			if (shape.componentName==moduleName) currentModule = shape;
+		});
+		return currentModule.signals;
+	}
+
 	nodes=graph.getChildVertices(graph.getDefaultParent());
 	
 	//name the nets
@@ -393,20 +415,22 @@ schematic.prototype.createVerilog=function(name)
 				wireSet[(1<<bus_encoder_size)].add(gateName(item,"X") );
 			break;
 		default:
+			var portSizes = getModulePortSizes(module);
 			var linksout=item.linksOutOf();
 			var outputs = new Set();
 			//find each output being used
 			linksout.forEach(function(link){
 				outputs.add( getSrcPortID(link) );
-				teststr += link.style;
 			});
 			//for each used output, map the net
-			outputs.forEach(function(output){
-				var linksout=item.getLinks( output + '_', true);
+			outputs.forEach(function(id){
+				var linksout=item.getLinks( 'out' + id + '_', true);
 				if( linksout.length == 1 && graph.getCellStyle(linksout[0].target)["shape"].includes('outputport'))
 					netAliases[netName(linksout[0])] = portName(linksout[0].target,"O");
-				else if( linksout.length )
-					wireSet[(1<<0)].add(netName(linksout[0],"X"));
+				else if( linksout.length ) {
+					wireSet[portSizes.output[id]].add(netName(linksout[0],"X"));
+					linksout[0].size=portSizes.output[id];
+				}
 			});
 			break;
 		}
@@ -648,21 +672,20 @@ schematic.prototype.createVerilog=function(name)
 			netList=netList+"} )\n);";
 			break; 
 		default: 
+			var ports = getModulePorts(module);
 			netList += "\n\n" + module + ' ' + gateName(item,"C") + " (";
 			var links=item.linksInto();
-			if( links.length )
-				links.forEach( function(link){ 
-					targetPort = link["style"].match(/targetPort=(.*?);/)[1].split("_")[1];
-					netList += ("\n\t." + targetPort + "(" + getNameOrAlias(link) + '),');
-				});
+			if( links.length ) links.forEach( function(link){ 
+				var id = getTrgtPortID(link);
+				netList += ("\n\t." + ports.input[id] + "(" + getNameOrAlias(link) + '),');
+			});
 			var links=item.linksOutOf();
-			if( links.length )
-				links.forEach( function(link){ 
-					sourcePort = link["style"].match(/sourcePort=(.*?);/)[1].split("_")[1];
-					var portInstantiation = "\n\t." + sourcePort + "(" + getNameOrAlias(link) + '),' 
-					if (!netList.includes(portInstantiation)) 
-						netList += (portInstantiation);
-				});
+			if( links.length ) links.forEach( function(link){ 
+				var id = getSrcPortID(link);
+				var portInstantiation = "\n\t." + ports.output[id] + "(" + getNameOrAlias(link) + '),' 
+				if (!netList.includes(portInstantiation)) 
+					netList += (portInstantiation);
+			});
 			netList=netList.replace(/, *$/gi, '');
 			netList=netList+"\n);";
 			break;
@@ -733,8 +756,6 @@ schematic.prototype.overlay_sw_on.addListener(mxEvent.CLICK, function(sender, ev
 
 });
 schematic.prototype.linkIsHigh=function( link ){
-
-
 	var style=this.graph.getCellStyle(link);
 	return style[mxConstants.STYLE_STROKECOLOR] == 'green';
 };

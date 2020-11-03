@@ -43,10 +43,12 @@
 			var s=thisShape.signals.output.length;\
 			var ports=new Array();\
 			for( var i=0; i<s; i=i+1) {\
-				ports['out' + i  + '_' + thisShape.signals.output[i] + '_e'] = {x: 1, y: [(i+1)/(1+s)], perimeter: false, label: thisShape.signals.output[i]};\
+				var portLabel = (thisShape.signal_size.output[i]==1)? thisShape.signals.output[i] : thisShape.signals.output[i]+' ['+(thisShape.signal_size.output[i]-1)+':0]';\
+				ports['out' + i  + '_e'] = {x: 1, y: [(i+1)/(1+s)], perimeter: false, label: portLabel};\
 			}\
 			for( var i=0; i<n; i=i+1 ) {\
-				ports['in' + i + '_' + thisShape.signals.input[i] + '_w'] = {x: 0, y: [(i+1)/(1+n)], perimeter: false, label: thisShape.signals.input[i]};\
+				var portLabel = (thisShape.signal_size.input[i]==1)? thisShape.signals.input[i] : thisShape.signals.input[i]+' ['+(thisShape.signal_size.input[i]-1)+':0]';\
+				ports['in' + i + '_w'] = {x: 0, y: [(i+1)/(1+n)], perimeter: false, label: portLabel};\
 			}\
 			return ports;"
 		);
@@ -437,7 +439,7 @@
 	//====================================================================================
 
 	//====================================================================================
-	//	LATCH GROUP
+	//	REGISTER GROUP
 	//====================================================================================
 	function DLatchShape()
 	{
@@ -468,43 +470,11 @@
 			ports['in_en_w']={x: 0, y: 0.5, perimeter:false, label:'en'};
 		return ports;
 	};
-	mxCellRenderer.registerShape('dlatch', DLatchShape);
-	mxCellRenderer.registerShape('dlatch_en', DLatchShape);
 	mxCellRenderer.registerShape('dff', DLatchShape);
 	mxCellRenderer.registerShape('dff_en', DLatchShape);
 
-	function SRLatchShape()
-	{
-		mxActor.call(this);
-	};
-	mxUtils.extend(SRLatchShape, mxActor);
-	SRLatchShape.prototype.redrawPath = function(c, x, y, w, h)
-	{
-		var name= "SR-Latch";
-		c.setStrokeColor('black');
-		c.begin();
-		c.rect(0,0,w,h);
-		c.fillAndStroke();
-		c.setFontSize(8);
-		c.setFontStyle(mxConstants.FONT_BOLD);
-		c.text(w/2,2*h/5,0,0,name,'center','middle');
-	};
-	SRLatchShape.prototype.getPorts = function()
-	{
-		var ports=new Array();
-		var style=this.state.style["shape"];
-		var is_enable=style.endsWith("_en");
-		ports['in_S_w']={x: 0, y: 0.25, perimeter:false, label:'S'};
-		ports['in_R_w']={x: 0, y: 0.75, perimeter:false, label:'R'};
-		ports['out_Q_e']={x: 1, y: 0.25, perimeter:false, label:'Q'};
-		if( is_enable )
-			ports['in_en_w']={x: 0, y: 0.5, perimeter:false, label:'en'};
-		return ports;
-	};
-	mxCellRenderer.registerShape('srlatch', SRLatchShape);
-	mxCellRenderer.registerShape('srlatch_en', SRLatchShape);
 	//====================================================================================
-	//	END LATCH GROUP
+	//	END REGISTER GROUP
 	//====================================================================================
 
 	//====================================================================================
