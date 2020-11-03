@@ -866,7 +866,7 @@ Sidebar.prototype.createBasicGatesShapes = function()
 Sidebar.prototype.addMuxComponentPalette = function(expand)
 {
 	
-	this.addPaletteFunctions('muxcomponents', mxResources.get('muxcomponents'), false, this.createMuxComponentShapes());
+	this.addPaletteFunctions('multiplexers', mxResources.get('multiplexers'), false, this.createMuxComponentShapes());
 };
 
 Sidebar.prototype.createMuxComponentShapes = function()
@@ -885,7 +885,7 @@ Sidebar.prototype.createMuxComponentShapes = function()
 
 Sidebar.prototype.addDecoderComponentPalette = function(expand)
 {
-	this.addPaletteFunctions('decodercomponents', mxResources.get('decodercomponents'), false, this.createDecoderComponentShapes());
+	this.addPaletteFunctions('decoders', mxResources.get('decoders'), false, this.createDecoderComponentShapes());
 };
 
 Sidebar.prototype.createDecoderComponentShapes = function()
@@ -903,7 +903,7 @@ Sidebar.prototype.createDecoderComponentShapes = function()
 
 Sidebar.prototype.addLatchComponentPalette = function(expand)
 {
-	this.addPaletteFunctions('latchcomponents', mxResources.get('latchcomponents'), false, this.createLatchComponentShapes());
+	this.addPaletteFunctions('registers', mxResources.get('registers'), false, this.createLatchComponentShapes());
 };
 
 Sidebar.prototype.createLatchComponentShapes = function()

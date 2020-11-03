@@ -65,7 +65,7 @@ EditorUi = function(editor, container, lightbox)
 	}
 
 
-        style = graph.getCellStyle(edge);
+    style = graph.getCellStyle(edge);
 	var trgPortId=style[mxConstants.STYLE_TARGET_PORT];
 	var truecount=0;
 	edge.target.linksInto().forEach(function(link) {
@@ -75,6 +75,8 @@ EditorUi = function(editor, container, lightbox)
 	});
 	if( truecount != 1 )
 		deleteEdge(edge);
+
+	
 
     });
 

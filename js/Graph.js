@@ -93,24 +93,24 @@ mxEdgeStyle.SchematicWiringStyle=function(state,source,target,points,result)
 
 		if (source != null)
 		{
-			if( state.style['sourcePort'].endsWith("_e"))
+			if( state.style['sourcePort'].includes("_e"))
 				portConstraint[0]=mxConstants.DIRECTION_MASK_EAST;
-			else if( state.style['sourcePort'].endsWith("_s"))
+			else if( state.style['sourcePort'].includes("_s"))
 				portConstraint[0]=mxConstants.DIRECTION_MASK_SOUTH;
-			else if( state.style['sourcePort'].endsWith("_n"))
+			else if( state.style['sourcePort'].includes("_n"))
 				portConstraint[0]=mxConstants.DIRECTION_MASK_NORTH;
-			else //if( state.style['sourcePort'].endsWith("_w"))
+			else //if( state.style['sourcePort'].includes("_w"))
 				portConstraint[0]=mxConstants.DIRECTION_MASK_WEST;
 		}
 		if (target != null)
 		{
-			if( state.style['targetPort'].endsWith("_e"))
+			if( state.style['targetPort'].includes("_e"))
 				portConstraint[1]=mxConstants.DIRECTION_MASK_EAST;
-			else if( state.style['targetPort'].endsWith("_s"))
+			else if( state.style['targetPort'].includes("_s"))
 				portConstraint[1]=mxConstants.DIRECTION_MASK_SOUTH;
-			else if( state.style['targetPort'].endsWith("_n"))
+			else if( state.style['targetPort'].includes("_n"))
 				portConstraint[1]=mxConstants.DIRECTION_MASK_NORTH;
-			else //if( state.style['targetPort'].endsWith("_w"))
+			else //if( state.style['targetPort'].includes("_w"))
 				portConstraint[1]=mxConstants.DIRECTION_MASK_WEST;
 		}
 
@@ -3388,7 +3388,7 @@ if (typeof mxVertexHandler != 'undefined')
 			{
 				style += 'html=1;';
 			}
-
+			style+='$';
 			return style;
 		};
 
