@@ -47,7 +47,7 @@ schematic.prototype.runDRC = function()
 
 	nodes=graph.getChildVertices(graph.getDefaultParent());
 	nodes.forEach(function(item){
-		var muxsize=1;
+		var mux_size=1;
 		var decodersize=2
 		var fan_in=2;
 			var style=graph.getCellStyle(item);
@@ -105,15 +105,15 @@ schematic.prototype.runDRC = function()
 			break;
 
 			/*
-		case "mux16":muxsize++;
-		case "mux8":muxsize++;
-		case "mux4":muxsize++;
+		case "mux16":mux_size++;
+		case "mux8":mux_size++;
+		case "mux4":mux_size++;
 		case "mux2":
-			if( item.getLinks("in_s",false).length != muxsize)
+			if( item.getLinks("in_s",false).length != mux_size)
 				Messages.addError("All MUX \"select\" input(s) must be connected",item);
 			if( item.numLinksOutOf() == 0 )
 				Messages.addWarning("MUX has an unconnected output",item);
-			if( item.getLinks("in_i",false).length != (1<<muxsize))
+			if( item.getLinks("in_i",false).length != (1<<mux_size))
 				Messages.addWarning("MUX has an unconnected data input(s)",item);
 			break;
 		case "decoder4":decodersize++;
@@ -256,7 +256,7 @@ schematic.prototype.createVerilog=function(name)
 	//name the nets
 	if( nodes ) nodes.forEach(function(item){
 		var style=graph.getCellStyle(item); 
-		var muxsize=0;
+		var mux_size=0;
 		var decodersize=1;
 		var module = style["shape"];
 		switch( module )
@@ -292,6 +292,7 @@ schematic.prototype.createVerilog=function(name)
 		var decodersize=1;
 		var bus_decoder_size=0;
 		var bus_encoder_size=0;
+		var mux_size=0;
 		var input_size=0;
 		var output_size=0;
 		var style=graph.getCellStyle(item); 
@@ -334,7 +335,9 @@ schematic.prototype.createVerilog=function(name)
 			//else add net name to wire list
 			else if( linksout.length ) {
 				wireSet[(1<<0)].add(netName(linksout[0],"X"));
-				linksout[0].size=1;
+				linksout.forEach(function(link){
+					link.size=1;
+				})
 			}
 			else
 				wireSet[(1<<0)].add(gateName(item,"X") );
@@ -351,21 +354,23 @@ schematic.prototype.createVerilog=function(name)
 			//else add net name to wire list
 			else if( linksout.length ) {
 				wireSet[output_size].add(netName(linksout[0],"X"));
-				linksout[0].size=output_size;
+				linksout.forEach(function(link){
+					link.size=output_size;
+				})
 			}
 			else
 				wireSet[output_size].add(gateName(item,"X") );
 			break;
-		case "mux16":
-		case "mux8":
-		case "mux4":
-		case "mux2":
+		case "mux16": mux_size++;
+		case "mux8": mux_size++;
+		case "mux4": mux_size++;
+		case "mux2": mux_size++;
 			//find the width of the largest connected wire, and make the output that width
-			var inputs=item.linksInto();
 			var output_size=1;
-			if (inputs.length) inputs.forEach(function(input){
-				if (input.size>output_size) output_size=input.size;
-			});
+			for (var i=0; i<(1<<mux_size); i++) {
+				var linkin = item.getLink('i'+i, false);
+				if (linkin && linkin.size>output_size) output_size=linkin.size;
+			}
 			//determine if output net name is port name
 			var linksout=item.linksOutOf();
 			if( linksout.length == 1 && graph.getCellStyle(linksout[0].target)["shape"].includes('outputport')) 
@@ -373,7 +378,9 @@ schematic.prototype.createVerilog=function(name)
 			//else add net name to wire list
 			else if( linksout.length ) {
 				wireSet[output_size].add(netName(linksout[0],"X"));
-				linksout[0].size=output_size;
+				linksout.forEach(function(link){
+					link.size=output_size;
+				});
 			}
 			else
 				wireSet[output_size].add(gateName(item,"X") );
@@ -418,7 +425,9 @@ schematic.prototype.createVerilog=function(name)
 			//else add net name to wire list
 			else if( linksout.length ) {
 				wireSet[(1<<bus_encoder_size)].add(netName(linksout[0],"X"));
-				linksout[0].size=(1<<bus_encoder_size);
+				linksout.forEach(function(link){
+					link.size=(1<<bus_encoder_size);
+				});
 			}
 			else
 				wireSet[(1<<bus_encoder_size)].add(gateName(item,"X") );
@@ -447,7 +456,7 @@ schematic.prototype.createVerilog=function(name)
 	//create Verilog
 	if( nodes )
 	nodes.forEach(function(item){
-		var muxsize=0;
+		var mux_size=0;
 		var bus_encoder_size = 0;
 		var bus_decoder_size = 0;
 		var input_size=0;
@@ -527,13 +536,13 @@ schematic.prototype.createVerilog=function(name)
 			netList=netList.replace(/, *$/gi, '');
 			netList=netList+");";
 			break; 
-		case "mux16": muxsize++;
-		case "mux8": muxsize++;
-		case "mux4": muxsize++;
-		case "mux2": muxsize++;
+		case "mux16": mux_size++;
+		case "mux8": mux_size++;
+		case "mux4": mux_size++;
+		case "mux2": mux_size++;
 			netList += "\n\n" + gateNames[style["shape"]] + ' #('+'32' +') '+gateName(item,"U") + " ("; 
 			netList=netList+"\n\t";
-			for( var i=0; i<(1<<muxsize); i++ )
+			for( var i=0; i<(1<<mux_size); i++ )
 			{
 				netList += '.i'+i+'(';
 				var lnk=item.getLink( 'i'+i,false);
@@ -542,7 +551,7 @@ schematic.prototype.createVerilog=function(name)
 				netList+='), ';
 			}
 			netList += '\n\t.sel( {';
-			for( var i=muxsize-1; i>=0; i=i-1 )
+			for( var i=mux_size-1; i>=0; i=i-1 )
 			{
 				var lnk=item.getLink( 'sel'+i,false);
 				if( lnk ) netList+=getNameOrAlias(lnk);
