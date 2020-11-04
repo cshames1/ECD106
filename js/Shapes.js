@@ -349,7 +349,7 @@
 		var ports=new Array();
 		for( var i=0; i<n; i=i+1)
 		{
-			ports['i'+ i+'_w'] = {x: 0, y: [(i+1)/(1+n)], perimeter: false, label: 'i'+i};
+			ports['in'+ i+'_w'] = {x: 0, y: [(i+1)/(1+n)], perimeter: false, label: 'i'+i};
 			if( i < s )
 			{
 				var x= 1- (1+i)/ ((s<2) ? (1+s) : (2+s));
@@ -478,7 +478,7 @@
 	//====================================================================================
 	//	BUS GROUP
 	//====================================================================================
-	var drawBusDecoder = function(n, c, x, y, w, h)
+	var drawFanOut = function(n, c, x, y, w, h)
 	{
 		c.setStrokeColor('black');
 		c.setFontSize(8);
@@ -486,24 +486,24 @@
 		c.begin();
 		c.rect(0,0,w,h);
 		c.fillAndStroke();
-		c.text(w/2,h/2,0,0,''+1+'-to-'+n+'\nBus \nDecoder','center','middle');
+		c.text(w/2,h/2,0,0,''+1+'-to-'+n+'\nFan \nOut','center','middle');
 	};
 
-	function BusDecoderShape()
+	function FanOutShape()
 	{
 		mxActor.call(this);
 	};
-	mxUtils.extend(BusDecoderShape, mxActor);
+	mxUtils.extend(FanOutShape, mxActor);
 
-	BusDecoderShape.prototype.redrawPath = function(c, x, y, w, h)
+	FanOutShape.prototype.redrawPath = function(c, x, y, w, h)
 	{
-		drawBusDecoder(this.numOutputs(),c,x,y,w,h);
+		drawFanOut(this.numOutputs(),c,x,y,w,h);
 	};
 
-	BusDecoderShape.prototype.numInputs = function(){return 1;};
-	BusDecoderShape.prototype.numOutputs = function(){return this.state.style["shape"].slice(10);};
+	FanOutShape.prototype.numInputs = function(){return 1;};
+	FanOutShape.prototype.numOutputs = function(){return this.state.style["shape"].slice(6);};
 
-	BusDecoderShape.prototype.getPorts = function()
+	FanOutShape.prototype.getPorts = function()
 	{
 		var ports=new Array();
 		ports['in_w'] = {x: 0, y: .5, perimeter: false, label: 'in'};
@@ -513,7 +513,7 @@
 	};
 
 	
-	var drawBusEncoder = function(n, c, x, y, w, h)
+	var drawFanIn = function(n, c, x, y, w, h)
 	{
 		c.setStrokeColor('black');
 		c.setFontSize(8);
@@ -521,24 +521,24 @@
 		c.begin();
 		c.rect(0,0,w,h);
 		c.fillAndStroke();
-		c.text(w/2,h/2,0,0,''+n+'-to-'+1+'\nBus \nEncoder','center','middle');
+		c.text(w/2,h/2,0,0,''+n+'-to-'+1+'\nFan \nIn','center','middle');
 	};
 
-	function BusEncoderShape()
+	function FanInShape()
 	{
 		mxActor.call(this);
 	};
-	mxUtils.extend(BusEncoderShape, mxActor);
+	mxUtils.extend(FanInShape, mxActor);
 
-	BusEncoderShape.prototype.redrawPath = function(c, x, y, w, h)
+	FanInShape.prototype.redrawPath = function(c, x, y, w, h)
 	{
-		drawBusEncoder(this.numInputs(),c,x,y,w,h);
+		drawFanIn(this.numInputs(),c,x,y,w,h);
 	};
 
-	BusEncoderShape.prototype.numInputs = function(){return this.state.style["shape"].slice(10);};
-	BusEncoderShape.prototype.numOutputs = function(){return 1;};
+	FanInShape.prototype.numInputs = function(){return this.state.style["shape"].slice(5);};
+	FanInShape.prototype.numOutputs = function(){return 1;};
 
-	BusEncoderShape.prototype.getPorts = function()
+	FanInShape.prototype.getPorts = function()
 	{
 		var ports=new Array();
 		for( var i=0; i<this.numInputs(); i=i+1 )
@@ -547,16 +547,16 @@
 		return ports;
 	};
 
-	mxCellRenderer.registerShape('busdecoder2', BusDecoderShape);
-	mxCellRenderer.registerShape('busencoder2', BusEncoderShape);
-	mxCellRenderer.registerShape('busdecoder4', BusDecoderShape);
-	mxCellRenderer.registerShape('busencoder4', BusEncoderShape);
-	mxCellRenderer.registerShape('busdecoder8', BusDecoderShape);
-	mxCellRenderer.registerShape('busencoder8', BusEncoderShape);
-	mxCellRenderer.registerShape('busdecoder16', BusDecoderShape);
-	mxCellRenderer.registerShape('busencoder16', BusEncoderShape);
-	mxCellRenderer.registerShape('busdecoder32', BusDecoderShape);
-	mxCellRenderer.registerShape('busencoder32', BusEncoderShape);
+	mxCellRenderer.registerShape('fanOut2', FanOutShape);
+	mxCellRenderer.registerShape('fanIn2', FanInShape);
+	mxCellRenderer.registerShape('fanOut4', FanOutShape);
+	mxCellRenderer.registerShape('fanIn4', FanInShape);
+	mxCellRenderer.registerShape('fanOut8', FanOutShape);
+	mxCellRenderer.registerShape('fanIn8', FanInShape);
+	mxCellRenderer.registerShape('fanOut16', FanOutShape);
+	mxCellRenderer.registerShape('fanIn16', FanInShape);
+	mxCellRenderer.registerShape('fanOut32', FanOutShape);
+	mxCellRenderer.registerShape('fanIn32', FanInShape);
 	//====================================================================================
 	//	END BUS GROUP
 	//====================================================================================

@@ -933,16 +933,16 @@ Sidebar.prototype.createBusComponentShapes = function()
 	var field = new mxCell('List Item', new mxGeometry(0, 0, 60, 26), 'text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;');
 	field.vertex = true;
 	return [
-		this.createVertexTemplateEntry('shape=busdecoder2;editable=0;', 50, 40, '', '1-to-2 Bus Decoder', null, null, 'Bus Decoder 2'),
-		this.createVertexTemplateEntry('shape=busencoder2;editable=0;', 50, 40, '', '2-to-1 Bus Encoder', null, null, 'Bus Encoder 2'),
-		this.createVertexTemplateEntry('shape=busdecoder4;editable=0;', 50, 40, '', '4-to-1 Bus Decoder', null, null, 'Bus Decoder 4'),
-		this.createVertexTemplateEntry('shape=busencoder4;editable=0;', 50, 40, '', '1-to-4 Bus Encoder', null, null, 'Bus Encoder 4'),
-		this.createVertexTemplateEntry('shape=busdecoder8;editable=0;', 50, 160, '', '8-to-1 Bus Decoder', null, null, 'Bus Decoder 8'),
-		this.createVertexTemplateEntry('shape=busencoder8;editable=0;', 50, 160, '', '1-to-8 Bus Encoder', null, null, 'Bus Encoder 8'),
-		this.createVertexTemplateEntry('shape=busdecoder16;editable=0;', 50, 220, '', '16-to-1 Bus Decoder', null, null, 'Bus Decoder 16'),
-		this.createVertexTemplateEntry('shape=busencoder16;editable=0;', 50, 220, '', '1-to-16 Bus Encoder', null, null, 'Bus Encoder 16'),
-		this.createVertexTemplateEntry('shape=busdecoder32;editable=0;', 50, 400, '', '32-to-1 Bus Decoder', null, null, 'Bus Decoder 32'),
-		this.createVertexTemplateEntry('shape=busencoder32;editable=0;', 50, 400, '', '1-to-32 Bus Encoder', null, null, 'Bus Encoder 32')
+		this.createVertexTemplateEntry('shape=fanOut2;editable=0;', 50, 40, '', '1-to-2 Fan Out', null, null, 'Fan Out 2'),
+		this.createVertexTemplateEntry('shape=fanIn2;editable=0;', 50, 40, '', '2-to-1 Fan In', null, null, 'Fan In 2'),
+		this.createVertexTemplateEntry('shape=fanOut4;editable=0;', 50, 40, '', '4-to-1 Fan Out', null, null, 'Fan Out 4'),
+		this.createVertexTemplateEntry('shape=fanIn4;editable=0;', 50, 40, '', '1-to-4 Fan In', null, null, 'Fan In 4'),
+		this.createVertexTemplateEntry('shape=fanOut8;editable=0;', 50, 160, '', '8-to-1 Fan Out', null, null, 'Fan Out 8'),
+		this.createVertexTemplateEntry('shape=fanIn8;editable=0;', 50, 160, '', '1-to-8 Fan In', null, null, 'Fan In 8'),
+		this.createVertexTemplateEntry('shape=fanOut16;editable=0;', 50, 220, '', '16-to-1 Fan Out', null, null, 'Fan Out 16'),
+		this.createVertexTemplateEntry('shape=fanIn16;editable=0;', 50, 220, '', '1-to-16 Fan In', null, null, 'Fan In 16'),
+		this.createVertexTemplateEntry('shape=fanOut32;editable=0;', 50, 400, '', '32-to-1 Fan Out', null, null, 'Fan Out 32'),
+		this.createVertexTemplateEntry('shape=fanIn32;editable=0;', 50, 400, '', '1-to-32 Fan In', null, null, 'Fan In 32')
 	];
 };
 

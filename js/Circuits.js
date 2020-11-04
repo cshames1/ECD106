@@ -48,7 +48,7 @@ schematic.prototype.runDRC = function()
 	nodes=graph.getChildVertices(graph.getDefaultParent());
 	nodes.forEach(function(item){
 		var mux_size=1;
-		var decodersize=2
+		var decoder_size=2
 		var fan_in=2;
 			var style=graph.getCellStyle(item);
 		switch( style["shape"] )
@@ -116,14 +116,14 @@ schematic.prototype.runDRC = function()
 			if( item.getLinks("in_i",false).length != (1<<mux_size))
 				Messages.addWarning("MUX has an unconnected data input(s)",item);
 			break;
-		case "decoder4":decodersize++;
-		case "decoder3":decodersize++;
+		case "decoder4":decoder_size++;
+		case "decoder3":decoder_size++;
 		case "decoder2":
-			if( item.getLinks("in_a",false).length != decodersize)
+			if( item.getLinks("in_a",false).length != decoder_size)
 				Messages.addError("All Decoder address inputs must be connected",item);
 			if( item.getLinks("in_en",false).length != 1)
 				Messages.addError("Decoder enable input must be connected",item);
-			for( var i=0; i<(1<<decodersize); i=i+1 )
+			for( var i=0; i<(1<<decoder_size); i=i+1 )
 			{
 				if( item.getLinks("out_"+(i+1)+"_",true).length == 0)
 				{
@@ -167,16 +167,16 @@ schematic.prototype.runDRC = function()
 			break;
 			*/
 
-		case "busdecoder2":
-		case "busencoder2":
-		case "busdecoder4":
-		case "busencoder4":
-		case "busdecoder8":
-		case "busencoder8":
-		case "busdecoder16":
-		case "busencoder16":
-		case "busdecoder32":
-		case "busencoder32":	
+		case "fanOut2":
+		case "fanIn2":
+		case "fanOut4":
+		case "fanIn4":
+		case "fanOut8":
+		case "fanIn8":
+		case "fanOut16":
+		case "fanIn16":
+		case "fanOut32":
+		case "fanIn32":	
 		}
 	},this);
 	if( numOutputs===0 )
@@ -210,8 +210,8 @@ schematic.prototype.createVerilog=function(name)
 					mux2:"mux2", mux4:"mux4", mux8:"mux8", mux16:"mux16",
 					decoder2:"decoder #(2,1)",decoder3:"decoder #(3,1)",decoder4:"decoder #(4,1)",
 					dlatch:"d_latch",dlatch_en:"d_latch_en",register:"register",register_en:"register_en",srlatch:"sr_latch",srlatch_en:"sr_latch_en",
-					busencoder2: "busencoder2", busencoder4: "busencoder4", busencoder8: "busencoder8", busencoder16: "busencoder16", busencoder32: "busencoder32",
-					busdecoder2: "busdecoder2", busdecoder4: "busdecoder4", busdecoder8: "busdecoder8", busdecoder16: "busdecoder16", busdecoder32: "busdecoder32" 
+					fanIn2: "fanIn2", fanIn4: "fanIn4", fanIn8: "fanIn8", fanIn16: "fanIn16", fanIn32: "fanIn32",
+					fanOut2: "fanOut2", fanOut4: "fanOut4", fanOut8: "fanOut8", fanOut16: "fanOut16", fanOut32: "fanOut32" 
 				};
 	function gateName( node, prefix){ return prefix+node.id;}
 	function portName( node, prefix ){ return node.value ? node.value : gateName(node,prefix);}
@@ -257,7 +257,7 @@ schematic.prototype.createVerilog=function(name)
 	if( nodes ) nodes.forEach(function(item){
 		var style=graph.getCellStyle(item); 
 		var mux_size=0;
-		var decodersize=1;
+		var decoder_size=1;
 		var module = style["shape"];
 		switch( module )
 		{
@@ -289,9 +289,9 @@ schematic.prototype.createVerilog=function(name)
 	});
 	//map the netlist
 	if( nodes ) nodes.forEach(function(item){
-		var decodersize=1;
-		var bus_decoder_size=0;
-		var bus_encoder_size=0;
+		var decoder_size=1;
+		var fanout_size=0;
+		var fanin_size=0;
 		var mux_size=0;
 		var input_size=0;
 		var output_size=0;
@@ -316,7 +316,6 @@ schematic.prototype.createVerilog=function(name)
 		case "outputport4":
 		case "outputport2":
 		case "outputport1":
-			break;
 		case "constant0":
 		case "constant1":
 			break;
@@ -368,7 +367,7 @@ schematic.prototype.createVerilog=function(name)
 			//find the width of the largest connected wire, and make the output that width
 			var output_size=1;
 			for (var i=0; i<(1<<mux_size); i++) {
-				var linkin = item.getLink('i'+i, false);
+				var linkin = item.getLink('in'+i, false);
 				if (linkin && linkin.size>output_size) output_size=linkin.size;
 			}
 			//determine if output net name is port name
@@ -385,10 +384,10 @@ schematic.prototype.createVerilog=function(name)
 			else
 				wireSet[output_size].add(gateName(item,"X") );
 			break;
-		case "decoder4":decodersize++;
-		case "decoder3":decodersize++;
-		case "decoder2":decodersize++;
-			for( var i=0; i<(1<<decodersize); i=i+1 )
+		case "decoder4":decoder_size++;
+		case "decoder3":decoder_size++;
+		case "decoder2":decoder_size++;
+			for( var i=0; i<(1<<decoder_size); i=i+1 )
 			{
 				var linksout=item.getLinks( 'out'+ i +'_d', true);
 				if( linksout.length == 1 && graph.getCellStyle(linksout[0].target)["shape"].includes('outputport'))
@@ -397,12 +396,12 @@ schematic.prototype.createVerilog=function(name)
 					wireSet[(1<<0)].add(netName(linksout[0],"X"));
 			}
 			break;
-		case "busdecoder32": bus_decoder_size++;
-		case "busdecoder16": bus_decoder_size++;
-		case "busdecoder8": bus_decoder_size++;
-		case "busdecoder4": bus_decoder_size++;
-		case "busdecoder2": bus_decoder_size++;
-			for( var i=0; i<(1<<bus_decoder_size); i=i+1 )
+		case "fanOut32": fanout_size++;
+		case "fanOut16": fanout_size++;
+		case "fanOut8": fanout_size++;
+		case "fanOut4": fanout_size++;
+		case "fanOut2": fanout_size++;
+			for( var i=0; i<(1<<fanout_size); i=i+1 )
 			{
 				var linksout=item.getLinks( 'out'+ i + '_', true);
 				if( linksout.length == 1 && graph.getCellStyle(linksout[0].target)["shape"].includes('outputport'))
@@ -413,24 +412,24 @@ schematic.prototype.createVerilog=function(name)
 				}
 			}
 			break;
-		case "busencoder32": bus_encoder_size++;
-		case "busencoder16": bus_encoder_size++;
-		case "busencoder8": bus_encoder_size++;
-		case "busencoder4": bus_encoder_size++;
-		case "busencoder2": bus_encoder_size++;
+		case "fanIn32": fanin_size++;
+		case "fanIn16": fanin_size++;
+		case "fanIn8": fanin_size++;
+		case "fanIn4": fanin_size++;
+		case "fanIn2": fanin_size++;
 			//determine if output net name is port name
 			var linksout=item.linksOutOf();
 			if( linksout.length == 1 && graph.getCellStyle(linksout[0].target)["shape"].includes('outputport')) 
 				netAliases[netName(linksout[0])] = portName(linksout[0].target,"O");
 			//else add net name to wire list
 			else if( linksout.length ) {
-				wireSet[(1<<bus_encoder_size)].add(netName(linksout[0],"X"));
+				wireSet[(1<<fanin_size)].add(netName(linksout[0],"X"));
 				linksout.forEach(function(link){
-					link.size=(1<<bus_encoder_size);
+					link.size=(1<<fanin_size);
 				});
 			}
 			else
-				wireSet[(1<<bus_encoder_size)].add(gateName(item,"X") );
+				wireSet[(1<<fanin_size)].add(gateName(item,"X") );
 			break;
 		default:
 			var portSizes = getModulePortSizes(module);
@@ -457,11 +456,11 @@ schematic.prototype.createVerilog=function(name)
 	if( nodes )
 	nodes.forEach(function(item){
 		var mux_size=0;
-		var bus_encoder_size = 0;
-		var bus_decoder_size = 0;
+		var fanin_size = 0;
+		var fanout_size = 0;
 		var input_size=0;
 		var output_size=0;
-		var decodersize=1;
+		var decoder_size=1;
 		var style=graph.getCellStyle(item); 
 		var module = style["shape"];
 		switch( module )
@@ -540,15 +539,20 @@ schematic.prototype.createVerilog=function(name)
 		case "mux8": mux_size++;
 		case "mux4": mux_size++;
 		case "mux2": mux_size++;
-			netList += "\n\n" + gateNames[style["shape"]] + ' #('+'32' +') '+gateName(item,"U") + " ("; 
+			var output_size=1;
+			for( var i=0; i<(1<<mux_size); i++ )
+			{
+				var linki = item.getLink( 'in'+i,false);
+				if (linki && linki.size>output_size)
+					output_size = linki.size;
+			}
+			netList += "\n\n" + gateNames[style["shape"]] + ' #(' + output_size +') '+gateName(item,"U") + " ("; 
 			netList=netList+"\n\t";
 			for( var i=0; i<(1<<mux_size); i++ )
 			{
-				netList += '.i'+i+'(';
-				var lnk=item.getLink( 'i'+i,false);
-				if( lnk ) netList+=getNameOrAlias(lnk);
-				else netList+='1\'bx';
-				netList+='), ';
+				var linki = item.getLink( 'in'+i,false);
+				if( linki ) 
+					netList += '.i' + i + '(' + getNameOrAlias(linki) + '), ';
 			}
 			netList += '\n\t.sel( {';
 			for( var i=mux_size-1; i>=0; i=i-1 )
@@ -568,61 +572,32 @@ schematic.prototype.createVerilog=function(name)
 			netList += ')\n);';
 			break; 
 		case "register":
-			netList += "\n\n" + gateNames[style["shape"]] + ' #()' + ' ' + gateName(item,"U") + " ("; 
-			netList += '\n\t.data_in(';
-			{
-				var lnk=item.getLink( 'in_D',false);
-				if( lnk ) netList+=getNameOrAlias(lnk);
-				else netList+='1\'bx';
-			}
-			netList=netList+"),\n\t.clk_in(";
-			{
-				var lnk=item.getLink( 'in_clk',false);
-				if( lnk ) netList+=getNameOrAlias(lnk);
-				else netList+='1\'bx';
-			}
-			netList += '),\n\t.q(';
-			var links=item.linksOutOf();
-			if( links.length )
-				netList += getNameOrAlias(links[0]);
-			else
-				netList += gateName(item,"X");
-			netList=netList+")\n);";
-			break;
 		case "register_en":
-			netList += "\n\n" + gateNames[style["shape"]] + ' #()' +  ' ' + gateName(item,"U") + " ("; 
-			netList += '\n\t.data_in(';
-			{
-				var lnk=item.getLink( 'in_D',false);
-				if( lnk ) netList+=getNameOrAlias(lnk);
-				else netList+='1\'bx';
-			}
-			netList=netList+"),\n\t.clk_in(";
-			{
-				var lnk=item.getLink( 'in_clk',false);
-				if( lnk ) netList+=getNameOrAlias(lnk);
-				else netList+='1\'bx';
-			}
-			netList=netList+"),\n\t.en_in(";
-			{
-				var lnk=item.getLink( 'in_en',false);
-				if( lnk ) netList+=getNameOrAlias(lnk);
-				else netList+='1\'bx';
-			}
-			netList += '),\n\t.q(';
-			var links=item.linksOutOf();
-			if( links.length )
-				netList += getNameOrAlias(links[0]);
+			var linkin=item.getLink( 'in_D_',false);
+			var output_size = (linkin)? linkin.size : 1;
+			netList += '\n\n' + gateNames[style["shape"]] + ' #(' + output_size + ')' +  ' ' + gateName(item,'U') + ' ('; 
+			if( linkin )
+				netList += '\n\t.data_in(' + getNameOrAlias(linkin) + '),';
+			var linkclk=item.getLink( 'in_clk_',false);
+			if( linkclk )
+				netList += '\n\t.clk_in(' + getNameOrAlias(linkclk) + '),';
+			var linken=item.getLink( 'in_en_',false);
+			if( linken ) 
+				netList += '\n\t.en_in(' + getNameOrAlias(linken) + '),';
+			netList += '\n\t.q(';
+			var linkq=item.linksOutOf();
+			if( linkq.length )
+				netList += getNameOrAlias(linkq[0]);
 			else
 				netList += gateName(item,"X");
 			netList=netList+")\n);";
 			break;
-		case "decoder4": decodersize++;
-		case "decoder3": decodersize++;
-		case "decoder2": decodersize++;
+		case "decoder4": decoder_size++;
+		case "decoder3": decoder_size++;
+		case "decoder2": decoder_size++;
 			netList += "\n\n" + gateNames[style["shape"]] + ' ' + gateName(item,"U") + " ("; 
 			netList += '\n\t.data_out( {';
-			for( var i=(1<<decodersize)-1; i>=0; i=i-1 )
+			for( var i=(1<<decoder_size)-1; i>=0; i=i-1 )
 			{
 				var lnk=item.getLink( 'out'+(i)+'_d'+i,true);
 				if( lnk ) netList+=getNameOrAlias(lnk);
@@ -631,7 +606,7 @@ schematic.prototype.createVerilog=function(name)
 			}
 			netList=netList.replace(/, *$/gi, '');
 			netList = netList+ '} ),\n\t.address_in( {';
-			for( var i=decodersize-1; i>=0; i=i-1 )
+			for( var i=decoder_size-1; i>=0; i=i-1 )
 			{
 				var lnk=item.getLink( 'in'+i,false);
 				if( lnk ) netList+=getNameOrAlias(lnk);
@@ -645,14 +620,14 @@ schematic.prototype.createVerilog=function(name)
 				else netList+='1\'bx';
 			netList+=")\n);";
 			break; 
-		case "busdecoder32": bus_decoder_size++;
-		case "busdecoder16": bus_decoder_size++;
-		case "busdecoder8": bus_decoder_size++;
-		case "busdecoder4": bus_decoder_size++;
-		case "busdecoder2": bus_decoder_size++;
+		case "fanOut32": fanout_size++;
+		case "fanOut16": fanout_size++;
+		case "fanOut8": fanout_size++;
+		case "fanOut4": fanout_size++;
+		case "fanOut2": fanout_size++;
 			netList += "\n\n" + gateNames[style["shape"]] + ' ' + gateName(item,"U") + " ("; 
 			netList += '\n\t.bits_out( {';
-			for( var i=(1<<bus_decoder_size)-1; i>=0; i=i-1 )
+			for( var i=(1<<fanout_size)-1; i>=0; i=i-1 )
 			{
 				var lnk=item.getLink( 'out'+(i)+'_d'+i,true);
 				if( lnk ) netList+=getNameOrAlias(lnk);
@@ -666,11 +641,11 @@ schematic.prototype.createVerilog=function(name)
 				else netList+='1\'bx';
 			netList+=")\n);";
 			break; 
-		case "busencoder32": bus_encoder_size++;
-		case "busencoder16": bus_encoder_size++;
-		case "busencoder8": bus_encoder_size++;
-		case "busencoder4": bus_encoder_size++;
-		case "busencoder2": bus_encoder_size++;
+		case "fanIn32": fanin_size++;
+		case "fanIn16": fanin_size++;
+		case "fanIn8": fanin_size++;
+		case "fanIn4": fanin_size++;
+		case "fanIn2": fanin_size++;
 			netList += "\n\n" + gateNames[style["shape"]] + ' ' + gateName(item,"U") + " ("; 
 			netList += '\n\t.bus_out(';
 			var links=item.linksOutOf();
@@ -679,7 +654,7 @@ schematic.prototype.createVerilog=function(name)
 			else
 				netList += gateName(item,"X");
 			netList=netList+"),\n\t.bits_in( {";
-			for( var i=(1<<bus_encoder_size)-1; i>=0; i=i-1 )
+			for( var i=(1<<fanin_size)-1; i>=0; i=i-1 )
 			{
 				var lnk=item.getLink( 'in'+i,false);
 				if( lnk ) netList+=getNameOrAlias(lnk);
