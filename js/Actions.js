@@ -118,7 +118,6 @@ Actions.prototype.init = function()
 				mxUtils.alert(mxResources.get('invalidOrMissingFile') + ': ' + e.message);
 			}
 
-//Tomer's code for parsing verilog:
 			function parseVerilog(file,compName)
 			{
 				remove_whitespace = function(text) {
@@ -143,22 +142,26 @@ Actions.prototype.init = function()
 
 				//for each line after the first line, find the direction and name of each input/output
 				var signals = {input:[], output:[]};
+				var signal_size = {input:[], output:[]};
 				for(var i = 1; lines[i].indexOf(';') < 0; i++){
 
 					let words = lines[i].split(" ");
-
+					let port_size;
+					if (lines[i].includes('[')) {
+						port_size = lines[i].split('[')[1];
+						port_size = port_size.split(':')[0];
+						port_size++;
+					}
+					else	
+						port_size=1;
+						
 					let direction = remove_whitespace(words[0]);
 					//this will need to be changed to work on buses
-					let name = remove_whitespace(remove_commas(words[words.length - 1]));
-					signals[direction].push(name);
+					let port_name = remove_whitespace(remove_commas(words[words.length - 1]));
+					signals[direction].push(port_name);
+					signal_size[direction].push(port_size);
 				}
-				//print decoded results
-				/*console.log("Module: " + SymbolName);
-				console.log("Inputs:" );
-				console.log(signals.input);
-				console.log("outputs:" );
-				console.log(signals.output);*/
-
+				
 				//save the decoded shape to localstorage
 				var storedShapes = JSON.parse(localStorage.getItem('storedShapes'));
 				if(storedShapes == null)
@@ -166,7 +169,8 @@ Actions.prototype.init = function()
 				storedShapes.push({
 					"verilogName":SymbolName.replace(".v", ""),
 					"componentName":compName.replace(".v", ""),
-					"signals":signals
+					"signals":signals,
+					"signal_size":signal_size
 				});
 				localStorage.setItem('storedShapes', JSON.stringify(storedShapes));
 				//reload the page
