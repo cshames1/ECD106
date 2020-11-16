@@ -214,7 +214,6 @@ schematic.prototype.getUsedImportedComponents=function(){
 	var graph=this.graph;
 	nodes=graph.getChildVertices(graph.getDefaultParent());
 	var components = new Set();
-	//name the nets
 	if( nodes ) nodes.forEach(function(item){
 		var style=graph.getCellStyle(item); 
 		var module = style["shape"];
