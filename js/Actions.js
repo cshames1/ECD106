@@ -161,7 +161,6 @@ Actions.prototype.init = function()
 					signals[direction].push(port_name);
 					signal_size[direction].push(port_size);
 				}
-				
 				//save the decoded shape to localstorage
 				var storedShapes = JSON.parse(localStorage.getItem('storedShapes'));
 				if(storedShapes == null)
@@ -170,7 +169,8 @@ Actions.prototype.init = function()
 					"verilogName":SymbolName.replace(".v", ""),
 					"componentName":compName.replace(".v", ""),
 					"signals":signals,
-					"signal_size":signal_size
+					"signal_size":signal_size,
+					"verilogCode":file
 				});
 				localStorage.setItem('storedShapes', JSON.stringify(storedShapes));
 				//reload the page
