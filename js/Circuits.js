@@ -186,6 +186,45 @@ schematic.prototype.runDRC = function()
 	return Messages;
 };
 
+schematic.prototype.getImportedComponentVerilog=function( module ){
+	function getModuleVerilog( module ) {
+		var storedShapes = JSON.parse(localStorage.getItem('storedShapes'));
+		var currentModule;
+		if ( storedShapes ) storedShapes.forEach(function(shape){
+			if (shape.componentName==module) currentModule = shape;
+		});
+		return currentModule.verilogCode;
+	}
+	var importedVerilog = getModuleVerilog( module );
+	var lines = importedVerilog.split(/\n/g);
+	var newVerilog="module "+module+" (\n";
+	for (var i=1; i<lines.length; i++) {
+		newVerilog += lines[i] + '\n';
+	}
+	return newVerilog;
+}
+
+schematic.prototype.getUsedImportedComponents=function(){
+	var native_components=["and", "nand", "or","nor","xor","xnor","buf", "not",
+					"mux2","mux4", "mux8","mux16",
+					"decoder #(2,1)","decoder #(3,1)","decoder #(4,1)",
+					"d_latch","d_latch_en","register","register_en","sr_latch","sr_latch_en",
+					"fanIn2",  "fanIn4",  "fanIn8",  "fanIn16",  "fanIn32",
+					"fanOut2",  "fanOut4", "fanOut8", "fanOut16", "fanOut32" ];
+	var graph=this.graph;
+	nodes=graph.getChildVertices(graph.getDefaultParent());
+	var components = new Set();
+	var str = "";
+	//name the nets
+	if( nodes ) nodes.forEach(function(item){
+		var style=graph.getCellStyle(item); 
+		var module = style["shape"];
+		if ( !native_components.includes( module ) ) 
+			components.add( module );
+		str += module;
+	});
+	return components;
+}
 
 schematic.prototype.createVerilog=function(name)
 {

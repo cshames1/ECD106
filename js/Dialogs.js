@@ -1230,9 +1230,19 @@ var VerilogWindow = function(editorUi, x, y, w, h)
 	var exportBtn = mxUtils.button("Export", function()
 	{
 		var blob = new Blob([textarea.value], { type: "text/plain"});
-		exportveriloganchor.download = moduleName()+".v";
+		exportveriloganchor.download = "top_level.v";
 		exportveriloganchor.href = window.URL.createObjectURL(blob);
 		exportveriloganchor.click();
+
+		var imported_components = editorUi.circuit.getUsedImportedComponents();
+		if (imported_components) imported_components.forEach(function(module){
+			var moduleVerilog = editorUi.circuit.getImportedComponentVerilog(module);
+			blob = new Blob([moduleVerilog], { type: "text/plain"});
+			exportveriloganchor.download = module+".v";
+			exportveriloganchor.href = window.URL.createObjectURL(blob);
+			exportveriloganchor.click();
+		});
+		
 	});
 	exportBtn.className = 'geBtn';
 	div.appendChild(drcBtn);
