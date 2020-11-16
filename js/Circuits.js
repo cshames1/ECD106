@@ -214,14 +214,12 @@ schematic.prototype.getUsedImportedComponents=function(){
 	var graph=this.graph;
 	nodes=graph.getChildVertices(graph.getDefaultParent());
 	var components = new Set();
-	var str = "";
 	//name the nets
 	if( nodes ) nodes.forEach(function(item){
 		var style=graph.getCellStyle(item); 
 		var module = style["shape"];
 		if ( !native_components.includes( module ) ) 
 			components.add( module );
-		str += module;
 	});
 	return components;
 }
