@@ -1,5 +1,4 @@
-
-/**
+/*
  * Copyright (c) 2018, Douglas H. Summerville, Binghamton University
  * (see license.txt for attributions)
  * 
