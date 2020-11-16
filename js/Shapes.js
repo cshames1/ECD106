@@ -459,16 +459,12 @@
 	RegisterShape.prototype.getPorts = function()
 	{
 		var ports=new Array();
-		var style=this.state.style["shape"];
-		var is_enable=style.endsWith("_en");
 		ports['in_D_w']={x: 0, y: 0.25, perimeter:false, label:'D'};
 		ports['in_clk_w']={x: 0, y: 0.75, perimeter:false, label:'clk'};
 		ports['out_Q_e']={x: 1, y: 0.25, perimeter:false, label:'Q'};
-		if( is_enable )
-			ports['in_en_w']={x: 0, y: 0.5, perimeter:false, label:'en'};
+		ports['in_en_w']={x: 0, y: 0.5, perimeter:false, label:'en'};
 		return ports;
 	};
-	mxCellRenderer.registerShape('register', RegisterShape);
 	mxCellRenderer.registerShape('register_en', RegisterShape);
 
 	//====================================================================================

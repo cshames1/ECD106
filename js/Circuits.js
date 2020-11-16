@@ -208,7 +208,7 @@ schematic.prototype.getUsedImportedComponents=function(){
 	var native_components=["and", "nand", "or","nor","xor","xnor","buf", "not",
 					"mux2","mux4", "mux8","mux16",
 					"decoder #(2,1)","decoder #(3,1)","decoder #(4,1)",
-					"d_latch","d_latch_en","register","register_en","sr_latch","sr_latch_en",
+					"d_latch","d_latch_en","register_en","sr_latch","sr_latch_en",
 					"fanIn2",  "fanIn4",  "fanIn8",  "fanIn16",  "fanIn32",
 					"fanOut2",  "fanOut4", "fanOut8", "fanOut16", "fanOut32" ];
 	var graph=this.graph;
@@ -245,7 +245,7 @@ schematic.prototype.createVerilog=function(name)
 	var gateNames={and:"and", nand:"nand",or:"or",nor:"nor",xor:"xor",xnor:"xnor",buffer:"buf", inverter:"not",
 					mux2:"mux2", mux4:"mux4", mux8:"mux8", mux16:"mux16",
 					decoder2:"decoder #(2,1)",decoder3:"decoder #(3,1)",decoder4:"decoder #(4,1)",
-					dlatch:"d_latch",dlatch_en:"d_latch_en",register:"register",register_en:"register_en",srlatch:"sr_latch",srlatch_en:"sr_latch_en",
+					dlatch:"d_latch",dlatch_en:"d_latch_en",register_en:"register_en",srlatch:"sr_latch",srlatch_en:"sr_latch_en",
 					fanIn2: "fanIn2", fanIn4: "fanIn4", fanIn8: "fanIn8", fanIn16: "fanIn16", fanIn32: "fanIn32",
 					fanOut2: "fanOut2", fanOut4: "fanOut4", fanOut8: "fanOut8", fanOut16: "fanOut16", fanOut32: "fanOut32" 
 				};
@@ -377,7 +377,6 @@ schematic.prototype.createVerilog=function(name)
 			else
 				wireSet[(1<<0)].add(gateName(item,"X") );
 			break;
-		case "register":
 		case "register_en":
 			var output_size=1;
 			var input = item.getLinks('in_D',false);
@@ -607,7 +606,6 @@ schematic.prototype.createVerilog=function(name)
 				netList += gateName(item,"X");
 			netList += ')\n);';
 			break; 
-		case "register":
 		case "register_en":
 			var linkin=item.getLink( 'in_D_',false);
 			var output_size = (linkin)? linkin.size : 1;
