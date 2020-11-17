@@ -230,7 +230,7 @@ schematic.prototype.createVerilog=function(name)
 	var inputSet=new Set();
 	var assignList="";
 	var wireList = new Object();
-	var wireSet = new Array();
+	var wireSet = new Object();
 	for (var i=0; i<=5; i++) {
 		wireList[(1<<i)] = "";
 		wireSet[(1<<i)] = new Set();
