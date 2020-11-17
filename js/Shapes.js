@@ -479,13 +479,12 @@
 	//====================================================================================
 	var drawFanOut = function(n, c, x, y, w, h)
 	{
-		c.setStrokeColor('black');
-		c.setFontSize(8);
-		c.setFontStyle(mxConstants.FONT_BOLD);
-		c.begin();
-		c.rect(0,0,w,h);
-		c.fillAndStroke();
-		c.text(w/2,h/2,0,0,''+1+'-to-'+n+'\nFan \nOut','center','middle');
+		c.moveTo(w, 0);
+		c.lineTo(w, h);
+		c.moveTo(w, h/2);
+		c.lineTo(0, h/2);
+		c.close();
+		c.end();
 	};
 
 	function FanOutShape()
@@ -514,13 +513,12 @@
 	
 	var drawFanIn = function(n, c, x, y, w, h)
 	{
-		c.setStrokeColor('black');
-		c.setFontSize(8);
-		c.setFontStyle(mxConstants.FONT_BOLD);
-		c.begin();
-		c.rect(0,0,w,h);
-		c.fillAndStroke();
-		c.text(w/2,h/2,0,0,''+n+'-to-'+1+'\nFan \nIn','center','middle');
+		c.moveTo(0, 0);
+		c.lineTo(0, h);
+		c.moveTo(0, h/2);
+		c.lineTo(w, h/2);
+		c.close();
+		c.end();
 	};
 
 	function FanInShape()
