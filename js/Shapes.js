@@ -626,7 +626,9 @@
 	//====================================================================================
 	//	CONSTANT GROUP
 	//====================================================================================-
-	function ConstantShape() { mxEllipse.call(this); };
+	function ConstantShape() {
+		 mxEllipse.call(this); 
+	};
 	mxUtils.extend(ConstantShape, mxEllipse);
 	ConstantShape.prototype.getPorts = function()
 	{

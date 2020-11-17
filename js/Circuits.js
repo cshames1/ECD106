@@ -352,6 +352,7 @@ schematic.prototype.createVerilog=function(name)
 		case "outputport4":
 		case "outputport2":
 		case "outputport1":
+			break;
 		case "constant0":
 		case "constant1":
 			break;
@@ -500,6 +501,9 @@ schematic.prototype.createVerilog=function(name)
 		var module = style["shape"];
 		switch( module )
 		{
+		case "constant0":
+		case "constant1":
+			break;
 		case "inputport32": input_size++;
 		case "inputport16": input_size++;
 		case "inputport8": input_size++;
