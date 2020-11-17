@@ -270,7 +270,7 @@ schematic.prototype.getUsedImportedComponents=function(){
 	return components;
 }
 
-schematic.prototype.createVerilog=function(name)
+schematic.prototype.createVerilog=function()
 {
 	var netList="";
 	var inputList="";
@@ -285,7 +285,6 @@ schematic.prototype.createVerilog=function(name)
 	var outputList="";
 	var netAliases={};
 	var gateInputs={};
-	var moduleName= name;
 	var verilogCode="";
 	var graph=this.graph;
 	var gateNames={and:"and", nand:"nand",or:"or",nor:"nor",xor:"xor",xnor:"xnor",buffer:"buf", inverter:"not",
@@ -783,9 +782,7 @@ schematic.prototype.createVerilog=function(name)
 		}
 	});
 
-	verilogCode="module ";
-	verilogCode+=(moduleName!=="")?moduleName:"mymodule";
-	verilogCode+= "(" ;
+	verilogCode="module top (";
 	if( inputList != '' || outputList != '')
 	{
 		verilogCode += inputList;
