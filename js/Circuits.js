@@ -285,22 +285,30 @@ schematic.prototype.createVerilog=function(name)
 		});
 		return currentModule.signals;
 	}
-
-	unsorted_nodes = graph.getChildVertices(graph.getDefaultParent());
-	var sorted_nodes = new Set();
-	if ( unsorted_nodes) unsorted_nodes.forEach(function(node){
-		var style=graph.getCellStyle(node);
-		var module = style["shape"];
-		if ( module.includes("inputport") )
-			sorted_nodes.add( node );
-	});
-	if ( unsorted_nodes) unsorted_nodes.forEach(function(node){
-		var style=graph.getCellStyle(node);
-		var module = style["shape"];
-		if ( !module.includes("inputport") )
-			sorted_nodes.add( node );
-	});
-	nodes = sorted_nodes;
+	function sortNodes ( unsorted_nodes ) {
+		var sorted_nodes = new Set();
+		if ( unsorted_nodes) unsorted_nodes.forEach(function(node){
+			var style=graph.getCellStyle(node);
+			var module = style["shape"];
+			if ( module.includes("inputport") )
+				sorted_nodes.add( node );
+		});
+		if ( unsorted_nodes ) unsorted_nodes.forEach(function(node){
+			var style=graph.getCellStyle(node); 
+			var module = style["shape"];
+			if ( !(module in gateNames))
+				sorted_nodes.add( node );
+		});
+		if ( unsorted_nodes) unsorted_nodes.forEach(function(node){
+			var style=graph.getCellStyle(node);
+			var module = style["shape"];
+			if ( !module.includes("inputport") && (module in gateNames) )
+				sorted_nodes.add( node );
+		});
+		return sorted_nodes;
+	}
+	
+	nodes = sortNodes( graph.getChildVertices(graph.getDefaultParent()) );
 
 	//name the nets
 	if( nodes ) nodes.forEach(function(item){
