@@ -225,7 +225,6 @@ schematic.prototype.getUsedImportedComponents=function(){
 
 schematic.prototype.createVerilog=function(name)
 {
-	var teststr = "";
 	var netList="";
 	var inputList="";
 	var inputSet=new Set();
@@ -287,8 +286,22 @@ schematic.prototype.createVerilog=function(name)
 		return currentModule.signals;
 	}
 
-	nodes=graph.getChildVertices(graph.getDefaultParent());
-	
+	unsorted_nodes = graph.getChildVertices(graph.getDefaultParent());
+	var sorted_nodes = new Set();
+	if ( unsorted_nodes) unsorted_nodes.forEach(function(node){
+		var style=graph.getCellStyle(node);
+		var module = style["shape"];
+		if ( module.includes("inputport") )
+			sorted_nodes.add( node );
+	});
+	if ( unsorted_nodes) unsorted_nodes.forEach(function(node){
+		var style=graph.getCellStyle(node);
+		var module = style["shape"];
+		if ( !module.includes("inputport") )
+			sorted_nodes.add( node );
+	});
+	nodes = sorted_nodes;
+
 	//name the nets
 	if( nodes ) nodes.forEach(function(item){
 		var style=graph.getCellStyle(item); 
@@ -333,6 +346,7 @@ schematic.prototype.createVerilog=function(name)
 		var output_size=0;
 		var style=graph.getCellStyle(item); 
 		var module = style["shape"];
+		
 		switch( module )
 		{
 		case "inputport32": input_size++;
@@ -753,7 +767,7 @@ schematic.prototype.createVerilog=function(name)
 		verilogCode+="\n"+assignList;
 	if( netList != '' )
 		verilogCode+="\n"+netList;
-	verilogCode+="\n\nendmodule\n"+teststr;
+	verilogCode+="\n\nendmodule\n";
 	return verilogCode;
 };
 
