@@ -290,13 +290,7 @@ schematic.prototype.createVerilog=function(name)
 		if ( unsorted_nodes) unsorted_nodes.forEach(function(node){
 			var style=graph.getCellStyle(node);
 			var module = style["shape"];
-			if ( module.includes("inputport") )
-				sorted_nodes.add( node );
-		});
-		if ( unsorted_nodes ) unsorted_nodes.forEach(function(node){
-			var style=graph.getCellStyle(node); 
-			var module = style["shape"];
-			if ( !(module in gateNames))
+			if ( module.includes("inputport") || !(module in gateNames) )
 				sorted_nodes.add( node );
 		});
 		if ( unsorted_nodes) unsorted_nodes.forEach(function(node){
@@ -313,8 +307,6 @@ schematic.prototype.createVerilog=function(name)
 	//name the nets
 	if( nodes ) nodes.forEach(function(item){
 		var style=graph.getCellStyle(item); 
-		var mux_size=0;
-		var decoder_size=1;
 		var module = style["shape"];
 		switch( module )
 		{
@@ -374,7 +366,6 @@ schematic.prototype.createVerilog=function(name)
 		case "outputport4":
 		case "outputport2":
 		case "outputport1":
-			break;
 		case "constant0":
 		case "constant1":
 			break;
