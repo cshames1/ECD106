@@ -912,11 +912,6 @@ Sidebar.prototype.createLatchComponentShapes = function()
 	var field = new mxCell('List Item', new mxGeometry(0, 0, 60, 26), 'text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;');
 	field.vertex = true;
 	return [
-		//this.createVertexTemplateEntry('shape=srlatch;editable=0;', 80, 80, '', 'SR Latch', null, null, 'SR Latch'),
-		//this.createVertexTemplateEntry('shape=srlatch_en;editable=0;', 80, 80, '', 'SR Latch with EN', null, null, 'SR Latch with EN'),
-		//this.createVertexTemplateEntry('shape=dlatch;editable=0;', 80, 80, '', 'D Latch', null, null, 'D Latch'),
-		//this.createVertexTemplateEntry('shape=dlatch_en;editable=0;', 80, 80, '', 'D Latch with EN', null, null, 'D Latch with EN'),
-		this.createVertexTemplateEntry('shape=register;editable=0;', 80, 80, '', 'Register', null, null, 'Register'),
 		this.createVertexTemplateEntry('shape=register_en;editable=0;', 80, 80, '', 'Register with EN', null, null, 'Register with EN')
 	];
 };

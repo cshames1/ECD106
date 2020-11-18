@@ -27,6 +27,7 @@ schematic.prototype.checkPortName= function(newstr)
 		return  "Error:" + newstr + " is a Verilog reserved word and cannot be used as a port name";
 	return "";
 };
+
 schematic.prototype.runDRC = function()
 {
 	var graph=this.graph;
@@ -48,11 +49,16 @@ schematic.prototype.runDRC = function()
 	nodes=graph.getChildVertices(graph.getDefaultParent());
 	nodes.forEach(function(item){
 		var mux_size=1;
-		var decoder_size=2
+		var decoder_size=2;
+		var fanout_size=2;
+		var fanin_size=2;
 		var fan_in=2;
 			var style=graph.getCellStyle(item);
 		switch( style["shape"] )
 		{
+		//====================================================================================
+		//	MISC GROUP
+		//====================================================================================
 		case "constant0":
 		case "constant1":
 			break;
@@ -74,6 +80,7 @@ schematic.prototype.runDRC = function()
 				Messages.addError("Port name "+item.value+ " is used on multiple outputs",item);
 			if( item.value != "" ) output_identifiers.add(item.value);
 			break;
+
 		case "inputport1":
 			if( item.numLinksOutOf() === 0 )
 				Messages.addWarning("Input port is unconnected",item);
@@ -90,6 +97,9 @@ schematic.prototype.runDRC = function()
 				Messages.addError("Port name "+item.value+ " is used on output(s) and input(s)",item);
 			if( item.value != "" ) input_identifiers.add(item.value);
 			break;
+		//====================================================================================
+		//	BASIC GATE GROUP
+		//====================================================================================
 		case "buffer":
 		case "inverter": fan_in=1;
 		case "and":
@@ -103,8 +113,9 @@ schematic.prototype.runDRC = function()
 			if( item.numLinksInto() < fan_in )
 				Messages.addError("Gate must have at least "+fan_in+" input(s) connected",item);
 			break;
-
-			/*
+		//====================================================================================
+		//	MUX GROUP
+		//====================================================================================
 		case "mux16":mux_size++;
 		case "mux8":mux_size++;
 		case "mux4":mux_size++;
@@ -116,6 +127,9 @@ schematic.prototype.runDRC = function()
 			if( item.getLinks("in_i",false).length != (1<<mux_size))
 				Messages.addWarning("MUX has an unconnected data input(s)",item);
 			break;
+		//====================================================================================
+		//	DECODER GROUP
+		//====================================================================================
 		case "decoder4":decoder_size++;
 		case "decoder3":decoder_size++;
 		case "decoder2":
@@ -132,6 +146,9 @@ schematic.prototype.runDRC = function()
 				}
 			}
 			break;
+		//====================================================================================
+		//	LATCH GROUP
+		//====================================================================================
 		case "srlatch_en":
 			if( item.getLinks("in_en",false).length == 0)
 				Messages.addError("SR Latch enable input must be connected",item);
@@ -165,20 +182,50 @@ schematic.prototype.runDRC = function()
 			if( item.numLinksOutOf() == 0 )
 				Messages.addWarning("Flip-Flop has an unconnected output",item);
 			break;
-			*/
-
+		//====================================================================================
+		//	BUS GROUP
+		//====================================================================================
+		
+		// -Warning if not all outputs are connected
+		// Warning if input is not the bus size of the fanout****
+		// -Error if input is not connected
+		// -Error if no outputs are connected
+		// Error if output is not a 1-bit wire**** (does this matter?)
+		case "fanOut32":	fanout_size += 16;
+		case "fanOut16":	fanout_size += 8;
+		case "fanOut8":		fanout_size += 4;
+		case "fanOut4":		fanout_size += 2;
 		case "fanOut2":
+			if ( item.numLinksInto() == 0)
+				Messages.addError("Fan out input is unconnected",item);
+
+			if( item.numLinksOutOf() == 0 )
+				Messages.addError("Fan out has no connected outputs",item);
+			else if( item.numLinksOutOf() != fanout_size)
+				Messages.addWarning("Fan out has " + (fanout_size-item.numLinksOutOf()) + " unconnected outputs",item);
+			break;
+
+		// -Warning if not all inputs are connected
+		// Warning if output is not the bus size of the fanin**** (does this matter?)
+		// -Error if output is not connected
+		// -Error if no inputs are connected
+		// Error if input is not a 1-bit wire****
+		case "fanIn32":	fanin_size += 16;
+		case "fanIn16":	fanin_size += 8;
+		case "fanIn8":	fanin_size += 4;
+		case "fanIn4":	fanin_size += 2;
 		case "fanIn2":
-		case "fanOut4":
-		case "fanIn4":
-		case "fanOut8":
-		case "fanIn8":
-		case "fanOut16":
-		case "fanIn16":
-		case "fanOut32":
-		case "fanIn32":	
+			if ( item.numLinksOutOf() == 0)
+				Messages.addError("Fan in output is unconnected",item);
+
+			if( item.numLinksInto() == 0 )
+				Messages.addError("Fan in has no connected inputs",item);
+			else if( item.numLinksInto() != fanin_size)
+				Messages.addWarning("Fan in has " + (fanin_size-item.numLinksInto()) + " unconnected inputs",item);
+			break;
 		}
 	},this);
+
 	if( numOutputs===0 )
 		Messages.addError("Schematic must have at least one connected output",null);
 	if( numInputs===0 )
@@ -208,33 +255,29 @@ schematic.prototype.getUsedImportedComponents=function(){
 	var native_components=["and", "nand", "or","nor","xor","xnor","buf", "not",
 					"mux2","mux4", "mux8","mux16",
 					"decoder #(2,1)","decoder #(3,1)","decoder #(4,1)",
-					"d_latch","d_latch_en","register","register_en","sr_latch","sr_latch_en",
+					"d_latch","d_latch_en","register_en","sr_latch","sr_latch_en",
 					"fanIn2",  "fanIn4",  "fanIn8",  "fanIn16",  "fanIn32",
 					"fanOut2",  "fanOut4", "fanOut8", "fanOut16", "fanOut32" ];
 	var graph=this.graph;
 	nodes=graph.getChildVertices(graph.getDefaultParent());
 	var components = new Set();
-	var str = "";
-	//name the nets
 	if( nodes ) nodes.forEach(function(item){
 		var style=graph.getCellStyle(item); 
 		var module = style["shape"];
 		if ( !native_components.includes( module ) ) 
 			components.add( module );
-		str += module;
 	});
 	return components;
 }
 
-schematic.prototype.createVerilog=function(name)
+schematic.prototype.createVerilog=function()
 {
-	var teststr = "";
 	var netList="";
 	var inputList="";
 	var inputSet=new Set();
 	var assignList="";
 	var wireList = new Object();
-	var wireSet = new Array();
+	var wireSet = new Object();
 	for (var i=0; i<=5; i++) {
 		wireList[(1<<i)] = "";
 		wireSet[(1<<i)] = new Set();
@@ -242,13 +285,12 @@ schematic.prototype.createVerilog=function(name)
 	var outputList="";
 	var netAliases={};
 	var gateInputs={};
-	var moduleName= name;
 	var verilogCode="";
 	var graph=this.graph;
 	var gateNames={and:"and", nand:"nand",or:"or",nor:"nor",xor:"xor",xnor:"xnor",buffer:"buf", inverter:"not",
 					mux2:"mux2", mux4:"mux4", mux8:"mux8", mux16:"mux16",
 					decoder2:"decoder #(2,1)",decoder3:"decoder #(3,1)",decoder4:"decoder #(4,1)",
-					dlatch:"d_latch",dlatch_en:"d_latch_en",register:"register",register_en:"register_en",srlatch:"sr_latch",srlatch_en:"sr_latch_en",
+					dlatch:"d_latch",dlatch_en:"d_latch_en",register_en:"register_en",srlatch:"sr_latch",srlatch_en:"sr_latch_en",
 					fanIn2: "fanIn2", fanIn4: "fanIn4", fanIn8: "fanIn8", fanIn16: "fanIn16", fanIn32: "fanIn32",
 					fanOut2: "fanOut2", fanOut4: "fanOut4", fanOut8: "fanOut8", fanOut16: "fanOut16", fanOut32: "fanOut32" 
 				};
@@ -289,14 +331,28 @@ schematic.prototype.createVerilog=function(name)
 		});
 		return currentModule.signals;
 	}
-
-	nodes=graph.getChildVertices(graph.getDefaultParent());
+	function sortNodes ( unsorted_nodes ) {
+		var sorted_nodes = new Set();
+		if ( unsorted_nodes) unsorted_nodes.forEach(function(node){
+			var style=graph.getCellStyle(node);
+			var module = style["shape"];
+			if ( module.includes("inputport") || !(module in gateNames) )
+				sorted_nodes.add( node );
+		});
+		if ( unsorted_nodes) unsorted_nodes.forEach(function(node){
+			var style=graph.getCellStyle(node);
+			var module = style["shape"];
+			if ( !module.includes("inputport") && (module in gateNames) )
+				sorted_nodes.add( node );
+		});
+		return sorted_nodes;
+	}
 	
+	nodes = sortNodes( graph.getChildVertices(graph.getDefaultParent()) );
+
 	//name the nets
 	if( nodes ) nodes.forEach(function(item){
 		var style=graph.getCellStyle(item); 
-		var mux_size=0;
-		var decoder_size=1;
 		var module = style["shape"];
 		switch( module )
 		{
@@ -336,6 +392,7 @@ schematic.prototype.createVerilog=function(name)
 		var output_size=0;
 		var style=graph.getCellStyle(item); 
 		var module = style["shape"];
+		
 		switch( module )
 		{
 		case "inputport32": input_size++;
@@ -380,7 +437,6 @@ schematic.prototype.createVerilog=function(name)
 			else
 				wireSet[(1<<0)].add(gateName(item,"X") );
 			break;
-		case "register":
 		case "register_en":
 			var output_size=1;
 			var input = item.getLinks('in_D',false);
@@ -504,6 +560,9 @@ schematic.prototype.createVerilog=function(name)
 		var module = style["shape"];
 		switch( module )
 		{
+		case "constant0":
+		case "constant1":
+			break;
 		case "inputport32": input_size++;
 		case "inputport16": input_size++;
 		case "inputport8": input_size++;
@@ -610,7 +669,6 @@ schematic.prototype.createVerilog=function(name)
 				netList += gateName(item,"X");
 			netList += ')\n);';
 			break; 
-		case "register":
 		case "register_en":
 			var linkin=item.getLink( 'in_D_',false);
 			var output_size = (linkin)? linkin.size : 1;
@@ -724,9 +782,7 @@ schematic.prototype.createVerilog=function(name)
 		}
 	});
 
-	verilogCode="module ";
-	verilogCode+=(moduleName!=="")?moduleName:"mymodule";
-	verilogCode+= "(" ;
+	verilogCode="module top (";
 	if( inputList != '' || outputList != '')
 	{
 		verilogCode += inputList;
@@ -754,7 +810,7 @@ schematic.prototype.createVerilog=function(name)
 		verilogCode+="\n"+assignList;
 	if( netList != '' )
 		verilogCode+="\n"+netList;
-	verilogCode+="\n\nendmodule\n"+teststr;
+	verilogCode+="\n\nendmodule\n";
 	return verilogCode;
 };
 

@@ -1,5 +1,4 @@
-
-/**
+/*
  * Copyright (c) 2018, Douglas H. Summerville, Binghamton University
  * (see license.txt for attributions)
  * 
@@ -459,16 +458,12 @@
 	RegisterShape.prototype.getPorts = function()
 	{
 		var ports=new Array();
-		var style=this.state.style["shape"];
-		var is_enable=style.endsWith("_en");
 		ports['in_D_w']={x: 0, y: 0.25, perimeter:false, label:'D'};
 		ports['in_clk_w']={x: 0, y: 0.75, perimeter:false, label:'clk'};
 		ports['out_Q_e']={x: 1, y: 0.25, perimeter:false, label:'Q'};
-		if( is_enable )
-			ports['in_en_w']={x: 0, y: 0.5, perimeter:false, label:'en'};
+		ports['in_en_w']={x: 0, y: 0.5, perimeter:false, label:'en'};
 		return ports;
 	};
-	mxCellRenderer.registerShape('register', RegisterShape);
 	mxCellRenderer.registerShape('register_en', RegisterShape);
 
 	//====================================================================================
@@ -480,13 +475,12 @@
 	//====================================================================================
 	var drawFanOut = function(n, c, x, y, w, h)
 	{
-		c.setStrokeColor('black');
-		c.setFontSize(8);
-		c.setFontStyle(mxConstants.FONT_BOLD);
-		c.begin();
-		c.rect(0,0,w,h);
-		c.fillAndStroke();
-		c.text(w/2,h/2,0,0,''+1+'-to-'+n+'\nFan \nOut','center','middle');
+		c.moveTo(w, 0);
+		c.lineTo(w, h);
+		c.moveTo(w, h/2);
+		c.lineTo(0, h/2);
+		c.close();
+		c.end();
 	};
 
 	function FanOutShape()
@@ -515,13 +509,12 @@
 	
 	var drawFanIn = function(n, c, x, y, w, h)
 	{
-		c.setStrokeColor('black');
-		c.setFontSize(8);
-		c.setFontStyle(mxConstants.FONT_BOLD);
-		c.begin();
-		c.rect(0,0,w,h);
-		c.fillAndStroke();
-		c.text(w/2,h/2,0,0,''+n+'-to-'+1+'\nFan \nIn','center','middle');
+		c.moveTo(0, 0);
+		c.lineTo(0, h);
+		c.moveTo(0, h/2);
+		c.lineTo(w, h/2);
+		c.close();
+		c.end();
 	};
 
 	function FanInShape()
@@ -630,7 +623,9 @@
 	//====================================================================================
 	//	CONSTANT GROUP
 	//====================================================================================-
-	function ConstantShape() { mxEllipse.call(this); };
+	function ConstantShape() {
+		 mxEllipse.call(this); 
+	};
 	mxUtils.extend(ConstantShape, mxEllipse);
 	ConstantShape.prototype.getPorts = function()
 	{

@@ -107,6 +107,9 @@ Actions.prototype.init = function()
 	{
 		if (this.DRCWindow == null)
 		{
+			// 
+			// 
+			// 
 			// LATER: Check outline window for initial placement
 			this.DRCWindow = new DRCWindow(ui, 200, 30, 400, 100  );
 			//this.DRCWindow.window.addListener('show', function()
