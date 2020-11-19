@@ -310,9 +310,9 @@ schematic.prototype.createVerilog=function()
 		return graph.getCellStyle(link.target)["shape"].includes(moduleName);
 	}
 	function getNameOrAlias( item,  link ){
-		var x = netAliases[netName(link)] ;
-		if (x)
-			alias = x;
+		var try_name = netAliases[netName(link)] ;
+		if ( try_name )
+			alias = try_name;
 		else if ( srcNodeIs(link, "fanOut") ) {
 			var alias = "";
 			var link_in=item.getLink( 'in',false);
