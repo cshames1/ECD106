@@ -527,7 +527,7 @@ schematic.prototype.createVerilog=function()
 					linksout[0].size=1;
 				}
 				else if( linksout.length ){
-					wireSet[(1<<0)].add(netName(linksout[0],"X"));
+					//wireSet[(1<<0)].add(netName(linksout[0],"X"));
 					linksout[0].size=1;
 				}
 			}
