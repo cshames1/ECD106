@@ -527,7 +527,6 @@ schematic.prototype.createVerilog=function()
 					linksout[0].size=1;
 				}
 				else if( linksout.length ){
-					wireSet[(1<<0)].add(netName(linksout[0],"X"));
 					linksout[0].size=1;
 				}
 			}
@@ -543,7 +542,6 @@ schematic.prototype.createVerilog=function()
 				netAliases[netName(linksout[0])] = portName(linksout[0].target,"O");
 			//else add net name to wire list
 			else if( linksout.length ) {
-				//wireSet[(1<<fanin_size)].add(netName(linksout[0],"X"));
 				linksout.forEach(function(link){
 					link.size=(1<<fanin_size);
 				});
