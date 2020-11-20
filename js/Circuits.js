@@ -312,7 +312,7 @@ schematic.prototype.createVerilog=function()
 	function getNameOrAlias( item,  link ){
 		var alias = "";
 		var try_name = netAliases[netName(link)] ;
-		if ( srcNodeIs(link, "fanOut") || trgtNodeIs(link, "outputport") ) {
+		if ( srcNodeIs(link, "fanOut") ) {
 			var src_node = link.source;
 			var srclnk = src_node.getLink( 'in',false);
 			if (srclnk) {
