@@ -255,7 +255,7 @@ schematic.prototype.getUsedImportedComponents=function(){
 	var native_components=["and", "nand", "or","nor","xor","xnor","buf", "not",
 					"mux2","mux4", "mux8","mux16",
 					"decoder #(2,1)","decoder #(3,1)","decoder #(4,1)",
-					"d_latch","d_latch_en","register_en","sr_latch","sr_latch_en",
+					"register_en",
 					"fanIn2",  "fanIn4",  "fanIn8",  "fanIn16",  "fanIn32",
 					"fanOut2",  "fanOut4", "fanOut8", "fanOut16", "fanOut32" ];
 	var graph=this.graph;
@@ -312,9 +312,7 @@ schematic.prototype.createVerilog=function()
 	function getNameOrAlias( item,  link ){
 		var alias = "";
 		var try_name = netAliases[netName(link)] ;
-		if ( try_name )
-			alias = try_name;
-		else if ( srcNodeIs(link, "fanOut") ) {
+		if ( srcNodeIs(link, "fanOut") || trgtNodeIs(link, "outputport") ) {
 			var src_node = link.source;
 			var srclnk = src_node.getLink( 'in',false);
 			if (srclnk) {
@@ -323,13 +321,15 @@ schematic.prototype.createVerilog=function()
 					alias += try_alias+'['+getSrcPortID(link)+']';
 				}
 				else {
-					alias += 'X'+srclnk.source.id+"[";
+					alias += netName(srclnk)+"[";
 					alias += getSrcPortID(link)+"]";
 				}
 			}
 			else
 				alias = "1b'x";
 		}
+		else if ( try_name )
+			alias = try_name;
 		else if (netName(link))
 			alias = netName(link);
 		return alias;
