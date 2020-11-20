@@ -315,8 +315,7 @@ schematic.prototype.createVerilog=function()
 		if ( try_name )
 			alias = try_name;
 		else if ( srcNodeIs(link, "fanOut") ) {
-			var link_in=item.getLink( 'in',false);
-			var src_node = link_in.source;
+			var src_node = link.source;
 			var srclnk = src_node.getLink( 'in',false);
 			if (srclnk) {
 				var try_alias = netAliases[netName(srclnk)];
