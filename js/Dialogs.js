@@ -1290,14 +1290,6 @@ var VerilogWindow = function(editorUi, x, y, w, h)
 		this.window.destroy();
 	};
 	this.update = function(){ update();};
-	function moduleName(){
-		var mname=editorUi.editor.getOrCreateFilename();
-		if( mname.endsWith('.sch'))
-			mname= mname.substr(0,mname.lastIndexOf(".sch"));
-		mname=mname.replace(/^[^a-z]/i,"m");
-		mname=mname.replace(/[^a-z0-9]+/gi,"_");
-		return mname;
-	}
 	function update()
 	{
 		textarea.value=editorUi.circuit.createVerilog(editorUi.editor.graph);
