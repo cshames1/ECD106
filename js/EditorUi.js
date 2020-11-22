@@ -177,14 +177,15 @@ EditorUi = function(editor, container, lightbox)
 				//var src = img.src;
 				var bounds = new mxRectangle(Math.round(cp.x - scale*13 / 2),
 					Math.round(cp.y - scale*13 / 2), Math.round(scale*13), Math.round(scale*13));
-				//var icon = new mxImageShape(bounds, src);
-				//icon=new mxText('s0',bounds);
-				//icon=new mxLine(bounds,'black',1);
+				
+
 				var constraintName=this.constraints[i].label;
+				var id = this.constraints[i].id; 
+				var orientation = id[id.length-1];
 				//===============================================================================================
 				// Port labels created here
 				//===============================================================================================
-				icon=new portShape(bounds,constraintName,constraintName);
+				icon=new portShape(bounds,constraintName,orientation);
 				icon.dialect = (this.graph.dialect != mxConstants.DIALECT_SVG) ?
 						mxConstants.DIALECT_MIXEDHTML : mxConstants.DIALECT_SVG;
 				icon.preserveImageAspect = false;
@@ -200,7 +201,7 @@ EditorUi = function(editor, container, lightbox)
 						return false;
 					});
 				}
-
+	
 				// Move the icon behind all other overlays
 				if (icon.node.previousSibling != null)
 				{

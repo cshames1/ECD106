@@ -3388,7 +3388,6 @@ if (typeof mxVertexHandler != 'undefined')
 			{
 				style += 'html=1;';
 			}
-			style+='$';
 			return style;
 		};
 
