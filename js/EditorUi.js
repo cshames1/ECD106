@@ -36,9 +36,9 @@ EditorUi = function(editor, container, lightbox)
 
     graph.connectionHandler.addListener(mxEvent.CONNECT, function(sender, evt)
     {
+	circuit=new schematic(graph);
+	circuit.createVerilog(graph);
 	var edge = evt.getProperty('cell');
-
-
 	var style = graph.getCellStyle(edge);
 	var srcPortId = style[mxConstants.STYLE_SOURCE_PORT];
 	var trgPortId = style[mxConstants.STYLE_TARGET_PORT];
