@@ -375,8 +375,7 @@ schematic.prototype.mapNetSizes=function(graph){
 		case "xnor":
 		case "buffer":
 		case "inverter":
-			var linksout=node.linksOutOf();
-		    if( linksout ) {
+		    if( linksout.length ) {
 				linksout.forEach(function(link){
 					setLinkSize(link, 1);
 				})
@@ -388,7 +387,7 @@ schematic.prototype.mapNetSizes=function(graph){
 			if(input.length) output_size = input[0].size;
 			//determine if output net name is port name
 			var linksout=node.linksOutOf();
-			 if( linksout ) {
+			 if( linksout.length ) {
 				linksout.forEach(function(link){
 					setLinkSize(link, output_size);
 				})
@@ -407,7 +406,7 @@ schematic.prototype.mapNetSizes=function(graph){
 			}
 			//determine if output net name is port name
 			var linksout=node.linksOutOf();
-			if( linksout ) {
+			if( linksout.length ) {
 				linksout.forEach(function(link){
 					setLinkSize(link, output_size);
 				});
@@ -446,7 +445,7 @@ schematic.prototype.mapNetSizes=function(graph){
 		case "fanIn2": fanin_size++;
 			//determine if output net name is port name
 			var linksout=node.linksOutOf();
-			if( linksout ) {
+			if( linksout.length ) {
 				linksout.forEach(function(link){
 					linksout.forEach(function(link){
 						setLinkSize(link, (1<<fanin_size));
