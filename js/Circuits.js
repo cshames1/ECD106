@@ -270,8 +270,213 @@ schematic.prototype.getUsedImportedComponents=function(){
 	return components;
 }
 
+schematic.prototype.mapNetSizes=function(graph){
+	var graph=this.graph;
+	var gateNames={and:"and", nand:"nand",or:"or",nor:"nor",xor:"xor",xnor:"xnor",buffer:"buf", inverter:"not",
+					mux2:"mux2", mux4:"mux4", mux8:"mux8", mux16:"mux16",
+					decoder2:"decoder #(2,1)",decoder3:"decoder #(3,1)",decoder4:"decoder #(4,1)",
+					dlatch:"d_latch",dlatch_en:"d_latch_en",register_en:"register_en",srlatch:"sr_latch",srlatch_en:"sr_latch_en",
+					fanIn2: "fanIn2", fanIn4: "fanIn4", fanIn8: "fanIn8", fanIn16: "fanIn16", fanIn32: "fanIn32",
+					fanOut2: "fanOut2", fanOut4: "fanOut4", fanOut8: "fanOut8", fanOut16: "fanOut16", fanOut32: "fanOut32" 
+				};
+	function getSrcPortID ( link ) {
+		var oPortName=/sourcePort=out([^_]*)/.exec(link.style);
+		return oPortName[1];
+	}
+	function getModulePortSizes (moduleName) {
+		var storedShapes = JSON.parse(localStorage.getItem('storedShapes'));
+		var currentModule;
+		storedShapes.forEach(function(shape){
+			if (shape.componentName==moduleName) currentModule = shape;
+		});
+		return currentModule.signal_size;
+	}
+	function getModule( node ){
+		return graph.getCellStyle(node)["shape"];
+	}
+	function sortNodes ( unsorted_nodes ) {
+		var sorted_nodes = new Set();
+		if ( unsorted_nodes) unsorted_nodes.forEach(function(node){
+			var module = getModule( node );
+			if ( module.includes("inputport") || !(module in gateNames) || module.includes("fanIn") )
+				sorted_nodes.add( node );
+		});
+		if ( unsorted_nodes) unsorted_nodes.forEach(function(node){
+			var module = getModule( node );
+			if ( !module.includes("inputport") && (module in gateNames) && !module.includes("fanIn") )
+				sorted_nodes.add( node );
+		});
+		return sorted_nodes;
+	}
+	function setStrokeWidth( edge ){
+		var new_style ="";
+		var width = Math.log2(edge.size)+1;
+		var style = edge["style"];
+		if ( style.includes("strokeWidth") ) {
+			style_array = style.split(";");
+			style_array.forEach(function(element){
+				if ( element.includes("strokeWidth") )
+					new_style += "strokeWidth=" +width+ ";";
+				else if (element)
+					new_style += element + ";";
+			});
+		}
+		else
+			new_style += style+"strokeWidth="+width+";";
+		edge["style"] = new_style;
+	}
+	function setLinkSize(edge, size){
+		edge.size = size;
+		setStrokeWidth( edge );
+	}
+	nodes = sortNodes( graph.getChildVertices(graph.getDefaultParent()) );
+	//map the netlist
+	if( nodes ) nodes.forEach(function(node){
+		var decoder_size=1;
+		var fanout_size=0;
+		var fanin_size=0;
+		var mux_size=0;
+		var input_size=0;
+		var output_size=0;
+		var module = getModule(node);
+		switch( module )
+		{
+		case "inputport32": input_size++;
+		case "inputport16": input_size++;
+		case "inputport8": input_size++;
+		case "inputport4": input_size++;
+		case "inputport2": input_size++;
+		case "inputport1":
+			var links=node.linksOutOf();
+			links.forEach(function(link){
+				setLinkSize(link, (1<<input_size));
+			});
+			break;
+		case "outputport32":
+		case "outputport16":
+		case "outputport8":
+		case "outputport4":
+		case "outputport2":
+		case "outputport1":
+			break;
+		case "constant0":
+		case "constant1":
+			var links=node.linksOutOf();
+			if (links) 
+				links.forEach(function(link){
+					setLinkSize(link, 1);
+				});
+			break;
+		case "and":
+		case "nand":
+		case "or":
+		case "nor":
+		case "xor":
+		case "xnor":
+		case "buffer":
+		case "inverter":
+		    if( linksout.length ) {
+				linksout.forEach(function(link){
+					setLinkSize(link, 1);
+				})
+			}
+			break;
+		case "register_en":
+			var output_size=1;
+			var input = node.getLinks('in_D',false);
+			if(input.length) output_size = input[0].size;
+			//determine if output net name is port name
+			var linksout=node.linksOutOf();
+			 if( linksout.length ) {
+				linksout.forEach(function(link){
+					setLinkSize(link, output_size);
+				})
+			}
+			break;
+		case "mux16": mux_size++;
+		case "mux8": mux_size++;
+		case "mux4": mux_size++;
+		case "mux2": mux_size++;
+			//find the width of the largest connected wire, and make the output that width
+			var output_size=1;
+			for (var i=0; i<(1<<mux_size); i++) {
+				var linkin = node.getLink('in'+i, false);
+				if (linkin && linkin.size>output_size) 
+					output_size=linkin.size;
+			}
+			//determine if output net name is port name
+			var linksout=node.linksOutOf();
+			if( linksout.length ) {
+				linksout.forEach(function(link){
+					setLinkSize(link, output_size);
+				});
+			}
+			break;
+		case "decoder4":decoder_size++;
+		case "decoder3":decoder_size++;
+		case "decoder2":decoder_size++;
+			for( var i=0; i<(1<<decoder_size); i=i+1 )
+			{
+				var linksout=node.getLinks( 'out'+ i +'_d', true);
+				if( linksout  ) 
+					linksout.forEach(function(link){
+						setLinkSize(link, 1);
+					});
+			}
+			break;
+		case "fanOut32": fanout_size++;
+		case "fanOut16": fanout_size++;
+		case "fanOut8": fanout_size++;
+		case "fanOut4": fanout_size++;
+		case "fanOut2": fanout_size++;
+			for( var i=0; i<(1<<fanout_size); i=i+1 )
+			{
+				var linksout=node.getLinks( 'out'+ i + '_', true);
+				if( linksout )
+					linksout.forEach(function(link){
+						setLinkSize(link, 1);
+					});
+			}
+			break;
+		case "fanIn32": fanin_size++;
+		case "fanIn16": fanin_size++;
+		case "fanIn8": fanin_size++;
+		case "fanIn4": fanin_size++;
+		case "fanIn2": fanin_size++;
+			//determine if output net name is port name
+			var linksout=node.linksOutOf();
+			if( linksout.length ) {
+				linksout.forEach(function(link){
+					linksout.forEach(function(link){
+						setLinkSize(link, (1<<fanin_size));
+					});
+				});
+			}
+			break;
+		default:
+			var portSizes = getModulePortSizes(module);
+			var linksout=node.linksOutOf();
+			var outputs = new Set();
+			//find each output being used
+			linksout.forEach(function(link){
+				outputs.add( getSrcPortID(link) );
+			});
+			//for each used output, map the net
+			outputs.forEach(function(id){
+				var linksout=node.getLinks( 'out' + id + '_', true);
+				if( linksout.length ) {
+					linksout.forEach(function(link){
+						setLinkSize(link, portSizes.output[id]);
+					});
+				}
+			});
+			break;
+		}
+	});
+}
+
 schematic.prototype.createVerilog=function()
-{
+{	
 	var netList="";
 	var inputList="";
 	var inputSet=new Set();
@@ -410,30 +615,25 @@ schematic.prototype.createVerilog=function()
 	if( nodes ) nodes.forEach(function(node){
 		var decoder_size=1;
 		var fanout_size=0;
-		var fanin_size=0;
 		var mux_size=0;
 		var input_size=0;
 		var output_size=0;
 		var module = getModule(node);
 		switch( module )
 		{
-		case "inputport32": input_size++;
-		case "inputport16": input_size++;
-		case "inputport8": input_size++;
-		case "inputport4": input_size++;
-		case "inputport2": input_size++;
+		case "inputport32": 
+		case "inputport16": 
+		case "inputport8": 
+		case "inputport4": 
+		case "inputport2": 
 		case "inputport1":
-			var links=node.linksOutOf();
-			links.forEach(function(link){
-				link.size = (1<<input_size);
-			});
 			break;
-		case "outputport32":
 		case "outputport16":
 		case "outputport8":
 		case "outputport4":
 		case "outputport2":
 		case "outputport1":
+			break;
 		case "constant0":
 		case "constant1":
 			break;
@@ -450,12 +650,8 @@ schematic.prototype.createVerilog=function()
 			if( linksout.length == 1 && trgtNodeIs(linksout[0], "outputport") )
 				netAliases[netName(linksout[0])] = portName(linksout[0].target,"O");
 			//else add net name to wire list
-			else if( linksout.length ) {
+			else if( linksout.length ) 
 				wireSet[(1<<0)].add(netName(linksout[0],"X"));
-				linksout.forEach(function(link){
-					link.size=1;
-				})
-			}
 			else
 				wireSet[(1<<0)].add(gateName(node,"X") );
 			break;
@@ -465,15 +661,11 @@ schematic.prototype.createVerilog=function()
 			if(input.length) output_size = input[0].size;
 			//determine if output net name is port name
 			var linksout=node.linksOutOf();
-			if( linksout.length == 1 && trgtNodeIs(linksout[0], "outputport") ) 
+			if( linksout.length == 1 && trgtNodeIs(linksout[0], "outputport") )
 				netAliases[netName(linksout[0])] = portName(linksout[0].target,"O");
 			//else add net name to wire list
-			else if( linksout.length ) {
+			else if( linksout.length ) 
 				wireSet[output_size].add(netName(linksout[0],"X"));
-				linksout.forEach(function(link){
-					link.size=output_size;
-				})
-			}
 			else
 				wireSet[output_size].add(gateName(node,"X") );
 			break;
@@ -493,12 +685,8 @@ schematic.prototype.createVerilog=function()
 			if( linksout.length == 1 && trgtNodeIs(linksout[0], "outputport") ) 
 				netAliases[netName(linksout[0])] = portName(linksout[0].target,"O");
 			//else add net name to wire list
-			else if( linksout.length ) {
+			else if( linksout.length ) 
 				wireSet[output_size].add(netName(linksout[0],"X"));
-				linksout.forEach(function(link){
-					link.size=output_size;
-				});
-			}
 			else
 				wireSet[output_size].add(gateName(node,"X") );
 			break;
@@ -522,29 +710,19 @@ schematic.prototype.createVerilog=function()
 			for( var i=0; i<(1<<fanout_size); i=i+1 )
 			{
 				var linksout=node.getLinks( 'out'+ i + '_', true);
-				if( linksout.length == 1 && trgtNodeIs(linksout[0], "outputport") ) {
+				if( linksout.length == 1 && trgtNodeIs(linksout[0], "outputport") ) 
 					netAliases[netName(linksout[0])] = portName(linksout[0].target,"O");
-					linksout[0].size=1;
-				}
-				else if( linksout.length )
-					linksout[0].size=1;
 			}
 			break;
-		case "fanIn32": fanin_size++;
-		case "fanIn16": fanin_size++;
-		case "fanIn8": fanin_size++;
-		case "fanIn4": fanin_size++;
-		case "fanIn2": fanin_size++;
+		case "fanIn32": 
+		case "fanIn16": 
+		case "fanIn8": 
+		case "fanIn4": 
+		case "fanIn2": 
 			//determine if output net name is port name
 			var linksout=node.linksOutOf();
 			if( linksout.length == 1 && trgtNodeIs(linksout[0], "outputport") ) 
 				netAliases[netName(linksout[0])] = portName(linksout[0].target,"O");
-			//else add net name to wire list
-			else if( linksout.length ) {
-				linksout.forEach(function(link){
-					link.size=(1<<fanin_size);
-				});
-			}
 			break;
 		default:
 			var portSizes = getModulePortSizes(module);
@@ -559,10 +737,8 @@ schematic.prototype.createVerilog=function()
 				var linksout=node.getLinks( 'out' + id + '_', true);
 				if( linksout.length == 1 && trgtNodeIs(linksout[0], "outputport") ) 
 					netAliases[netName(linksout[0])] = portName(linksout[0].target,"O");
-				else if( linksout.length ) {
+				else if( linksout.length ) 
 					wireSet[portSizes.output[id]].add(netName(linksout[0],"X"));
-					linksout[0].size=portSizes.output[id];
-				}
 			});
 			break;
 		}

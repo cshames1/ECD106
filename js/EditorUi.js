@@ -25,6 +25,8 @@ EditorUi = function(editor, container, lightbox)
 	mxCellOverlay.prototype.graph=graph;
 	this.isInSimulationMode=false;
 	this.circuit=new schematic(graph);
+	
+	
 
 	mxConnectionHandler.prototype.select = false;
 	mxGraph.prototype.enterStopsCellEditing = true;
@@ -36,9 +38,10 @@ EditorUi = function(editor, container, lightbox)
 
     graph.connectionHandler.addListener(mxEvent.CONNECT, function(sender, evt)
     {
+	var circuit=new schematic(graph);
+	circuit.mapNetSizes(graph);
+	console.log();
 	var edge = evt.getProperty('cell');
-
-
 	var style = graph.getCellStyle(edge);
 	var srcPortId = style[mxConstants.STYLE_SOURCE_PORT];
 	var trgPortId = style[mxConstants.STYLE_TARGET_PORT];
@@ -79,17 +82,6 @@ EditorUi = function(editor, container, lightbox)
 	
 
     });
-
-
-//graph.addListener(mxEvent.CLICK, function(sender, evt)
-//{
-	//var cell = evt.getProperty('cell');
-	//
-	//if (cell != null )
-	//{
-		;//
-	//}
-//});
 
 
 	graph.setPortsEnabled(false);
