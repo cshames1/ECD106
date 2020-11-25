@@ -63,8 +63,6 @@ EditorUi = function(editor, container, lightbox)
 		graph.setCellStyles(mxConstants.STYLE_SOURCE_PORT, trgPortId, new Array(edge));
 		graph.setCellStyles(mxConstants.STYLE_TARGET_PORT, srcPortId, new Array(edge));
 	}
-
-
     style = graph.getCellStyle(edge);
 	var trgPortId=style[mxConstants.STYLE_TARGET_PORT];
 	var truecount=0;
@@ -75,22 +73,8 @@ EditorUi = function(editor, container, lightbox)
 	});
 	if( truecount != 1 )
 		deleteEdge(edge);
-
-	
-
+	graph.refresh();
     });
-
-
-//graph.addListener(mxEvent.CLICK, function(sender, evt)
-//{
-	//var cell = evt.getProperty('cell');
-	//
-	//if (cell != null )
-	//{
-		;//
-	//}
-//});
-
 
 	graph.setPortsEnabled(false);
 	graph.setAllowDanglingEdges(false);
