@@ -374,6 +374,7 @@ Actions.prototype.init = function()
 				graph.setSelectionCells(select);
 			}
 		}
+		ui.circuit.createVerilog(graph);
 	};
 
 	this.addAction('delete', function(evt)

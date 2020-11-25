@@ -229,7 +229,7 @@ schematic.prototype.runDRC = function()
 	if( numOutputs===0 )
 		Messages.addError("Schematic must have at least one connected output",null);
 	if( numInputs===0 )
-		Messages.addWarning("Schematic has not connected inputs",null);
+		Messages.addWarning("Schematic has unconnected inputs",null);
 	return Messages;
 };
 
@@ -375,26 +375,25 @@ schematic.prototype.createVerilog=function()
 		});
 		return sorted_nodes;
 	}
-	function setStrokeWidth( edge ){
+	function setCellStyleAttribute( cell, attribute, value ){
 		var new_style ="";
-		var width = Math.log2(edge.size)+1;
-		var style = edge["style"];
-		if ( style.includes("strokeWidth") ) {
+		var style = cell["style"];
+		if ( style.includes(attribute) ) {
 			style_array = style.split(";");
-			style_array.forEach(function(element){
-				if ( element.includes("strokeWidth") )
-					new_style += "strokeWidth=" +width+ ";";
-				else if (element)
-					new_style += element + ";";
+			style_array.forEach(function(token){
+				if ( token.includes(attribute) )
+					new_style += attribute+"=" +value+ ";";
+				else if (token)
+					new_style += token + ";";
 			});
 		}
 		else
-			new_style += style+"strokeWidth="+width+";";
-		edge["style"] = new_style;
+			new_style += style+ attribute+"=" +value+ ";";
+		cell["style"] = new_style;
 	}
 	function setLinkSize(edge, size){
 		edge.size = size;
-		setStrokeWidth( edge );
+		setCellStyleAttribute( edge, "strokeWidth", Math.log2(size)+1 );
 	}
 	nodes = sortNodes( graph.getChildVertices(graph.getDefaultParent()) );
 
@@ -857,6 +856,8 @@ schematic.prototype.createVerilog=function()
 	if( netList != '' )
 		verilogCode+=netList;
 	verilogCode+="\n\nendmodule\n";
+
+	graph.refresh();
 	return verilogCode;
 };
 
