@@ -382,18 +382,20 @@ schematic.prototype.createVerilog=function()
 			style_array = style.split(";");
 			style_array.forEach(function(token){
 				if ( token.includes(attribute) )
-					new_style += attribute+"=" +value+ ";";
+					new_style += attribute+"="+value+";";
 				else if (token)
-					new_style += token + ";";
+					new_style += token+";";
 			});
 		}
 		else
-			new_style += style+ attribute+"=" +value+ ";";
+			new_style += style+attribute+"="+value+";";
 		cell["style"] = new_style;
 	}
-	function setLinkSize(edge, size){
-		edge.size = size;
-		setCellStyleAttribute( edge, "strokeWidth", Math.log2(size)+1 );
+	function setLinkSetSize(link_set, size){
+		if ( link_set ) link_set.forEach(function(link){
+			link.size = size;
+			setCellStyleAttribute( link, "strokeWidth", Math.log2(size)+1 );
+		});
 	}
 	nodes = sortNodes( graph.getChildVertices(graph.getDefaultParent()) );
 
@@ -434,20 +436,18 @@ schematic.prototype.createVerilog=function()
 		var fanout_size=0;
 		var fanin_size=0;
 		var mux_size=0;
-		var input_size=0;
-		var module = getModule(node);
+		var inputport_size=0;
+		var module = getModule( node );
 		switch( module )
 		{
-		case "inputport32": input_size++;
-		case "inputport16": input_size++;
-		case "inputport8": input_size++;
-		case "inputport4": input_size++;
-		case "inputport2": input_size++;
+		case "inputport32": inputport_size++;
+		case "inputport16": inputport_size++;
+		case "inputport8": inputport_size++;
+		case "inputport4": inputport_size++;
+		case "inputport2": inputport_size++;
 		case "inputport1":
-			var links=node.linksOutOf();
-			links.forEach(function(link){
-				setLinkSize(link, (1<<input_size));
-			});
+			var linksout=node.linksOutOf();
+			setLinkSetSize(linksout, (1<<inputport_size));
 			break;
 		case "outputport32":
 		case "outputport16":
@@ -458,10 +458,8 @@ schematic.prototype.createVerilog=function()
 			break;
 		case "constant0":
 		case "constant1":
-			var links=node.linksOutOf();
-			if (links) links.forEach(function(link){
-				setLinkSize(link, 1);
-			});
+			var linksout=node.linksOutOf();
+			setLinkSetSize(linksout, 1);
 			break;
 		case "and":
 		case "nand":
@@ -481,10 +479,7 @@ schematic.prototype.createVerilog=function()
 			}
 			else
 				wireSet[(1<<0)].add(gateName(node,"X") );
-			if (linksout)
-				linksout.forEach(function(link){
-					setLinkSize(link, 1);
-				});
+			setLinkSetSize(linksout, 1);
 			break;
 		case "register_en":
 			var output_size=1;
@@ -498,9 +493,7 @@ schematic.prototype.createVerilog=function()
 			//else add net name to wire list
 			else if( linksout.length ) 
 				wireSet[output_size].add(netName(linksout[0],"X"));
-			if (linksout) linksout.forEach(function(link){
-				setLinkSize(link, output_size);
-			});
+			setLinkSetSize(linksout, output_size);
 			break;
 		case "mux16": mux_size++;
 		case "mux8": mux_size++;
@@ -518,17 +511,11 @@ schematic.prototype.createVerilog=function()
 			if( linksout.length == 1 && trgtNodeIs(linksout[0], "outputport") ) 
 				netAliases[netName(linksout[0])] = portName(linksout[0].target,"O");
 			//else add net name to wire list
-			else if( linksout.length ) {
+			else if( linksout.length ) 
 				wireSet[output_size].add(netName(linksout[0],"X"));
-				linksout.forEach(function(link){
-					link.size=output_size;
-				});
-			}
 			else
 				wireSet[output_size].add(gateName(node,"X") );
-			if (linksout) linksout.forEach(function(link){
-				setLinkSize(link, output_size);
-			});
+			setLinkSetSize(linksout, output_size);
 			break;
 		case "decoder4":decoder_size++;
 		case "decoder3":decoder_size++;
@@ -540,9 +527,7 @@ schematic.prototype.createVerilog=function()
 					netAliases[netName(linksout[0])] = portName(linksout[0].target,"O");
 				else if( linksout.length )
 					wireSet[(1<<0)].add(netName(linksout[0],"X"));
-				if (linksout) linksout.forEach(function(link){
-					setLinkSize(link, output_size);
-				});
+				setLinkSetSize(linksout, 1);
 			}
 			break;
 		case "fanOut32": fanout_size++;
@@ -553,12 +538,9 @@ schematic.prototype.createVerilog=function()
 			for( var i=0; i<(1<<fanout_size); i=i+1 )
 			{
 				var linksout=node.getLinks( 'out'+ i + '_', true);
-				if( linksout.length == 1 && trgtNodeIs(linksout[0], "outputport") ) {
+				if( linksout.length == 1 && trgtNodeIs(linksout[0], "outputport") ) 
 					netAliases[netName(linksout[0])] = portName(linksout[0].target,"O");
-				}
-				if (linksout) linksout.forEach(function(link){
-					setLinkSize(link, 1);
-				});;
+				setLinkSetSize(linksout, 1);
 			}
 			break;
 		case "fanIn32": fanin_size++;
@@ -570,12 +552,7 @@ schematic.prototype.createVerilog=function()
 			var linksout=node.linksOutOf();
 			if( linksout.length == 1 && trgtNodeIs(linksout[0], "outputport") ) 
 				netAliases[netName(linksout[0])] = portName(linksout[0].target,"O");
-			//else add net name to wire list
-			if( linksout ) {
-				linksout.forEach(function(link){
-					setLinkSize(link, (1<<fanin_size));
-				});
-			}
+			setLinkSetSize(linksout, (1<<fanin_size));
 			break;
 		default:
 			var portSizes = getModulePortSizes(module);
@@ -590,12 +567,9 @@ schematic.prototype.createVerilog=function()
 				var linksout=node.getLinks( 'out' + id + '_', true);
 				if( linksout.length == 1 && trgtNodeIs(linksout[0], "outputport") ) 
 					netAliases[netName(linksout[0])] = portName(linksout[0].target,"O");
-				if( linksout.length ) {
+				if( linksout.length ) 
 					wireSet[portSizes.output[id]].add(netName(linksout[0],"X"));
-					linksout.forEach(function(link){
-						setLinkSize(link, portSizes.output[id]);					
-					});
-				}
+				setLinkSetSize(linksout, portSizes.output[id]);					
 			});
 			break;
 		}
@@ -605,8 +579,8 @@ schematic.prototype.createVerilog=function()
 	nodes.forEach(function(node){
 		var mux_size=0;
 		var fanin_size = 0;
-		var input_size=0;
-		var output_size=0;
+		var inputport_size=0;
+		var outputport_size=0;
 		var decoder_size=1;
 		var module = getModule(node);
 		switch( module )
@@ -614,33 +588,31 @@ schematic.prototype.createVerilog=function()
 		case "constant0":
 		case "constant1":
 			break;
-		case "inputport32": input_size++;
-		case "inputport16": input_size++;
-		case "inputport8": input_size++;
-		case "inputport4": input_size++;
-		case "inputport2": input_size++;
+		case "inputport32": inputport_size++;
+		case "inputport16": inputport_size++;
+		case "inputport8": inputport_size++;
+		case "inputport4": inputport_size++;
+		case "inputport2": inputport_size++;
 		case "inputport1":
-			if (input_size==0) 
+			if (inputport_size==0) 
 				inputList+="\n\tinput " + portName(node,'I') +',';
 			else
-				inputList+="\n\tinput [" + ((1<<input_size)-1) + ':0] ' + portName(node,'I') +',';
+				inputList+="\n\tinput [" + ((1<<inputport_size)-1) + ':0] ' + portName(node,'I') +',';
 			inputSet.add( portName(node,'I') );
 			break;
-		case "outputport32": output_size++;
-		case "outputport16": output_size++;
-		case "outputport8": output_size++;
-		case "outputport4": output_size++;
-		case "outputport2": output_size++;
+		case "outputport32": outputport_size++;
+		case "outputport16": outputport_size++;
+		case "outputport8": outputport_size++;
+		case "outputport4": outputport_size++;
+		case "outputport2": outputport_size++;
 		case "outputport1":
-			if (output_size==0)
+			if (outputport_size==0)
 				outputList+="\n\toutput " + portName(node,'O') + ',';
 			else
-				outputList+="\n\toutput [" + ((1<<output_size)-1) + ':0] ' + portName(node,'O') +',';
+				outputList+="\n\toutput [" + ((1<<outputport_size)-1) + ':0] ' + portName(node,'O') +',';
 			var link=node.linksInto();
 			if( link.length == 0 )
-			{
 				outputAssignList += "\nassign " + portName(node,"O") + " = 1\'bx;" ;
-			}
 			else if( getNameOrAlias( link[0]) != portName(node,"O")) 
 			{
 				outputAssignList += "\nassign " + portName(node,"O") + " = " ;
@@ -982,7 +954,7 @@ schematic.prototype.updateGateOutput=function(node)
 			links.forEach(function(link){ count=count+(ckt.linkIsHigh(link)?1:0);} );
 		ckt.setGateOutput(node,(1+count)%2 );
 		break;
-		/*
+		
 	case "mux16":
 		sel+= ckt.linkIsHigh(node.getLink("in_s3")) ? 8 : 0;
 	case "mux8":
@@ -1002,31 +974,9 @@ schematic.prototype.updateGateOutput=function(node)
 		sel+= ckt.linkIsHigh(node.getLink("in_a0")) ? 1 : 0;
 		ckt.setGateOutput( node,false);
 		ckt.setGateOutput( node,ckt.linkIsHigh( node.getLink("in_en")),"out"+(sel+1));
-	case "srlatch_en":
-		if( !ckt.linkIsHigh(node.getLink("in_en")))
-			break;
-	case "srlatch":
-		if( ckt.linkIsHigh(node.getLink("in_S")))
-			ckt.setGateOutput( node,true);
-		else if( ckt.linkIsHigh(node.getLink("in_R")))
-			ckt.setGateOutput( node,false);
-		break;
-	case "dlatch_en":
-		if( !ckt.linkIsHigh(node.getLink("in_en")))
-			break;
-	case "dlatch":
-		if( ckt.linkIsHigh(node.getLink("in_G")))
-			ckt.setGateOutput( node,ckt.linkIsHigh( node.getLink("in_D")),);
-		break;
 	case "register_en":
 		if( !ckt.linkIsHigh(node.getLink("in_en")))
 			break;
-	case "dff":
-		if( !node.clkLast && ckt.linkIsHigh(node.getLink("in_>")))
-			ckt.setGateOutput( node,ckt.linkIsHigh( node.getLink("in_D")));
-		node.clkLast = ckt.linkIsHigh( node.getLink("in_>")) ;
-		break;
-		*/
 	default:
 	//------- never tested
 		sel+= ckt.linkIsHigh(node.getLink("in_a1")) ? 2 : 0;
