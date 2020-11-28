@@ -304,12 +304,12 @@ schematic.prototype.createVerilog=function()
 			return 'X'+link.source.id + '_'+ port_id;
 	}
 	function srcNodeIs(link, moduleName){
-		return graph.getCellStyle(link.source)["shape"].includes(moduleName);
+		return getModule(link.source).includes(moduleName);
 	}
 	function trgtNodeIs(link, moduleName){
-		return graph.getCellStyle(link.target)["shape"].includes(moduleName);
+		return getModule(link.target).includes(moduleName);
 	}
-	function getNameOrAlias(  link ){
+	function getNameOrAlias( link ){
 		var alias = "";
 		var try_inputport_name = netAliases[netName(link)] ;
 		if ( srcNodeIs(link, "fanOut") ) {
