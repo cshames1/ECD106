@@ -294,8 +294,12 @@ schematic.prototype.createVerilog=function()
 					fanIn2: "fanIn2", fanIn4: "fanIn4", fanIn8: "fanIn8", fanIn16: "fanIn16", fanIn32: "fanIn32",
 					fanOut2: "fanOut2", fanOut4: "fanOut4", fanOut8: "fanOut8", fanOut16: "fanOut16", fanOut32: "fanOut32" 
 				};
-	function gateName( node, prefix){ return prefix+node.id;}
-	function portName( node, prefix ){ return node.value ? node.value : gateName(node,prefix);}
+	function gateName( node, prefix){ 
+		return prefix+node.id;
+	}
+	function portName( node, prefix ){ 
+		return node.value ? node.value : gateName(node,prefix);
+	}
 	function netName( link ){
 		var port_id = getSrcPortID( link );
 		if( port_id == "" )
@@ -332,34 +336,27 @@ schematic.prototype.createVerilog=function()
 		return alias;
 	}
 	function getSrcPortID ( link ) {
-		var oPortName=/sourcePort=out([^_]*)/.exec(link.style);
-		if (oPortName)
-			return oPortName[1];
-		else
-			return 0;
+		return /sourcePort=out([^_]*)/.exec(link.style)[1];
 	}
 	function getTrgtPortID ( link ) {
-		var oPortName=/targetPort=in([^_]*)/.exec(link.style);
-		return oPortName[1];
+		return /targetPort=in([^_]*)/.exec(link.style)[1];
 	}
-	function getModulePortSizes (moduleName) {
-		var storedShapes = JSON.parse(localStorage.getItem('storedShapes'));
-		var currentModule;
-		storedShapes.forEach(function(shape){
-			if (shape.componentName==moduleName) currentModule = shape;
-		});
-		return currentModule.signal_size;
+	function searchStoredShapesFor( moduleName ){
+		var stored_shapes = JSON.parse(localStorage.getItem('storedShapes'));
+		var i = stored_shapes.length;
+		while( i-- ){
+			if ( stored_shapes[i].componentName==moduleName )
+				return stored_shapes[i];
+		}
 	}
-	function getModulePorts (moduleName){
-		var storedShapes = JSON.parse(localStorage.getItem('storedShapes'));
-		var currentModule;
-		storedShapes.forEach(function(shape){
-			if (shape.componentName==moduleName) currentModule = shape;
-		});
-		return currentModule.signals;
+	function getModulePortSizes ( moduleName ) {
+		return searchStoredShapesFor( moduleName ).signal_size;
+	}
+	function getModulePorts ( moduleName ){
+		return searchStoredShapesFor( moduleName ).signals;
 	}
 	function getModule( node ){
-		return graph.getCellStyle(node)["shape"];
+		return graph.getCellStyle( node )["shape"];
 	}
 	function sortNodes ( unsorted_nodes ) {
 		var sorted_nodes = new Set();
@@ -789,7 +786,7 @@ schematic.prototype.createVerilog=function()
 				var id = getSrcPortID(link);
 				var portInstantiation = "\n\t." + ports.output[id] + "(" + getNameOrAlias( link) + '),' 
 				if (!netList.includes(portInstantiation)) 
-					netList += (portInstantiation);
+					netList += portInstantiation;
 			});
 			netList=netList.replace(/, *$/gi, '');
 			netList=netList+"\n);";
