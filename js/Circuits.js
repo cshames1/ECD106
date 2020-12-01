@@ -395,7 +395,7 @@ schematic.prototype.createVerilog=function()
 		});
 	}
 	nodes = sortNodes( graph.getChildVertices(graph.getDefaultParent()) );
-
+	
 	//name the nets
 	if( nodes ) nodes.forEach(function(node){
 		var module = getModule(node);
@@ -568,6 +568,7 @@ schematic.prototype.createVerilog=function()
 					wireSet[portSizes.output[id]].add(netName(linksout[0],"X"));
 				setLinkSetSize(linksout, portSizes.output[id]);					
 			});
+
 			break;
 		}
 	});
