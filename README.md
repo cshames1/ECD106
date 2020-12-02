@@ -2,7 +2,7 @@
 
 
 [Live Preview Link](https://cshames1.github.io/ECD106/)
-<!---
+
  Ready for Testing:
   -RTL Implementation
       -.v files can be imported from Logic Designer or DSD
@@ -18,4 +18,4 @@
   -continue implementing new DRC's, including abilityto check bit widths
   -figure out how to allow user to delete imported components. Only current option is clearing browser cache
   -progress on the simulation capability
--->
+
