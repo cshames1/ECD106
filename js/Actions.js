@@ -372,7 +372,7 @@ Actions.prototype.init = function()
 				graph.setSelectionCells(select);
 			}
 		}
-		ui.circuit.createVerilog(graph);
+		ui.circuit.createVerilog();
 	};
 
 	this.addAction('delete', function(evt)
