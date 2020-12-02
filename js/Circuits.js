@@ -232,16 +232,21 @@ schematic.prototype.runDRC = function()
 		Messages.addWarning("Schematic has unconnected inputs",null);
 	return Messages;
 };
-/* function: function getUsedImportedComponents
+/* prototype method: function getUsedImportedComponents
  *		Returns verilog code stored in cache memory associated with module
  * module: module whose Verilog code will be returned
  */
 schematic.prototype.getImportedComponentVerilog=function( module ){
-	function getModuleVerilog( module ) {
+	/* helper function: getModuleVerilog
+	 * 		Returns verilog code stored in cache memory with imported component
+	 *		name module
+	 * moduleName: the name of component being retreived
+	 */
+	function getModuleVerilog( moduleName ) {
 		var storedShapes = JSON.parse(localStorage.getItem('storedShapes'));
 		var currentModule;
 		if ( storedShapes ) storedShapes.forEach(function(shape){
-			if (shape.componentName==module) currentModule = shape;
+			if (shape.componentName==moduleName) currentModule = shape;
 		});
 		return currentModule.verilogCode;
 	}
@@ -253,7 +258,7 @@ schematic.prototype.getImportedComponentVerilog=function( module ){
 	}
 	return newVerilog;
 }
-/* function: function getUsedImportedComponents
+/* prototype method: function getUsedImportedComponents
  *		Returns set of all imported components used in the schematic
  */
 schematic.prototype.getUsedImportedComponents=function(){
@@ -274,7 +279,7 @@ schematic.prototype.getUsedImportedComponents=function(){
 	});
 	return components;
 }
-/* function: function createVerilog
+/* prototype method: function createVerilog
  *		Returns synthesizeable Verilog code generated from graph
  *		Maps netlist and sets bit width of all wires
  */
@@ -282,7 +287,6 @@ schematic.prototype.createVerilog=function()
 {
 	var netList="";
 	var inputList="";
-	var inputSet=new Set();
 	var outputAssignList="";
 	var wireAssignList="";
 	var wireList = new Object();
@@ -302,7 +306,7 @@ schematic.prototype.createVerilog=function()
 					fanIn2: "fanIn2", fanIn4: "fanIn4", fanIn8: "fanIn8", fanIn16: "fanIn16", fanIn32: "fanIn32",
 					fanOut2: "fanOut2", fanOut4: "fanOut4", fanOut8: "fanOut8", fanOut16: "fanOut16", fanOut32: "fanOut32" 
 				};
-	/* function: function gateName
+	/* helper function: function gateName
 	 *		Returns the node's unique ID number prefixed by prefix
 	 * node: the node whose value will be checked. Must be an inputport
 	 * prefix: prefix to use if inputport has not been asssigned a name by user
@@ -310,7 +314,7 @@ schematic.prototype.createVerilog=function()
 	function gateName( node, prefix){ 
 		return prefix+node.id;
 	}
-	/* function: portName
+	/* helper function: portName
 	 * 		Checks if user has assigned inputport a name. If so, this name is returned.
 	 *		Otherwise, call gateName
 	 * node: the node whose value will be checked. Must be an inputport
@@ -319,7 +323,7 @@ schematic.prototype.createVerilog=function()
 	function portName( node, prefix ){ 
 		return node.value ? node.value : gateName(node,prefix);
 	}
-	/* function: netName
+	/* helper function: netName
 	 * 		Creates a name for a wire. Verilog requires that wire names
 	 *		start with a letter, so name is prefixed with "X" and followed
 	 *		by the link's unique ID number. If source module has multiple outputs,
@@ -333,7 +337,7 @@ schematic.prototype.createVerilog=function()
 		else
 			return 'X'+link.source.id + '_'+ port_id;
 	}
-	/* function: getNameOrAlias
+	/* helper function: getNameOrAlias
 	 * 		Returns alias associated with link. This alias may be an 
 	 *		inputport name, a bus indexed with bracket notation if the 
 	 *		source module is a fanOut, unassigned, or a single bit wire
@@ -361,14 +365,14 @@ schematic.prototype.createVerilog=function()
 			alias += netName(link);
 		return alias;
 	}
-	/* function: getModule
+	/* helper function: getModule
 	 * 		Returns the module name associated with node
 	 * node: the node whose module name will be returned
 	 */
 	function getModule( node ){
 		return graph.getCellStyle( node )["shape"];
 	}
-	/* function: getSrcPortID
+	/* helper function: getSrcPortID
 	 * 		Each outputport of a module is assigned an ID number starting at 0 
 	 *		for the top port and increasing by 1. Returns the ID of the port
 	 *		link is sourced from
@@ -377,7 +381,7 @@ schematic.prototype.createVerilog=function()
 	function getSrcPortID ( link ) {
 		return /sourcePort=out([^_]*)/.exec(link.style)[1];
 	}
-	/* function: getTrgtPortID
+	/* helper function: getTrgtPortID
 	 * 		Each inputport of a module is assigned an ID number starting at 0 
 	 *		for the top port and increasing by 1. Returns the ID of the port
 	 *		link targets 
@@ -387,7 +391,7 @@ schematic.prototype.createVerilog=function()
 		console.log(/targetPort=in([^_]*)/.exec(link.style)[1]);
 		return /targetPort=in([^_]*)/.exec(link.style)[1];
 	}
-	/* function: srcNodeIs
+	/* helper function: srcNodeIs
 	 * 		Returns true of the source module of edge is moduleName
 	 * link: the edge whose target module will be checked
 	 * moduleName: name of module to check for
@@ -395,7 +399,7 @@ schematic.prototype.createVerilog=function()
 	function srcNodeIs( link, moduleName ){
 		return getModule( link.source ).includes( moduleName );
 	}
-	/* function: trgtNodeIs
+	/* helper function: trgtNodeIs
 	 * 		Returns true of the target module of edge is moduleName
 	 * link: the edge whose target module will be checked
 	 * moduleName: name of module to check for
@@ -403,7 +407,7 @@ schematic.prototype.createVerilog=function()
 	function trgtNodeIs( link, moduleName ){
 		return getModule( link.target ).includes( moduleName );
 	}
-	/* function: searchStoredShapesFor
+	/* helper function: searchStoredShapesFor
 	 * 		Searches through each component stored in cache memory and returns the 
 	 *		one whose name matches moduleName
 	 * moduleName: name of moduled to retrieve
@@ -416,7 +420,7 @@ schematic.prototype.createVerilog=function()
 				return storedShapes[i];
 		}
 	}
-	/* function: getModulePortSizes
+	/* helper function: getModulePortSizes
 	 * 		Returns object having two attributes;  the first is an array of inputport bit widths,
 	 *		the second is an array of outputport bit widths. This object is stored in cache memory
 	 *		with the imported component named moduleName
@@ -425,7 +429,7 @@ schematic.prototype.createVerilog=function()
 	function getModulePortSizes ( moduleName ) {
 		return searchStoredShapesFor( moduleName ).signal_size;
 	}
-	/* function: getModulePorts
+	/* helper function: getModulePorts
 	 * 		Returns object having two attributes;  the first is an array of inputport named,
 	 *		the second is an array of outputport names. This object is stored in cache memory
 	 *		with imported components
@@ -434,7 +438,7 @@ schematic.prototype.createVerilog=function()
 	function getModulePorts ( moduleName ){
 		return searchStoredShapesFor( moduleName ).signals;
 	}
-	/* function: sortNodes
+	/* helper function: sortNodes
 	 * 		Sorts nodes so any module which can determine bit width is placed first, others after them
 	 *  	Returns set of sorted nodes
 	 * unsorted_nodes: set of nodes to be sorted
@@ -453,7 +457,7 @@ schematic.prototype.createVerilog=function()
 		});
 		return sorted_nodes;
 	}
-	/* function: setCellStyleAttribute
+	/* helper function: setCellStyleAttribute
 	 * 		If cell does not have attribute, it will be created and initialized to value
 	 *      Othewise, its value will be replaced with value
 	 * cell: cell to be modified
@@ -476,7 +480,7 @@ schematic.prototype.createVerilog=function()
 			new_style += style+attribute+"="+value+";";
 		cell["style"] = new_style;
 	}
-	/* function: setLinkSetSize
+	/* helper function: setLinkSetSize
 	 * 		Creates attribute size for edges and initializes it to size
 	 * 		Modifies edges cell style to scale its strokeWidth in proportion to bit width
 	 * link_set: a set of edges in the graph
@@ -488,7 +492,7 @@ schematic.prototype.createVerilog=function()
 			setCellStyleAttribute( link, "strokeWidth", Math.log2(size)+1 );
 		});
 	}
-	//nodes must be sorted so any module which can determine a wire's bit width is processed before the others
+	//nodes must be sorted so any module which can determine a wire's bit width is processed before modules that can't
 	nodes = sortNodes( graph.getChildVertices(graph.getDefaultParent()) );
 	
 	//Iterate through the nodes a first time to define net aliases
@@ -529,7 +533,6 @@ schematic.prototype.createVerilog=function()
 	//Iterate through the nodes a second time to map the netlist, including bit widths of all wires
 	if( nodes ) nodes.forEach(function(node){
 		var decoder_size=1;
-		var fanout_size=0;
 		var fanin_size=0;
 		var mux_size=0;
 		var inputport_size=0;
@@ -700,11 +703,12 @@ schematic.prototype.createVerilog=function()
 		case "inputport4": inputport_size++;
 		case "inputport2": inputport_size++;
 		case "inputport1":
+			//create port instantiation for top level module instatiation
 			if (inputport_size==0) 
 				inputList+="\n\tinput " + portName(node,'I') +',';
+			//if port has bit width greater than 1, use bracket notation
 			else
 				inputList+="\n\tinput [" + ((1<<inputport_size)-1) + ':0] ' + portName(node,'I') +',';
-			inputSet.add( portName(node,'I') );
 			break;
 		case "outputport32": outputport_size++;
 		case "outputport16": outputport_size++;
@@ -712,53 +716,50 @@ schematic.prototype.createVerilog=function()
 		case "outputport4": outputport_size++;
 		case "outputport2": outputport_size++;
 		case "outputport1":
+			//create port instantiation for top level module instatiation
 			if (outputport_size==0)
 				outputList+="\n\toutput " + portName(node,'O') + ',';
+			//if port has bit width greater than 1, use bracket notation
 			else
 				outputList+="\n\toutput [" + ((1<<outputport_size)-1) + ':0] ' + portName(node,'O') +',';
 			var link=node.linksInto();
+			//if outputport is unconnected, assign it to 1b'x
 			if( link.length == 0 )
 				outputAssignList += "\nassign " + portName(node,"O") + " = 1\'bx;" ;
+			//otherwise if it is connected to a wire, and that wire has other target modules, assign it to the wire
 			else if( getNameOrAlias( link[0]) != portName(node,"O")) 
 			{
 				outputAssignList += "\nassign " + portName(node,"O") + " = " ;
 				outputAssignList += getNameOrAlias( link[0])  + ";";
 			}
+			//otherwise, outputport will be used in port instantiation of source module
 			break;
-		case "inverter":
-		case "buffer":
-			netList += "\n\n" + gateNames[module] + ' ' + gateName(node,"U") + " ("; 
-			var links=node.linksOutOf();
-			if( links.length )
-				netList += getNameOrAlias( links[0]);
-			else
-				netList += gateName(node,"X");
-			netList+=',';
-			var links=node.linksInto();
-			if( links.length )
-				netList += getNameOrAlias( links[0]);
-			else
-				netList += '1\'bx';
-			netList+=");";
-			break; 
 		case "and":
 		case "or":
 		case "xor":
 		case "nand":
 		case "nor":
 		case "xnor":
+		case "inverter":
+		case "buffer":
+			//begin module instatiation 
 			netList += "\n\n" + gateNames[module] + ' ' + gateName(node,"U") + " ("; 
 			var links=node.linksOutOf();
+			//if any wire or outputport is connected on the modules output, add its alias to module instantiation
 			if( links.length )
 				netList += getNameOrAlias( links[0]);
+			//otherwise use placeholder wire name
 			else
 				netList += gateName(node,"X");
 			netList+=',';
 			var links=node.linksInto();
+			//if anything is connected on input, add its alias to module instantiation
 			if( links.length )
 				links.forEach( function(link){ netList += getNameOrAlias( link) + ', ';});
+			//otherwise, add 1b'x to module instantiation
 			else
 				netList += '1\'bx,';
+			//delete last comma
 			netList=netList.replace(/, *$/gi, '');
 			netList=netList+");";
 			break; 
@@ -766,6 +767,7 @@ schematic.prototype.createVerilog=function()
 		case "mux8": mux_size++;
 		case "mux4": mux_size++;
 		case "mux2": mux_size++;
+			//determine the output size of module. default is 1, otherwise it will be the largest bit width on the data inputs
 			var output_size=1;
 			for( var i=0; i<(1<<mux_size); i++ )
 			{
@@ -773,46 +775,62 @@ schematic.prototype.createVerilog=function()
 				if (linki && linki.size>output_size)
 					output_size = linki.size;
 			}
+			//begin module instatiation. Pass bit width as parameter
 			netList += "\n\n" + gateNames[module] + ' #(' + output_size +') '+gateName(node,"U") + " ("; 
 			netList=netList+"\n\t";
+			//iterate through each data input
 			for( var i=0; i<(1<<mux_size); i++ )
 			{
 				var linki = node.getLink( 'in'+i,false);
+				//if anything is connected to indexed port, add it to module instantiation
 				if( linki ) 
 					netList += '.i' + i + '(' + getNameOrAlias( linki) + '), ';
 			}
+			//select input will be concatenation of each single bit wire connected on select input 
 			netList += '\n\t.sel( {';
+			//iterate through each select input
 			for( var i=mux_size-1; i>=0; i=i-1 )
 			{
 				var lnk=node.getLink( 'sel'+i,false);
+				//if anything is connected to indexed port, add its alias to concetenation
 				if( lnk ) 
 					netList+=getNameOrAlias( lnk);
+				//otherwise add 1b'x to concetenation
 				else 
 					netList+='1\'bx';
 				netList+=',';
 			}
+			//delete last comma
 			netList=netList.replace(/, *$/gi, '');
 			netList += '}),\n\t.q(';
 			var links=node.linksOutOf();
+			//if any module is connected on output, add its alias to port instantiation
 			if( links.length )
 				netList += getNameOrAlias( links[0]);
+			//otherwise use placeholder wire name
 			else
 				netList += gateName(node,"X");
 			netList += ')\n);';
 			break; 
 		case "register_en":
 			var linkin=node.getLink( 'in_D_',false);
+			//determine bit width of wire connected on data input
 			var output_size = (linkin)? linkin.size : 1;
+			//begin module instatiation. pass output size as parameter
 			netList += '\n\n' + gateNames[module] + ' #(' + output_size + ')' +  ' ' + gateName(node,'U') + ' ('; 
+			//if any wire is connected on data input add it to module instantiation
 			if( linkin )
 				netList += '\n\t.data_in(' + getNameOrAlias( linkin) + '),';
 			var linkclk=node.getLink( 'in_clk_',false);
+			//if any wire is connected on clock input add it to module instantiation
 			if( linkclk )
 				netList += '\n\t.clk_in(' + getNameOrAlias( linkclk) + '),';
 			var linken=node.getLink( 'in_en_',false);
+			//if any wire is connected on enable input add it to module instantiation
 			if( linken ) 
 				netList += '\n\t.en_in(' + getNameOrAlias( linken) + '),';
 			var linkq=node.linksOutOf();
+			//if any wire is connected on data output add it to module instantiation
 			if( linkq.length )
 				netList += '\n\t.q('+getNameOrAlias( linkq[0]) + ")";
 			netList=netList+"\n);";
@@ -820,33 +838,46 @@ schematic.prototype.createVerilog=function()
 		case "decoder4": decoder_size++;
 		case "decoder3": decoder_size++;
 		case "decoder2": decoder_size++;
+			//begin module instatiation 
 			netList += "\n\n" + gateNames[module] + ' ' + gateName(node,"U") + " ("; 
 			netList += '\n\t.data_out( {';
+			//iterate through each outputport. Each single bit output will be concatenated into bus output
 			for( var i=(1<<decoder_size)-1; i>=0; i=i-1 )
 			{
 				var lnk=node.getLink( 'out'+(i)+'_d'+i,true);
+				//if anything is connected on port, add its alias to concatenation
 				if( lnk ) 
 					netList+=getNameOrAlias( lnk);
+				//otherwise add 1b'x to concatenation
 				else 
 					netList+='1\'bx';
 				netList+=', ';
 			}
+			//delete last comma
 			netList=netList.replace(/, *$/gi, '');
 			netList = netList+ '} ),\n\t.address_in( {';
+			//iterate through each address input. Each single bit input will be concatenated into bus input
 			for( var i=decoder_size-1; i>=0; i=i-1 )
 			{
 				var lnk=node.getLink( 'in'+i,false);
+				//if anything is connected on port, add its alias to concatenation
 				if( lnk ) 
 					netList+=getNameOrAlias( lnk);
+				//otherwise add 1b'x to concatenation
 				else 
 					netList+='1\'bx';
 				netList+=', ';
 			}
+			//delete last comma
 			netList=netList.replace(/, *$/gi, '');
 			netList=netList+"} ),\n\t.en_in( ";
-			var lnk=node.getLink( 'in_en',false);
-				if( lnk ) netList+=getNameOrAlias( lnk);
-				else netList+='1\'bx';
+			var linken=node.getLink( 'in_en',false);
+			//if anything is connected on port, add its alias to port instantiation
+			if( linken ) 
+				netList+=getNameOrAlias( linken );
+			//otherwise add 1b'x to port instantiation
+			else 
+				netList+='1\'bx';
 			netList+=")\n);";
 			break; 
 		case "fanOut32": 
@@ -862,56 +893,74 @@ schematic.prototype.createVerilog=function()
 		case "fanIn2": fanin_size++;
 			var assignment = "";
 			var links=node.linksOutOf();
+			//if target module is outportput, begin direct assignment
 			if(links.length == 1 && trgtNodeIs(links[0], "outputport") ) 
 				assignment += "assign "+getNameOrAlias( links[0]) +' = { ';
+			//otherwise begin wire assignment
 			else
 				assignment += "wire ["+((1<<fanin_size)-1)+":0] "+gateName(node,"X")+" = { ";
+			//output value will be concatenation of each value on the inputs. begin iterating through each input
 			for( var i=(1<<fanin_size)-1; i>=0; i=i-1 )
 			{
 				var lnk=node.getLink( 'in'+i,false);
+				//if anything is connected on port, add its alias to concatenation
 				if( lnk ) 
 					assignment+=getNameOrAlias( lnk);
+				//otherwise add 1b'x to concatenation
 				else 
 					assignment+='1\'bx';
 				assignment+=', ';
 			}
+			//delete last comma
 			assignment=assignment.replace(/, *$/gi, '');
 			assignment=assignment+" };\n";
+			//if there is only 1 target module and it's an outputport, assign it directly to output value
 			if(links.length == 1 && trgtNodeIs(links[0], "outputport") ) 
 				outputAssignList += assignment;
+			//otherwise assign wire to output value
 			else
 				wireAssignList += assignment;
 			break; 
 		default: 
 			var ports = getModulePorts(module);
+			//begin module instatiation 
 			netList += "\n\n" + module + ' ' + gateName(node,"C") + " (";
 			var links=node.linksInto();
+			//iterate through each wire connected to inputs
 			if( links.length ) links.forEach( function(link){ 
+				//determine ID number of wire's target port
 				var id = getTrgtPortID(link);
+				//create port instantiation using name retreived from cache memory
 				netList += ("\n\t." + ports.input[id] + "(" + getNameOrAlias( link) + '),');
 			});
 			var links=node.linksOutOf();
+			//iterate through each wire connected to outputs
 			if( links.length ) links.forEach( function(link){ 
+				//determine ID number of wire's source port
 				var id = getSrcPortID(link);
+				//create port instantiation using name retreived from cache memory
 				var portInstantiation = "\n\t." + ports.output[id] + "(" + getNameOrAlias( link) + '),' 
+				//multiple wires may be sourced from 1 outputport, so to avoid redundant port instatiations only add it once
 				if (!netList.includes(portInstantiation)) 
 					netList += portInstantiation;
 			});
+			//delete last comma
 			netList=netList.replace(/, *$/gi, '');
 			netList=netList+"\n);";
 			break;
 		}
 	});
-
+	//begin top level module instantiation with all of its port instantiations
 	verilogCode="module top (";
 	if( inputList != '' || outputList != '')
 	{
 		verilogCode += inputList;
 		verilogCode += outputList;
+		//delete last comma
 		verilogCode=verilogCode.replace(/, *$/gi, '');
 	}
 	verilogCode+="\n);\n\n";
-	//Print busses
+	//Print bus declarations
 	for (var i=5; i>=1; i--) {
 		wireSet[(1<<i)].forEach( function(wire){ wireList[(1<<i)] += wire + ", "; } );
 		if( wireList[(1<<i)] != "" )
@@ -920,7 +969,7 @@ schematic.prototype.createVerilog=function()
 			verilogCode+="wire [" + ((1<<i)-1) + ":0] "+wireList[(1<<i)]+";\n";
 		}
 	}
-	//Print 1-bit Wires
+	//Print 1-bit Wire declarations
 	wireSet[(1<<0)].forEach( function(wire){ wireList[(1<<0)] += wire + ", "; } );
 	if( wireList[(1<<0)] != "" )
 	{
@@ -934,7 +983,7 @@ schematic.prototype.createVerilog=function()
 	if( netList != '' )
 		verilogCode+=netList;
 	verilogCode+="\n\nendmodule\n";
-	//refresht the graph because wires' bit widths may have changed
+	//refresh the graph because wires' bit widths may have changed
 	graph.refresh();
 	return verilogCode;
 };
