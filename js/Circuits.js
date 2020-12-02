@@ -940,7 +940,7 @@ schematic.prototype.createVerilog=function()
 				var id = getSrcPortID(link);
 				//create port instantiation using name retreived from cache memory
 				var portInstantiation = "\n\t." + ports.output[id] + "(" + getNameOrAlias( link) + '),' 
-				//multiple wires may be sourced from 1 outputport, so to avoid redundant port instatiations only add it once
+				//multiple wires may be sourced from 1 port, so to avoid redundant port instatiations only add it once
 				if (!netList.includes(portInstantiation)) 
 					netList += portInstantiation;
 			});
