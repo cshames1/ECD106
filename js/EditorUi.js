@@ -38,9 +38,8 @@ EditorUi = function(editor, container, lightbox)
 
     graph.connectionHandler.addListener(mxEvent.CONNECT, function(sender, evt)
     {
-	var circuit=new schematic(graph);
-	circuit.mapNetSizes(graph);
-	console.log();
+	circuit=new schematic(graph);
+	circuit.createVerilog();
 	var edge = evt.getProperty('cell');
 	var style = graph.getCellStyle(edge);
 	var srcPortId = style[mxConstants.STYLE_SOURCE_PORT];
@@ -66,8 +65,6 @@ EditorUi = function(editor, container, lightbox)
 		graph.setCellStyles(mxConstants.STYLE_SOURCE_PORT, trgPortId, new Array(edge));
 		graph.setCellStyles(mxConstants.STYLE_TARGET_PORT, srcPortId, new Array(edge));
 	}
-
-
     style = graph.getCellStyle(edge);
 	var trgPortId=style[mxConstants.STYLE_TARGET_PORT];
 	var truecount=0;
@@ -78,11 +75,8 @@ EditorUi = function(editor, container, lightbox)
 	});
 	if( truecount != 1 )
 		deleteEdge(edge);
-
-	
-
+	graph.refresh();
     });
-
 
 	graph.setPortsEnabled(false);
 	graph.setAllowDanglingEdges(false);

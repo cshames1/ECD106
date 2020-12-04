@@ -138,7 +138,7 @@ Actions.prototype.init = function()
 				//split file into array of lines separated by newline characters
 				var lines = file.split(/\n/g);
 				//retrieve name of module from from first line
-				var SymbolName = remove_parenthesis(lines[0].split(" ")[1]); //***check if theres a renamed name***
+				var SymbolName = remove_parenthesis(lines[0].split(" ")[1]); 
 
 				//for each line after the first line, find the direction and name of each input/output
 				var signals = {input:[], output:[]};
@@ -156,7 +156,6 @@ Actions.prototype.init = function()
 						port_size=1;
 						
 					let direction = remove_whitespace(words[0]);
-					//this will need to be changed to work on buses
 					let port_name = remove_whitespace(remove_commas(words[words.length - 1]));
 					signals[direction].push(port_name);
 					signal_size[direction].push(port_size);
@@ -165,13 +164,12 @@ Actions.prototype.init = function()
 				var storedShapes = JSON.parse(localStorage.getItem('storedShapes'));
 				if(storedShapes == null)
 					storedShapes = []
-				storedShapes.push({
-					"verilogName":SymbolName.replace(".v", ""),
-					"componentName":compName.replace(".v", ""),
-					"signals":signals,
-					"signal_size":signal_size,
-					"verilogCode":file
-				});
+					storedShapes.push({
+						"componentName":compName.replace(".v", ""),
+						"signals":signals,
+						"signal_size":signal_size,
+						"verilogCode":file
+					});
 				localStorage.setItem('storedShapes', JSON.stringify(storedShapes));
 				//reload the page
 				location.reload();
@@ -374,6 +372,7 @@ Actions.prototype.init = function()
 				graph.setSelectionCells(select);
 			}
 		}
+		ui.circuit.createVerilog();
 	};
 
 	this.addAction('delete', function(evt)
