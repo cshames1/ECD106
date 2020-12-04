@@ -379,17 +379,20 @@ schematic.prototype.createVerilog=function()
 	 * link: the edge whose source port ID will be returned
 	 */
 	function getSrcPortID ( link ) {
-		return /sourcePort=out([^_]*)/.exec(link.style)[1];
+		var port_object = /sourcePort=out([^_]*)/.exec(link.style);
+		if ( port_object ) 
+			return port_object[1];
 	}
 	/* helper function: getTrgtPortID
 	 * 		Each inputport of a module is assigned an ID number starting at 0 
 	 *		for the top port and increasing by 1. Returns the ID of the port
-	 *		link targets 
+	 *		link targets
 	 * link: the edge whose target port ID will be returned
 	 */
 	function getTrgtPortID ( link ) {
-		console.log(/targetPort=in([^_]*)/.exec(link.style)[1]);
-		return /targetPort=in([^_]*)/.exec(link.style)[1];
+		var port_object =  /targetPort=in([^_]*)/.exec(link.style);
+		if ( port_object ) 
+			return port_object[1];
 	}
 	/* helper function: srcNodeIs
 	 * 		Returns true of the source module of link is moduleName
