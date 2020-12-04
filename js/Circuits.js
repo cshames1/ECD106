@@ -392,7 +392,7 @@ schematic.prototype.createVerilog=function()
 		return /targetPort=in([^_]*)/.exec(link.style)[1];
 	}
 	/* helper function: srcNodeIs
-	 * 		Returns true of the source module of edge is moduleName
+	 * 		Returns true of the source module of link is moduleName
 	 * link: the edge whose target module will be checked
 	 * moduleName: name of module to check for
 	 */
@@ -400,7 +400,7 @@ schematic.prototype.createVerilog=function()
 		return getModule( link.source ).includes( moduleName );
 	}
 	/* helper function: trgtNodeIs
-	 * 		Returns true of the target module of edge is moduleName
+	 * 		Returns true of the target module of link is moduleName
 	 * link: the edge whose target module will be checked
 	 * moduleName: name of module to check for
 	 */
@@ -940,7 +940,7 @@ schematic.prototype.createVerilog=function()
 				var id = getSrcPortID(link);
 				//create port instantiation using name retreived from cache memory
 				var portInstantiation = "\n\t." + ports.output[id] + "(" + getNameOrAlias( link) + '),' 
-				//multiple wires may be sourced from 1 port, so to avoid redundant port instatiations only add it once
+				//multiple wires may be sourced from 1 port, so to avoid redundant port instatiations only add it once to module instantiation
 				if (!netList.includes(portInstantiation)) 
 					netList += portInstantiation;
 			});
