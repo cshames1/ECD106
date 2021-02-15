@@ -491,8 +491,9 @@ schematic.prototype.createVerilog=function()
 	 */
 	function setLinkSetSize(link_set, size){
 		if ( link_set ) link_set.forEach(function(link){
-			link.size = size;
-			setCellStyleAttribute( link, "strokeWidth", Math.log2(size)+1 );
+				link.size = size;
+				setCellStyleAttribute( link, "strokeWidth", (size>1)?2:1);
+				link.value = size;
 		});
 	}
 	//nodes must be sorted so any module which can determine a wire's bit width is processed before modules that can't
