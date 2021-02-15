@@ -33,7 +33,6 @@ EditorUi = function(editor, container, lightbox)
 		edge.target.removeEdge(edge,false);
 		edge.removeFromParent();
 	}
-
     graph.connectionHandler.addListener(mxEvent.CONNECT, function(sender, evt)
     {
 	circuit=new schematic(graph);
@@ -42,7 +41,8 @@ EditorUi = function(editor, container, lightbox)
 	var style = graph.getCellStyle(edge);
 	var srcPortId = style[mxConstants.STYLE_SOURCE_PORT];
 	var trgPortId = style[mxConstants.STYLE_TARGET_PORT];
-
+	
+	
 	if( edge.source == edge.target )
 	{
 		deleteEdge(edge);
@@ -3459,7 +3459,15 @@ EditorUi.prototype.renameFile = function()
 	this.showDialog(dlg.container, 300, 100, true, true);
 	dlg.init();
 };
-
+EditorUi.prototype.clearComponents = function()
+{
+	localStorage.removeItem('storedShapes');
+	var graph = this.editor.graph;
+	this.circuit=new schematic(graph);
+	circuit=new schematic(graph);
+	circuit.deleteClearedComponents();
+	location.reload();
+};
 EditorUi.prototype.save = function()
 {
 	if (name != null)

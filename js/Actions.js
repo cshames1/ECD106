@@ -63,6 +63,8 @@ Actions.prototype.init = function()
 	this.addAction('saveSchematic', function() { ui.saveFile(); }, null, null, Editor.ctrlKey + '+S').isEnabled = isGraphEnabled;
 	this.addAction('rename...', function() { ui.renameFile(); }, null, null, Editor.ctrlKey + '+Shift+S').isEnabled = isGraphEnabled;
 
+	this.addAction('importSchematic...', function() { ui.renameFile(); }, null, null, Editor.ctrlKey + '+Shift+S').isEnabled = isGraphEnabled;
+	this.addAction('clearComponents...', function() { ui.clearComponents(); }, null, null, '').isEnabled = isGraphEnabled;
 
 
 	action=this.addAction('exportVerilog', mxUtils.bind(this, function()
@@ -377,7 +379,6 @@ Actions.prototype.init = function()
 
 	this.addAction('delete', function(evt)
 	{
-
 		deleteCells(true);
 	}, null, null, 'Delete');
 	this.addAction('deleteAll', function()
