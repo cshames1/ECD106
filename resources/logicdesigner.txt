@@ -60,6 +60,7 @@ change=Change
 changeOrientation=Change Orientation
 circle=Circle
 classic=Classic
+clearComponents=Clear Components
 clearDefaultStyle=Clear Default Style
 clearWaypoints=Clear Waypoints
 clipart=Clipart
