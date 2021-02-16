@@ -286,9 +286,10 @@ schematic.prototype.getUsedImportedComponents=function(){
 	});
 	return components;
 }
-/* prototype method: function createVerilog
- *		Returns synthesizeable Verilog code generated from graph
- *		Maps netlist and sets bit width of all wires
+/* prototype method: function deleteClearedComponents
+ *		After the user clears imported components, this function will delete
+ *		any such components left on the graph
+ *		Returns nothing
  */
 schematic.prototype.deleteClearedComponents = function(){
 	var graph=this.graph;
@@ -302,8 +303,11 @@ schematic.prototype.deleteClearedComponents = function(){
 		}
 	});
 	graph.removeCells(cells);
-	
 }
+/* prototype method: function createVerilog
+ *		Returns synthesizeable Verilog code generated from graph
+ *		Maps netlist and sets bit width of all wires
+ */
 schematic.prototype.createVerilog=function()
 {
 	var netList="";
