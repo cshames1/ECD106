@@ -105,8 +105,17 @@ changedNames=[]
 	}
 
   function removeFile(id){
-    document.getElementById('fileRow-'+id).innerHTML = "";
-    deletedIDS.push(id)
+	var storedTMPShape = JSON.parse(localStorage.getItem('storedTMPShape'));
+    console.log("removed "+storedTMPShape[id].name);
+	console.log(storedTMPShape);
+	var new_shapes = new Array();
+	var i;
+	for (i=0; i<storedTMPShape.length; i++) {
+		if (i!=id) 
+			new_shapes.push(storedTMPShape[i]);
+	}
+	
+	console.log(new_shapes);
   }
 
   function changeFileName(id,newName){
@@ -236,7 +245,7 @@ changedNames=[]
 							}
 						};
 					})(key));
-
+					
 					window.parent.mxEvent.addListener(link, 'click', (function(k)
 					{
 						return function()
@@ -269,16 +278,17 @@ changedNames=[]
 		}
 		else
 		{
-			var editLink = document.getElementById('editLink');
-			var openButton = document.getElementById('openButton');
-			openButton.value = window.parent.mxResources.get(window.parent.openKey || 'open');
-			var cancelButton = document.getElementById('cancelButton');
-			cancelButton.value = window.parent.mxResources.get('cancel');
-			var supportedText = document.getElementById('importSupported');
-			supportedText.innerHTML = window.parent.mxResources.get('importSupported');
-			var form = window.openForm || document.getElementById('openForm');
-
-			form.setAttribute('action', window.parent.OPEN_URL);
+			
+			var storedTMPShape = JSON.parse(localStorage.getItem('storedTMPShape'));
+			
+			var output="";
+			var i;
+			if (storedTMPShape!=null && storedTMPShape.length>0) {
+				for (i=0; i<storedTMPShape.length; i++) {
+					output += '<tr id="fileRow-'+i+'"> <td>'+(i+1)+'. </td> <td colspan="2" > <input style="width:100%" type="text" name="" onchange="changeFileName('+i+',this.value)" value="'+storedTMPShape[i].name+'"></td> <td><input type="button" value="X" onclick="removeFile('+i+')"></td> </tr>'
+				}
+			}
+			document.getElementById("allFileNames").innerHTML = output;
 		}
 	};
 </script>
@@ -288,7 +298,6 @@ changedNames=[]
 <table style="width:100%;">
 <tr>
 <td style="vertical-align:top;" colspan="2">
-<input type="file" name="upfile" multiple onchange="fileChanged()">
 </td>
 </tr>
 <tr>
@@ -304,7 +313,7 @@ changedNames=[]
 </td>
 <td style="margin-top: 10px;vertical-align:middle;text-align:right;white-space:nowrap;">
 <input type="button" id="cancelButton" class="geBtn" value="Cancel" onclick="hideWindow(true);">
-<input type="submit" id="openButton" class="geBtn gePrimaryBtn" value="Open" disabled="disabled">
+<input type="submit" id="saveButton" class="geBtn gePrimaryBtn" value="Save" onclick="hideWindow(true);">
 </td>
 </tr>
 </table>

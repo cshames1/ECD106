@@ -64,9 +64,26 @@ Actions.prototype.init = function()
 	this.addAction('rename...', function() { ui.renameFile(); }, null, null, Editor.ctrlKey + '+Shift+S').isEnabled = isGraphEnabled;
 
 	this.addAction('importSchematic...', function() { ui.renameFile(); }, null, null, Editor.ctrlKey + '+Shift+S').isEnabled = isGraphEnabled;
-	this.addAction('clearComponents...', function() { ui.clearComponents(); }, null, null, '').isEnabled = isGraphEnabled;
+	
+	//this.addAction('clearComponents...', function() { ui.clearComponents(); }, null, null, '').isEnabled = isGraphEnabled;
+	action=this.addAction('clearComponents', mxUtils.bind(this, function()
+	{
+		window.openNew = false;
+		window.openKey = 'clearComponents';
+		
+
+		window.openFile = new OpenFile(mxUtils.bind(this, function()
+		{
+			ui.hideDialog();
+		}));
 
 
+		ui.showDialog(new ClearDialog(this).container, 320, 220, true, true, function()
+		{
+			window.openFile = null;
+		});
+	}));
+	
 	action=this.addAction('exportVerilog', mxUtils.bind(this, function()
 	{
 		if (this.verilogWindow == null)
