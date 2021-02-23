@@ -44,11 +44,16 @@ schematic.prototype.runDRC = function()
 		this.hasErrors=function(){ return this.errors.length != 0;}
 		this.hasWarnings=function(){ return this.warnings.length != 0;}
 	}
+	function input_size(item){
+		var links_in = item.linksInto();
+		return links_in[0].size;
+	}
 	var Messages=new DRCMessages;
 
 	nodes=graph.getChildVertices(graph.getDefaultParent());
 	nodes.forEach(function(item){
 		var mux_size=1;
+		var output_size=0;
 		var decoder_size=2;
 		var fanout_size=2;
 		var fanin_size=2;
@@ -62,7 +67,34 @@ schematic.prototype.runDRC = function()
 		case "constant0":
 		case "constant1":
 			break;
-		case "outputport1":
+		case "inputport32":
+		case "inputport16":
+		case "inputport8":
+		case "inputport4":
+		case "inputport2":			
+		case "inputport1":
+			if( item.numLinksOutOf() === 0 )
+				Messages.addWarning("Input port is unconnected",item);
+			numInputs++;
+			if( item.value == "" )
+				Messages.addWarning("Input port is unnamed: a default name will be provided",item);
+			else
+			{
+				portnameError=this.checkPortName(item.value);
+				if( portnameError != "")
+					Messages.addError(portnameError,item);
+			}
+			if( output_identifiers.has(item.value))
+				Messages.addError("Port name "+item.value+ " is used on output(s) and input(s)",item);
+			if( item.value != "" ) input_identifiers.add(item.value);
+			break;
+		
+		case "outputport32": output_size++;
+		case "outputport16": output_size++;
+		case "outputport8": output_size++;
+		case "outputport4": output_size++;
+		case "outputport2": output_size++;
+		case "outputport1": output_size++;
 			if( item.numLinksInto() === 0 )
 				Messages.addError("Output port must be connected to an input port or gate output",item);
 			numOutputs++;
@@ -79,23 +111,12 @@ schematic.prototype.runDRC = function()
 			if( output_identifiers.has(item.value))
 				Messages.addError("Port name "+item.value+ " is used on multiple outputs",item);
 			if( item.value != "" ) output_identifiers.add(item.value);
-			break;
 
-		case "inputport1":
-			if( item.numLinksOutOf() === 0 )
-				Messages.addWarning("Input port is unconnected",item);
-			numInputs++;
-			if( item.value == "" )
-				Messages.addWarning("Input port is unnamed: a default name will be provided",item);
-			else
-			{
-				portnameError=this.checkPortName(item.value);
-				if( portnameError != "")
-					Messages.addError(portnameError,item);
-			}
-			if( output_identifiers.has(item.value))
-				Messages.addError("Port name "+item.value+ " is used on output(s) and input(s)",item);
-			if( item.value != "" ) input_identifiers.add(item.value);
+			var correct_bitwidth = (1<<output_size);
+			var input_width = input_size(item);
+			if (input_width != correct_bitwidth)
+				Messages.addError(correct_bitwidth+"\'b outputport has "+input_width+"\'b input",item);
+			
 			break;
 		//====================================================================================
 		//	BASIC GATE GROUP
@@ -302,7 +323,8 @@ schematic.prototype.deleteClearedComponents = function(){
 		var module = style["shape"];
 		console.log(node);
 		if ( !native_components.includes(module) ){
-			cells.push(node);
+			cell
+			(node);
 		}
 	});
 	graph.removeCells(cells);
@@ -516,12 +538,13 @@ schematic.prototype.createVerilog=function()
 	function setLinkSetSize(link_set, size){
 		if ( link_set ) link_set.forEach(function(link){
 			link.size = size;
+			link.value=size;
 			setCellStyleAttribute( link, "strokeWidth", Math.log2(size)+1 );
 		});
 	}
 	//nodes must be sorted so any module which can determine a wire's bit width is processed before modules that can't
 	nodes = sortNodes( graph.getChildVertices(graph.getDefaultParent()) );
-	
+	console.log(graph);
 	//Iterate through the nodes a first time to define net aliases
 	if( nodes ) nodes.forEach(function(node){
 		var module = getModule(node);
