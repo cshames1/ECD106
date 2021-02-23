@@ -42,7 +42,7 @@ var ImportDialog = function()
 	this.container = iframe;
 };
 
-var ClearDialog = function()
+var EditComponentDialog = function()
 {
 	var iframe = document.createElement('iframe');
 	iframe.style.backgroundColor = 'transparent';
@@ -57,7 +57,7 @@ var ClearDialog = function()
 
 	iframe.setAttribute('width', (((Editor.useLocalStorage) ? 640 : 320) + dx) + 'px');
 	iframe.setAttribute('height', (((Editor.useLocalStorage) ? 480 : 220) + dx) + 'px');
-	iframe.setAttribute('src', CLEAR_FORM);
+	iframe.setAttribute('src', EDIT_FORM);
 
 	this.container = iframe;
 };

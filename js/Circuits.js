@@ -295,10 +295,21 @@ schematic.prototype.deleteClearedComponents = function(){
 	var graph=this.graph;
 	nodes =  graph.getChildVertices(graph.getDefaultParent());
 	var cells = new Array;
+	
+	function storedShapesIncludes( moduleName ){
+		var storedShapes = JSON.parse(localStorage.getItem('storedShapes'));
+		var i = storedShapes.length;
+		while( i-- ){
+			if ( storedShapes[i].componentName==moduleName )
+				return true;
+		}
+		return false;
+	}
+	
 	if( nodes ) nodes.forEach(function(node){
 		var style=graph.getCellStyle(node); 
 		var module = style["shape"];
-		if ( !schematic.prototype.isNativeComponent(module) ){
+		if ( !schematic.prototype.isNativeComponent(module) && !storedShapesIncludes(module) ){
 			cells.push(node);
 		}
 	});
