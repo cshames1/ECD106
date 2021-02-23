@@ -108,33 +108,52 @@ changedNames=[]
     deletedIDS.push(id)
   }
 
-  function changeFileName(id,newName){
-    changedNames[id] = newName
-
-    isExistingFile = false
-
-    //check for duplicates
-    var form = window.openForm || document.getElementById('openForm');
-    var files = form.upfile.files
-    for (var i = 0; i < files.length; i++){
-			(function(file)
-			{
-        var name = file.name
-        if (changedNames[i]){name = changedNames[i]}
-
-        for (existingfile in storedShapes){
-          if (storedShapes[existingfile].componentName == name.replace(".v", "")){
-            isExistingFile = true
-            alert('"'+file.name +'" already exists. Please change the name.')
-          }
-        }
-			})(files[i]);
+  function nameIsUsed(id,name){
+	for (var i=0; i<storedShapes.length; i++) {
+		if((i!=id) && (name==storedShapes[i].componentName))
+			return true;
+	}
+	return false;
     }
-    if (!isExistingFile)
-			openButton.removeAttribute('disabled');
-		else
-			openButton.setAttribute('disabled', 'disabled');
-  }
+	function isAlpha(c){
+		return /^[A-Z]$/i.test(c);
+	}
+	function nameIsValid(id,name){
+		var return_val = true;
+		if ( (!isAlpha(name[0])) && (name[0]!='_') ) 
+			return_val = false;
+		if ( name.includes(' ') ) 
+			return_val = false;
+		return return_val;
+	}
+
+  	function changeFileName(id,newName){
+		changedNames[id] = newName
+
+		isExistingFile = false
+
+		//check for duplicates
+		var form = window.openForm || document.getElementById('openForm');
+		var files = form.upfile.files
+		for (var i = 0; i < files.length; i++){
+				(function(file)
+				{
+			var name = file.name
+			if (changedNames[i]){name = changedNames[i]}
+
+			for (existingfile in storedShapes){
+			if (storedShapes[existingfile].componentName == name.replace(".v", "")){
+				isExistingFile = true
+				alert('"'+file.name +'" already exists. Please change the name.')
+			}
+			}
+				})(files[i]);
+		}
+		if (!isExistingFile)
+				openButton.removeAttribute('disabled');
+			else
+				openButton.setAttribute('disabled', 'disabled');
+  	}
 
   //file name change window
 	function fileChanged()

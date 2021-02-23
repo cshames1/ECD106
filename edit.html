@@ -21,19 +21,48 @@ changedNames=[];
 		window.parent.openFile.cancel(cancel);
 	}
 
-  function removeFile(id){
-	document.getElementById('fileRow-'+id).innerHTML = "";
-	var new_shapes = new Array();
-	for (var  i=0; i<storedShapes.length; i++) {
-		if (i!=id) 
-			new_shapes.push(storedShapes[i]);
+	function removeFile(id){
+		document.getElementById('fileRow-'+id).innerHTML = "";
+		var new_shapes = new Array();
+		for (var  i=0; i<storedShapes.length; i++) {
+			if (i!=id) 
+				new_shapes.push(storedShapes[i]);
+		}
+		storedShapes = new_shapes;
 	}
-	storedShapes = new_shapes;
-  }
 
-  function changeFileName(id,newName){
-	storedShapes[id].componentName = newName;
-  }
+
+  	function nameIsUsed(id,name){
+	for (var i=0; i<storedShapes.length; i++) {
+		if((i!=id) && (name==storedShapes[i].componentName))
+			return true;
+	}
+	return false;
+    }
+	function isAlpha(c){
+		return /^[A-Z]$/i.test(c);
+	}
+	function nameIsValid(id,name){
+		var return_val = true;
+		if ( (!isAlpha(name[0])) && (name[0]!='_') ) 
+			return_val = false;
+		if ( name.includes(' ') ) 
+			return_val = false;
+		return return_val;
+	}
+    function changeFileName(id,newName){
+		if ( nameIsUsed(id,newName) ){
+			alert('"'+ newName +'" already exists. Please change the name.');
+		}
+		else if ( !nameIsValid(id,newName) ) {
+			alert('"'+ newName +'" is invalid. Please change the name.');
+			console.log("alert");
+		}
+		else {
+			storedShapes[id].componentName = newName;
+		}
+    }
+
 
 	function main(){	
 		if (window.parent.Editor.useLocalStorage)
