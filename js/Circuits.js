@@ -28,6 +28,19 @@ schematic.prototype.checkPortName= function(newstr)
 	return "";
 };
 
+schematic.prototype.isNativeComponent = function( component ){
+	var native_components=["and", "nand", "or","nor","xor","xnor","buf", "not",
+					"mux2","mux4", "mux8","mux16",
+					"decoder #(2,1)","decoder #(3,1)","decoder #(4,1)",
+					"register_en",
+					"fanIn2",  "fanIn4",  "fanIn8",  "fanIn16",  "fanIn32",
+					"fanOut2",  "fanOut4", "fanOut8", "fanOut16", "fanOut32",
+					"inputport1", "inputport2", "inputport4", "inputport8", "inputport16", "inputport32",
+					"outputport1", "outputport2", "outputport4", "outputport8", "outputport16", "outputport32",
+					"constant0", "constant1" ];
+	return native_components.includes( component );
+};
+
 schematic.prototype.runDRC = function()
 {
 	var graph=this.graph;
@@ -283,52 +296,50 @@ schematic.prototype.getImportedComponentVerilog=function( module ){
  *		Returns set of all imported components used in the schematic
  */
 schematic.prototype.getUsedImportedComponents=function(){
-	var native_components=["and", "nand", "or","nor","xor","xnor","buf", "not",
-					"mux2","mux4", "mux8","mux16",
-					"decoder #(2,1)","decoder #(3,1)","decoder #(4,1)",
-					"register_en",
-					"fanIn2",  "fanIn4",  "fanIn8",  "fanIn16",  "fanIn32",
-					"fanOut2",  "fanOut4", "fanOut8", "fanOut16", "fanOut32",
-					"inputport1", "inputport2", "inputport4", "inputport8", "inputport16", "inputport32",
-					"outputport1", "outputport2", "outputport4", "outputport8", "outputport16", "outputport32"];
 	var graph=this.graph;
 	nodes=graph.getChildVertices(graph.getDefaultParent());
 	var components = new Set();
 	if( nodes ) nodes.forEach(function(item){
 		var style=graph.getCellStyle(item); 
 		var module = style["shape"];
-		if ( !native_components.includes( module ) ) 
+		if ( !schematic.prototype.isNativeComponent(module) ) 
 			components.add( module );
 	});
 	return components;
+}
+/* prototype method: function deleteClearedComponents
+ *		After the user clears imported components, this function will delete
+ *		any such components left on the graph
+ *		Returns nothing
+ */
+schematic.prototype.deleteClearedComponents = function(){
+	var graph=this.graph;
+	nodes =  graph.getChildVertices(graph.getDefaultParent());
+	var cells = new Array;
+	
+	function storedShapesIncludes( moduleName ){
+		var storedShapes = JSON.parse(localStorage.getItem('storedShapes'));
+		var i = storedShapes.length;
+		while( i-- ){
+			if ( storedShapes[i].componentName==moduleName )
+				return true;
+		}
+		return false;
+	}
+	
+	if( nodes ) nodes.forEach(function(node){
+		var style=graph.getCellStyle(node); 
+		var module = style["shape"];
+		if ( !schematic.prototype.isNativeComponent(module) && !storedShapesIncludes(module) ){
+			cells.push(node);
+		}
+	});
+	graph.removeCells(cells);
 }
 /* prototype method: function createVerilog
  *		Returns synthesizeable Verilog code generated from graph
  *		Maps netlist and sets bit width of all wires
  */
-schematic.prototype.deleteClearedComponents = function(){
-	var native_components=["and", "nand", "or","nor","xor","xnor","buf", "not",
-					"mux2","mux4", "mux8","mux16",
-					"decoder #(2,1)","decoder #(3,1)","decoder #(4,1)",
-					"register_en",
-					"fanIn2",  "fanIn4",  "fanIn8",  "fanIn16",  "fanIn32",
-					"fanOut2",  "fanOut4", "fanOut8", "fanOut16", "fanOut32",
-					"inputport1", "inputport2", "inputport4", "inputport8", "inputport16", "inputport32",
-					"outputport1", "outputport2", "outputport4", "outputport8", "outputport16", "outputport32" ];
-	var graph=this.graph;
-	nodes =  graph.getChildVertices(graph.getDefaultParent());
-	var cells = new Array;
-	if( nodes ) nodes.forEach(function(node){
-		var style=graph.getCellStyle(node); 
-		var module = style["shape"];
-		console.log(node);
-		if ( !native_components.includes(module) ){
-			cell
-			(node);
-		}
-	});
-	graph.removeCells(cells);
-}
 schematic.prototype.createVerilog=function()
 {
 	var netList="";
@@ -538,7 +549,7 @@ schematic.prototype.createVerilog=function()
 	function setLinkSetSize(link_set, size){
 		if ( link_set ) link_set.forEach(function(link){
 			link.size = size;
-			link.value=size;
+			link.value = size;
 			setCellStyleAttribute( link, "strokeWidth", Math.log2(size)+1 );
 		});
 	}
