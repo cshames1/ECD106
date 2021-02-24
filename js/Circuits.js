@@ -94,12 +94,11 @@ schematic.prototype.runDRC = function()
 
 	nodes=graph.getChildVertices(graph.getDefaultParent());
 	nodes.forEach(function(node){
-		var mux_size=1;
+		var mux_size=0;
 		var output_size=0;
-		var decoder_size=2;
+		var decoder_size=0;
 		var fanout_size=0;
-		var fanin_size=2;
-		var fan_in=2;
+		var fanin_size=0;
 		var module = getModule(node);
 		switch( module )
 		{
@@ -164,7 +163,12 @@ schematic.prototype.runDRC = function()
 		//	BASIC GATE GROUP
 		//====================================================================================
 		case "buffer":
-		case "inverter": fan_in=1;
+		case "inverter": 
+			if( node.numLinksOutOf() == 0 )
+				Messages.addWarning(module+" has an unconnected output",node);
+			if( node.numLinksInto() == 0 )
+				Messages.addError(module+" has an unconnected input",node);
+			break;
 		case "and":
 		case "nand":
 		case "or":
@@ -172,17 +176,17 @@ schematic.prototype.runDRC = function()
 		case "xor":
 		case "xnor":
 			if( node.numLinksOutOf() == 0 )
-				Messages.addWarning("Gate has an unconnected output",node);
-			if( node.numLinksInto() < fan_in )
-				Messages.addError("Gate must have at least "+fan_in+" input(s) connected",node);
+				Messages.addWarning(module+" gate has an unconnected output",node);
+			if( node.numLinksInto() < 2 )
+				Messages.addError(module+" gate must have at least 2 inputs connected",node);
 			break;
 		//====================================================================================
 		//	MUX GROUP
 		//====================================================================================
-		case "mux16":mux_size++;
-		case "mux8":mux_size++;
-		case "mux4":mux_size++;
-		case "mux2":
+		case "mux16": mux_size++;
+		case "mux8":  mux_size++;
+		case "mux4":  mux_size++;
+		case "mux2":  mux_size++;
 			if( node.getLinks("in_s",false).length != mux_size)
 				Messages.addError("All MUX \"select\" input(s) must be connected",node);
 			if( node.numLinksOutOf() == 0 )
@@ -193,17 +197,15 @@ schematic.prototype.runDRC = function()
 		//====================================================================================
 		//	DECODER GROUP
 		//====================================================================================
-		case "decoder4":decoder_size++;
-		case "decoder3":decoder_size++;
-		case "decoder2":
+		case "decoder4": decoder_size++;
+		case "decoder3": decoder_size++;
+		case "decoder2": decoder_size++;
 			if( node.getLinks("in_a",false).length != decoder_size)
 				Messages.addError("All Decoder address inputs must be connected",node);
 			if( node.getLinks("in_en",false).length != 1)
 				Messages.addError("Decoder enable input must be connected",node);
-			for( var i=0; i<(1<<decoder_size); i=i+1 )
-			{
-				if( node.getLinks("out_"+(i+1)+"_",true).length == 0)
-				{
+			for( var i=0; i<(1<<decoder_size); i++ ) {
+				if( node.getLinks("out"+i,true).length == 0) {
 					Messages.addWarning("Decoder has an unconnected data output(s)",node);
 					break;
 				}
@@ -227,42 +229,49 @@ schematic.prototype.runDRC = function()
 		//====================================================================================
 		
 		// -Warning if not all outputs are connected
-		// Warning if input is not the bus size of the fanout****
+		// Warning if input is not the bus size of the fanout
 		// -Error if input is not connected
 		// -Error if no outputs are connected
-		// Error if output is not a 1-bit wire**** (does this matter?)
-		case "fanOut32":	fanout_size += 16;
-		case "fanOut16":	fanout_size += 8;
-		case "fanOut8":		fanout_size += 4;
-		case "fanOut4":		fanout_size += 2;
-		case "fanOut2":
+		case "fanOut32": fanout_size++;
+		case "fanOut16": fanout_size++;
+		case "fanOut8":  fanout_size++;
+		case "fanOut4":	 fanout_size++;
+		case "fanOut2":  fanout_size++;
 			if ( node.numLinksInto() == 0)
 				Messages.addError("Fan out input is unconnected",node);
-
 			if( node.numLinksOutOf() == 0 )
 				Messages.addError("Fan out has no connected outputs",node);
-			else if( node.numLinksOutOf() != fanout_size)
-				Messages.addWarning("Fan out has " + (fanout_size-node.numLinksOutOf()) + " unconnected outputs",node);
+			else if( node.numLinksOutOf() != (1<<fanout_size) )
+				Messages.addWarning("Fan out has " + ((1<<fanout_size)-node.numLinksOutOf()) + " unconnected outputs",node);
+			var linkin = node.getLink("in",false);
+			if ( linkin && linkin.size!=(1<<fanout_size) ) 
+				Messages.addError(module+" has wrong size bus connected on input. Only "+(1<<fanout_size)+"'b busses may be connected",node);
 			break;
 
 		// -Warning if not all inputs are connected
-		// Warning if output is not the bus size of the fanin**** (does this matter?)
 		// -Error if output is not connected
 		// -Error if no inputs are connected
-		// Error if input is not a 1-bit wire****
+		// Error if input is not a 1-bit wire
 		case "fanIn32":	fanin_size++;
 		case "fanIn16":	fanin_size++;
-		case "fanIn8": fanin_size++;
-		case "fanIn4": fanin_size++;
-		case "fanIn2": fanin_size++;
+		case "fanIn8":  fanin_size++;
+		case "fanIn4":  fanin_size++;
+		case "fanIn2":  fanin_size++;
 			if ( node.numLinksOutOf() == 0)
-				Messages.addError("Fan in output is unconnected",node);
-
+				Messages.addError(module+" output is unconnected",node);
 			if( node.numLinksInto() == 0 )
-				Messages.addError("Fan in has no connected inputs",node);
-			else if( node.numLinksInto() != (1<<fanin_size) )
-				Messages.addWarning("Fan in has " + (fanin_size-node.numLinksInto()) + " unconnected inputs",node);
+				Messages.addError(module+" has no connected inputs",node);
+			else if( node.numLinksInto() < (1<<fanin_size) )
+				Messages.addWarning(module+" has " + ((1<<fanin_size)-node.numLinksInto()) + " unconnected inputs",node);
+			for (var i=0; i<(1<<fanin_size); i++) {
+				var link = node.getLink('in'+i+'_w');
+				if ( link && link.size!=(1<<fanin_size) )
+					Messages.addError(module+" has a bus connected on input  port in"+i+". Only single bit wires may be connected",node);		
+			}
 			break;
+		//====================================================================================
+		//	IMPORTED GROUP
+		//====================================================================================
 		// -Warning of not all inputs are connected
 		// -Error if name is invalid identifier
 		// -Error if wrong size bus is connected on input
@@ -631,9 +640,9 @@ schematic.prototype.createVerilog=function()
 		{
 		case "inputport32": inputport_size++;
 		case "inputport16": inputport_size++;
-		case "inputport8": inputport_size++;
-		case "inputport4": inputport_size++;
-		case "inputport2": inputport_size++;
+		case "inputport8":  inputport_size++;
+		case "inputport4":  inputport_size++;
+		case "inputport2":  inputport_size++;
 		case "inputport1":
 			//set bit width of all wires coming out of inputport to corresponding bit width
 			var linksout=node.linksOutOf();
@@ -988,7 +997,7 @@ schematic.prototype.createVerilog=function()
 				assignment += "\nassign "+getNameOrAlias( links[0]) +' = { ';
 			//otherwise begin wire assignment
 			else
-				assignment += "wire ["+((1<<fanin_size)-1)+":0] "+gateName(node,"X")+" = { ";
+				assignment += "\nwire ["+((1<<fanin_size)-1)+":0] "+gateName(node,"X")+" = { ";
 			//output value will be concatenation of each value on the inputs. begin iterating through each input
 			for( var i=(1<<fanin_size)-1; i>=0; i=i-1 )
 			{
@@ -1064,7 +1073,7 @@ schematic.prototype.createVerilog=function()
 	if( wireList[(1<<0)] != "" )
 	{
 		wireList[(1<<0)]=wireList[(1<<0)].replace(/, *$/gi, '');
-		verilogCode+="wire "+wireList[(1<<0)]+";\n";
+		verilogCode+="\nwire "+wireList[(1<<0)]+";\n";
 	}
 	if( wireAssignList != "" )
 		verilogCode+=wireAssignList;
