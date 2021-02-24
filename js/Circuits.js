@@ -68,13 +68,6 @@ schematic.prototype.runDRC = function()
 		this.hasErrors=function(){ return this.errors.length != 0;}
 		this.hasWarnings=function(){ return this.warnings.length != 0;}
 	}
-	function input_size(node){
-		var links_in = node.linksInto();
-		var size = null;
-		if (links_in) 
-			size = links_in[0].size;
-		return size;
-	}
 	function getModule( node ){
 		return graph.getCellStyle( node )["shape"];
 	}
@@ -155,11 +148,10 @@ schematic.prototype.runDRC = function()
 			if( output_identifiers.has(node.value))
 				Messages.addError("Port name "+node.value+ " is used on multiple outputs",node);
 			if( node.value != "" ) output_identifiers.add(node.value);
-
+			var link = node.getLink("in",false);
 			var correct_bitwidth = (1<<output_size);
-			var input_width = input_size(node);
-			if ( input_width != correct_bitwidth )
-				Messages.addError(correct_bitwidth+"\'b output port has "+input_width+"\'b input",node);
+			if ( link && link.size!=correct_bitwidth )
+				Messages.addError(module+" has "+link.size+"\'b input",node);
 			
 			break;
 		//====================================================================================
