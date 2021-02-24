@@ -11,7 +11,6 @@
   	var storedShapes = JSON.parse(localStorage.getItem('storedShapes'));
 	var deletedIDs = new Array();
 
-	// Handles form-submit by preparing to process response
 	function handleSubmit(){
 		var newShapes = new Array();
 		for (var i=0; i<storedShapes.length; i++) {
@@ -20,18 +19,13 @@
 		}
 		window.parent.openFile.setData(newShapes);
 	}
-
-	// Hides this dialog
 	function hideWindow(cancel){
 		window.parent.openFile.cancel(cancel);
 	}
-
 	function removeFile(id, name){
 		deletedIDs.push(id);
 		document.getElementById('fileRow-'+id).innerHTML = "";
 	}
-
-
   	function nameIsUsed(id,name){
 		for (var i=0; i<storedShapes.length; i++) {
 			if((i!=id) && (name==storedShapes[i].componentName))
@@ -50,6 +44,15 @@
 			return_val = false;
 		return return_val;
 	}
+	function updateComponentVerilog(id,newName){
+		var old_verilog = storedShapes[id].verilogCode;
+		var lines = old_verilog.split(/\n/g);
+		var new_verilog = "module "+newName+" (\n";
+		for (var i=1; i<lines.length; i++) {
+			new_verilog += (lines[i]+'\n');
+		}
+		storedShapes[id].verilogCode = new_verilog;
+	}
     function changeFileName(id,newName){
 		if ( nameIsUsed(id,newName) ){
 			alert('"'+ newName +'" already exists. Please change the name.');
@@ -59,9 +62,9 @@
 		}
 		else {
 			storedShapes[id].componentName = newName;
+			updateComponentVerilog(id,newName);
 		}
     }
-
 	function main(){	
 		if (window.parent.Editor.useLocalStorage)
 		{
