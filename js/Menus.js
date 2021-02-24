@@ -150,7 +150,7 @@ Menus.prototype.init = function()
 	this.put('file', new Menu(mxUtils.bind(this, function(menu, parent)
 	{
 
-		this.addMenuItems(menu, ['new',  'importSchematic', 'saveSchematic', 'rename', 'clearComponents', '-', 'pageSetup', 'print'], parent);
+		this.addMenuItems(menu, ['new',  'importSchematic', 'saveSchematic', 'rename', 'editComponents', '-', 'pageSetup', 'print'], parent);
 	})));
 	this.put('edit', new Menu(mxUtils.bind(this, function(menu, parent)
 	{

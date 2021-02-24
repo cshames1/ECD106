@@ -40,7 +40,7 @@ Actions.prototype.init = function()
 		{
 			ui.hideDialog();
 		}));
-
+		
 		window.openFile.setConsumer(mxUtils.bind(this, function(xml, filename)
 		{
 			try
@@ -64,9 +64,32 @@ Actions.prototype.init = function()
 	this.addAction('rename...', function() { ui.renameFile(); }, null, null, Editor.ctrlKey + '+Shift+S').isEnabled = isGraphEnabled;
 
 	this.addAction('importSchematic...', function() { ui.renameFile(); }, null, null, Editor.ctrlKey + '+Shift+S').isEnabled = isGraphEnabled;
-	this.addAction('clearComponents...', function() { ui.clearComponents(); }, null, null, '').isEnabled = isGraphEnabled;
+	
+	action=this.addAction('editComponents...', mxUtils.bind(this, function()
+	{
+		window.openNew = false;
+		window.openKey = 'editComponents';
+		
 
+		window.openFile = new OpenFile(mxUtils.bind(this, function()
+		{
+			ui.hideDialog();
+		}));
 
+		window.openFile.setConsumer(mxUtils.bind(this, function(allVerilog)
+		{	
+			localStorage.removeItem('storedShapes');
+			localStorage.setItem('storedShapes', JSON.stringify(allVerilog));
+			ui.circuit.deleteClearedComponents();
+			location.reload();
+		}));
+
+		ui.showDialog(new EditComponentDialog(this).container, 320, 220, true, true, function()
+		{
+			window.openFile = null;
+		});
+	}));
+	
 	action=this.addAction('exportVerilog', mxUtils.bind(this, function()
 	{
 		if (this.verilogWindow == null)
