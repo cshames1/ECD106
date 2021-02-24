@@ -528,6 +528,7 @@ schematic.prototype.createVerilog=function()
 	function setLinkSetSize(link_set, size){
 		if ( link_set ) link_set.forEach(function(link){
 			link.size = size;
+			link.value = size;
 			setCellStyleAttribute( link, "strokeWidth", Math.log2(size)+1 );
 		});
 	}
