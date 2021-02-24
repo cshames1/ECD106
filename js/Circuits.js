@@ -18,13 +18,24 @@ schematic.prototype.isVerilogReserved = function(str)
 schematic.prototype.checkPortName= function(newstr)
 {
 	if( /^[UX].*$/.test(newstr) )
-		return "Error: Port names cannot start with uppercase U or X";
+		return "Error ("+newstr+"): Port names cannot start with uppercase U or X";
 	if( newstr.length > this.maxPortnameLength )
-		return "Error: Port names must be less than" + this.maxPortnameLength + "characters";
+		return "Error ("+newstr+"): Port names must be less than" + this.maxPortnameLength + "characters";
 	if( ! /^[A-TV-WY-Za-z][A-Za-z0-9_]*$/.test(newstr))
-		return "Error: Port names must start with a letter (other than U or X) and contain only letters, numbers, or _";
+		return "Error ("+newstr+"): Port names must start with a letter (other than U or X) and contain only letters, numbers, or _";
 	if( this.isVerilogReserved(newstr) )
-		return  "Error:" + newstr + " is a Verilog reserved word and cannot be used as a port name";
+		return  "Error ("+newstr+"):" + newstr + " is a Verilog reserved word and cannot be used as a port name";
+	return "";
+};
+
+schematic.prototype.checkIdentifier= function(newstr)
+{
+	if( newstr.length > this.maxPortnameLength )
+		return "Error ("+newstr+"): Identifiers must be less than" + this.maxPortnameLength + "characters";
+	if( ! /^[A-TV-WY-Za-z][A-Za-z0-9_]*$/.test(newstr))
+		return "Error ("+newstr+"): Identifiers must start with a letter or _ and may not contain whitespace";
+	if( this.isVerilogReserved(newstr) )
+		return  "Error:" + newstr + " is a Verilog reserved word and cannot be used as an identifier";
 	return "";
 };
 
@@ -57,22 +68,40 @@ schematic.prototype.runDRC = function()
 		this.hasErrors=function(){ return this.errors.length != 0;}
 		this.hasWarnings=function(){ return this.warnings.length != 0;}
 	}
-	function input_size(item){
-		var links_in = item.linksInto();
+	function input_size(node){
+		var links_in = node.linksInto();
 		return links_in[0].size;
 	}
+	function getModule( node ){
+		return graph.getCellStyle( node )["shape"];
+	}
+	function searchStoredShapesFor( moduleName ){
+		var storedShapes = JSON.parse(localStorage.getItem('storedShapes'));
+		var i = storedShapes.length;
+		while( i-- ){
+			if ( storedShapes[i].componentName==moduleName )
+				return storedShapes[i];
+		}
+	}
+	function getModulePortSizes ( moduleName ) {
+		return searchStoredShapesFor( moduleName ).signal_size;
+	}
+	function getModulePorts ( moduleName ){
+		return searchStoredShapesFor( moduleName ).signals;
+	}
+
 	var Messages=new DRCMessages;
 
 	nodes=graph.getChildVertices(graph.getDefaultParent());
-	nodes.forEach(function(item){
+	nodes.forEach(function(node){
 		var mux_size=1;
 		var output_size=0;
 		var decoder_size=2;
-		var fanout_size=2;
+		var fanout_size=0;
 		var fanin_size=2;
 		var fan_in=2;
-			var style=graph.getCellStyle(item);
-		switch( style["shape"] )
+		var module = getModule(node);
+		switch( module )
 		{
 		//====================================================================================
 		//	MISC GROUP
@@ -86,49 +115,49 @@ schematic.prototype.runDRC = function()
 		case "inputport4":
 		case "inputport2":			
 		case "inputport1":
-			if( item.numLinksOutOf() === 0 )
-				Messages.addWarning("Input port is unconnected",item);
+			if( node.numLinksOutOf() === 0 )
+				Messages.addWarning("Input port is unconnected",node);
 			numInputs++;
-			if( item.value == "" )
-				Messages.addWarning("Input port is unnamed: a default name will be provided",item);
+			if( node.value == "" )
+				Messages.addWarning("Input port is unnamed: a default name will be provided",node);
 			else
 			{
-				portnameError=this.checkPortName(item.value);
+				portnameError=this.checkPortName(node.value);
 				if( portnameError != "")
-					Messages.addError(portnameError,item);
+					Messages.addError(portnameError,node);
 			}
-			if( output_identifiers.has(item.value))
-				Messages.addError("Port name "+item.value+ " is used on output(s) and input(s)",item);
-			if( item.value != "" ) input_identifiers.add(item.value);
+			if( output_identifiers.has(node.value))
+				Messages.addError("Port name "+node.value+ " is used on output(s) and input(s)",node);
+			if( node.value != "" ) 
+				input_identifiers.add(node.value);
 			break;
-		
 		case "outputport32": output_size++;
 		case "outputport16": output_size++;
 		case "outputport8": output_size++;
 		case "outputport4": output_size++;
 		case "outputport2": output_size++;
 		case "outputport1": output_size++;
-			if( item.numLinksInto() === 0 )
-				Messages.addError("Output port must be connected to an input port or gate output",item);
+			if( node.numLinksInto() === 0 )
+				Messages.addError("Output port must be connected to an input port or gate output",node);
 			numOutputs++;
-			if( item.value == "" )
-				Messages.addWarning("Output port is unnamed: a default name will be provided",item);
+			if( node.value == "" )
+				Messages.addWarning("Output port is unnamed: a default name will be provided",node);
 			else
 			{
-				portnameError=this.checkPortName(item.value);
+				portnameError=this.checkPortName(node.value);
 				if( portnameError != "")
-					Messages.addError(portnameError,item);
+					Messages.addError(portnameError,node);
 			}
-			if( input_identifiers.has(item.value))
-				Messages.addError("Port name "+item.value+ " is used on input(s) and output(s)",item);
-			if( output_identifiers.has(item.value))
-				Messages.addError("Port name "+item.value+ " is used on multiple outputs",item);
-			if( item.value != "" ) output_identifiers.add(item.value);
+			if( input_identifiers.has(node.value))
+				Messages.addError("Port name "+node.value+ " is used on input(s) and output(s)",node);
+			if( output_identifiers.has(node.value))
+				Messages.addError("Port name "+node.value+ " is used on multiple outputs",node);
+			if( node.value != "" ) output_identifiers.add(node.value);
 
 			var correct_bitwidth = (1<<output_size);
-			var input_width = input_size(item);
+			var input_width = input_size(node);
 			if (input_width != correct_bitwidth)
-				Messages.addError(correct_bitwidth+"\'b outputport has "+input_width+"\'b input",item);
+				Messages.addError(correct_bitwidth+"\'b output port has "+input_width+"\'b input",node);
 			
 			break;
 		//====================================================================================
@@ -142,10 +171,10 @@ schematic.prototype.runDRC = function()
 		case "nor":
 		case "xor":
 		case "xnor":
-			if( item.numLinksOutOf() == 0 )
-				Messages.addWarning("Gate has an unconnected output",item);
-			if( item.numLinksInto() < fan_in )
-				Messages.addError("Gate must have at least "+fan_in+" input(s) connected",item);
+			if( node.numLinksOutOf() == 0 )
+				Messages.addWarning("Gate has an unconnected output",node);
+			if( node.numLinksInto() < fan_in )
+				Messages.addError("Gate must have at least "+fan_in+" input(s) connected",node);
 			break;
 		//====================================================================================
 		//	MUX GROUP
@@ -154,12 +183,12 @@ schematic.prototype.runDRC = function()
 		case "mux8":mux_size++;
 		case "mux4":mux_size++;
 		case "mux2":
-			if( item.getLinks("in_s",false).length != mux_size)
-				Messages.addError("All MUX \"select\" input(s) must be connected",item);
-			if( item.numLinksOutOf() == 0 )
-				Messages.addWarning("MUX has an unconnected output",item);
-			if( item.getLinks("in_i",false).length != (1<<mux_size))
-				Messages.addWarning("MUX has an unconnected data input(s)",item);
+			if( node.getLinks("in_s",false).length != mux_size)
+				Messages.addError("All MUX \"select\" input(s) must be connected",node);
+			if( node.numLinksOutOf() == 0 )
+				Messages.addWarning("MUX has an unconnected output",node);
+			if( node.getLinks("in_i",false).length != (1<<mux_size))
+				Messages.addWarning("MUX has an unconnected data input(s)",node);
 			break;
 		//====================================================================================
 		//	DECODER GROUP
@@ -167,54 +196,31 @@ schematic.prototype.runDRC = function()
 		case "decoder4":decoder_size++;
 		case "decoder3":decoder_size++;
 		case "decoder2":
-			if( item.getLinks("in_a",false).length != decoder_size)
-				Messages.addError("All Decoder address inputs must be connected",item);
-			if( item.getLinks("in_en",false).length != 1)
-				Messages.addError("Decoder enable input must be connected",item);
+			if( node.getLinks("in_a",false).length != decoder_size)
+				Messages.addError("All Decoder address inputs must be connected",node);
+			if( node.getLinks("in_en",false).length != 1)
+				Messages.addError("Decoder enable input must be connected",node);
 			for( var i=0; i<(1<<decoder_size); i=i+1 )
 			{
-				if( item.getLinks("out_"+(i+1)+"_",true).length == 0)
+				if( node.getLinks("out_"+(i+1)+"_",true).length == 0)
 				{
-					Messages.addWarning("Decoder has an unconnected data output(s)",item);
+					Messages.addWarning("Decoder has an unconnected data output(s)",node);
 					break;
 				}
 			}
 			break;
 		//====================================================================================
-		//	LATCH GROUP
+		//	REGISTER GROUP
 		//====================================================================================
-		case "srlatch_en":
-			if( item.getLinks("in_en",false).length == 0)
-				Messages.addError("SR Latch enable input must be connected",item);
-		case "srlatch":
-			if( item.getLinks("in_S",false).length == 0)
-				Messages.addError("SR Latch Set (S) input must be connected",item);
-			if( item.getLinks("in_R",false).length == 0)
-				Messages.addError("SR Latch Reset (R) input must be connected",item);
-			if( item.numLinksOutOf() == 0 )
-				Messages.addWarning("SR Latch has an unconnected output",item);
-			break;
-		case "dlatch_en":
-			if( item.getLinks("in_en",false).length == 0)
-				Messages.addError("D Latch enable (en) input must be connected",item);
-		case "dlatch":
-			if( item.getLinks("in_G",false).length == 0)
-				Messages.addError("D Latch gate (G) input must be connected",item);
-			if( item.getLinks("in_D",false).length == 0)
-				Messages.addError("D Latch data (D) input must be connected",item);
-			if( item.numLinksOutOf() == 0 )
-				Messages.addWarning("Latch has an unconnected output",item);
-			break;
 		case "register_en":
-			if( item.getLinks("in_en",false).length == 0)
-				Messages.addError("Flip-Flop enable (en) input must be connected",item);
-		case "dff":
-			if( item.getLinks("in_>",false).length == 0)
-				Messages.addError("Flip-Flop clock input must be connected",item);
-			if( item.getLinks("in_D",false).length == 0)
-				Messages.addError("Flip-Flop D input must be connected",item);
-			if( item.numLinksOutOf() == 0 )
-				Messages.addWarning("Flip-Flop has an unconnected output",item);
+			if( node.getLinks("in_en",false).length == 0)
+				Messages.addError("Flip-Flop enable (en) input must be connected",node);
+			if( node.getLinks("in_clk",false).length == 0)
+				Messages.addError("Flip-Flop clock input must be connected",node);
+			if( node.getLinks("in_D",false).length == 0)
+				Messages.addError("Flip-Flop D input must be connected",node);
+			if( node.numLinksOutOf() == 0 )
+				Messages.addWarning("Flip-Flop has an unconnected output",node);
 			break;
 		//====================================================================================
 		//	BUS GROUP
@@ -230,13 +236,13 @@ schematic.prototype.runDRC = function()
 		case "fanOut8":		fanout_size += 4;
 		case "fanOut4":		fanout_size += 2;
 		case "fanOut2":
-			if ( item.numLinksInto() == 0)
-				Messages.addError("Fan out input is unconnected",item);
+			if ( node.numLinksInto() == 0)
+				Messages.addError("Fan out input is unconnected",node);
 
-			if( item.numLinksOutOf() == 0 )
-				Messages.addError("Fan out has no connected outputs",item);
-			else if( item.numLinksOutOf() != fanout_size)
-				Messages.addWarning("Fan out has " + (fanout_size-item.numLinksOutOf()) + " unconnected outputs",item);
+			if( node.numLinksOutOf() == 0 )
+				Messages.addError("Fan out has no connected outputs",node);
+			else if( node.numLinksOutOf() != fanout_size)
+				Messages.addWarning("Fan out has " + (fanout_size-node.numLinksOutOf()) + " unconnected outputs",node);
 			break;
 
 		// -Warning if not all inputs are connected
@@ -244,22 +250,46 @@ schematic.prototype.runDRC = function()
 		// -Error if output is not connected
 		// -Error if no inputs are connected
 		// Error if input is not a 1-bit wire****
-		case "fanIn32":	fanin_size += 16;
-		case "fanIn16":	fanin_size += 8;
-		case "fanIn8":	fanin_size += 4;
-		case "fanIn4":	fanin_size += 2;
-		case "fanIn2":
-			if ( item.numLinksOutOf() == 0)
-				Messages.addError("Fan in output is unconnected",item);
+		case "fanIn32":	fanin_size++;
+		case "fanIn16":	fanin_size++;
+		case "fanIn8": fanin_size++;
+		case "fanIn4": fanin_size++;
+		case "fanIn2": fanin_size++;
+			if ( node.numLinksOutOf() == 0)
+				Messages.addError("Fan in output is unconnected",node);
 
-			if( item.numLinksInto() == 0 )
-				Messages.addError("Fan in has no connected inputs",item);
-			else if( item.numLinksInto() != fanin_size)
-				Messages.addWarning("Fan in has " + (fanin_size-item.numLinksInto()) + " unconnected inputs",item);
+			if( node.numLinksInto() == 0 )
+				Messages.addError("Fan in has no connected inputs",node);
+			else if( node.numLinksInto() != (1<<fanin_size) )
+				Messages.addWarning("Fan in has " + (fanin_size-node.numLinksInto()) + " unconnected inputs",node);
+			break;
+		// -Warning of not all inputs are connected
+		// -Error if name is invalid identifier
+		// -Error if wrong size bus is connected on input
+		default:
+			var ports_sizes = getModulePortSizes(module);
+			var ports = getModulePorts(module);
+			var num_links_in = node.numLinksInto();
+			if (num_links_in< ports.input.length)
+				Messages.addWarning(module + " has unconnected inputs",node);
+			for (var i=0; i<ports_sizes.input.length; i++) {
+				var link = node.getLink('in'+i+'_w');
+				if ( link && link.size!=ports_sizes.input[i] )
+					Messages.addError(module + " has mismatched bit width connected on "+ports.input[i],node);
+			}
+			for (var i=0; i<ports_sizes.output.length; i++) {
+				var link = node.getLink('out'+i+'_e');
+				if ( !link )
+					Messages.addWarning(module + " has unconnected output on port "+ports.output[i],node);
+			}
+			nameError=this.checkIdentifier(module);
+			if( nameError != "")
+				Messages.addError(nameError,node);
 			break;
 		}
+		
 	},this);
-
+	
 	if( numOutputs===0 )
 		Messages.addError("Schematic must have at least one connected output",null);
 	if( numInputs===0 )
@@ -555,7 +585,6 @@ schematic.prototype.createVerilog=function()
 	}
 	//nodes must be sorted so any module which can determine a wire's bit width is processed before modules that can't
 	nodes = sortNodes( graph.getChildVertices(graph.getDefaultParent()) );
-	console.log(graph);
 	//Iterate through the nodes a first time to define net aliases
 	if( nodes ) nodes.forEach(function(node){
 		var module = getModule(node);
@@ -956,7 +985,7 @@ schematic.prototype.createVerilog=function()
 			var links=node.linksOutOf();
 			//if target module is outportput, begin direct assignment
 			if(links.length == 1 && trgtNodeIs(links[0], "outputport") ) 
-				assignment += "assign "+getNameOrAlias( links[0]) +' = { ';
+				assignment += "\nassign "+getNameOrAlias( links[0]) +' = { ';
 			//otherwise begin wire assignment
 			else
 				assignment += "wire ["+((1<<fanin_size)-1)+":0] "+gateName(node,"X")+" = { ";
@@ -1027,7 +1056,7 @@ schematic.prototype.createVerilog=function()
 		if( wireList[(1<<i)] != "" )
 		{
 			wireList[(1<<i)]=wireList[(1<<i)].replace(/, *$/gi, '');
-			verilogCode+="wire [" + ((1<<i)-1) + ":0] "+wireList[(1<<i)]+";\n";
+			verilogCode+="wire [" + ((1<<i)-1) + ":0] "+wireList[(1<<i)]+";";
 		}
 	}
 	//Print 1-bit Wire declarations
