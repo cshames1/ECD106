@@ -158,7 +158,7 @@ schematic.prototype.runDRC = function()
 
 			var correct_bitwidth = (1<<output_size);
 			var input_width = input_size(node);
-			if ( input_width && input_width != correct_bitwidth )
+			if ( input_width != correct_bitwidth )
 				Messages.addError(correct_bitwidth+"\'b output port has "+input_width+"\'b input",node);
 			
 			break;
