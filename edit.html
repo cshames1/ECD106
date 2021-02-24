@@ -6,14 +6,19 @@
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 </head>
 <script type="text/javascript">
-deletedIDS=[];
-changedNames=[];
+	
 	// Reads files locally using js
   	var storedShapes = JSON.parse(localStorage.getItem('storedShapes'));
+	var deletedIDs = new Array();
 
 	// Handles form-submit by preparing to process response
 	function handleSubmit(){
-		window.parent.openFile.setData(storedShapes);
+		var newShapes = new Array();
+		for (var i=0; i<storedShapes.length; i++) {
+			if ( !deletedIDs.includes(i) )
+				newShapes.push(storedShapes[i]);
+		}
+		window.parent.openFile.setData(newShapes);
 	}
 
 	// Hides this dialog
@@ -21,24 +26,19 @@ changedNames=[];
 		window.parent.openFile.cancel(cancel);
 	}
 
-	function removeFile(id){
+	function removeFile(id, name){
+		deletedIDs.push(id);
 		document.getElementById('fileRow-'+id).innerHTML = "";
-		var new_shapes = new Array();
-		for (var  i=0; i<storedShapes.length; i++) {
-			if (i!=id) 
-				new_shapes.push(storedShapes[i]);
-		}
-		storedShapes = new_shapes;
 	}
 
 
   	function nameIsUsed(id,name){
-	for (var i=0; i<storedShapes.length; i++) {
-		if((i!=id) && (name==storedShapes[i].componentName))
-			return true;
+		for (var i=0; i<storedShapes.length; i++) {
+			if((i!=id) && (name==storedShapes[i].componentName))
+				return true;
+		}
+		return false;
 	}
-	return false;
-    }
 	function isAlpha(c){
 		return /^[A-Z]$/i.test(c);
 	}
@@ -56,13 +56,11 @@ changedNames=[];
 		}
 		else if ( !nameIsValid(id,newName) ) {
 			alert('"'+ newName +'" is invalid. Please change the name.');
-			console.log("alert");
 		}
 		else {
 			storedShapes[id].componentName = newName;
 		}
     }
-
 
 	function main(){	
 		if (window.parent.Editor.useLocalStorage)

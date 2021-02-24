@@ -78,6 +78,7 @@ Actions.prototype.init = function()
 
 		window.openFile.setConsumer(mxUtils.bind(this, function(allVerilog)
 		{
+			console.log(allVerilog);
 			localStorage.removeItem('storedShapes');
 			localStorage.setItem('storedShapes', JSON.stringify(allVerilog));
 			ui.circuit.deleteClearedComponents();
