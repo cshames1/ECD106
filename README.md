@@ -27,7 +27,5 @@
  
   -continue implementing new DRC's, including abilityto check bit widths
   
-  -figure out how to allow user to delete imported components. Only current option is clearing browser cache
-  
   -progress on the simulation capability
 
