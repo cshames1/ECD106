@@ -70,7 +70,10 @@ schematic.prototype.runDRC = function()
 	}
 	function input_size(node){
 		var links_in = node.linksInto();
-		return links_in[0].size;
+		var size = null;
+		if (links_in) 
+			size = links_in[0].size;
+		return size;
 	}
 	function getModule( node ){
 		return graph.getCellStyle( node )["shape"];
@@ -155,7 +158,7 @@ schematic.prototype.runDRC = function()
 
 			var correct_bitwidth = (1<<output_size);
 			var input_width = input_size(node);
-			if (input_width != correct_bitwidth)
+			if ( input_width && input_width != correct_bitwidth )
 				Messages.addError(correct_bitwidth+"\'b output port has "+input_width+"\'b input",node);
 			
 			break;
