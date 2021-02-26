@@ -24,8 +24,6 @@
       -edges thickness scales in relation to bit width
 
  TODO
- 
-  -continue implementing new DRC's, including abilityto check bit widths
   
   -progress on the simulation capability
 
