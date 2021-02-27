@@ -312,7 +312,7 @@ schematic.prototype.runDRC = function()
 			if (num_links_in< ports.input.length)
 				Messages.addWarning(module + " has unconnected inputs",node);
 			for (var i=0; i<ports_sizes.input.length; i++) {
-				var link = node.getLink('in'+i+'_w');
+				var link = node.getLink('in'+i+'_w',false);
 				if ( link && link.size!=ports_sizes.input[i] )
 					Messages.addError(module + " has mismatched bit width connected on "+ports.input[i],node);
 			}
