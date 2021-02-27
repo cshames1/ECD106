@@ -317,7 +317,7 @@ schematic.prototype.runDRC = function()
 					Messages.addError(module + " has mismatched bit width connected on "+ports.input[i],node);
 			}
 			for (var i=0; i<ports_sizes.output.length; i++) {
-				var link = node.getLink('out'+i+'_e');
+				var link = node.getLink('out'+i+'_e',true);
 				if ( !link )
 					Messages.addWarning(module + " has unconnected output on port "+ports.output[i],node);
 			}
