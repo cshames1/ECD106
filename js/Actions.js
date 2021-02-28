@@ -61,9 +61,9 @@ Actions.prototype.init = function()
 		});
 	}).isEnabled = isGraphEnabled;
 	this.addAction('saveSchematic', function() { ui.saveFile(); }, null, null, Editor.ctrlKey + '+S').isEnabled = isGraphEnabled;
-	this.addAction('rename...', function() { ui.renameFile(); }, null, null, Editor.ctrlKey + '+Shift+S').isEnabled = isGraphEnabled;
+	this.addAction('rename...', function() { ui.renameFile(); }, null, null, null).isEnabled = isGraphEnabled;
 
-	this.addAction('importSchematic...', function() { ui.renameFile(); }, null, null, Editor.ctrlKey + '+Shift+S').isEnabled = isGraphEnabled;
+	this.addAction('importSchematic...', function() { ui.renameFile(); }, null, null, null).isEnabled = isGraphEnabled;
 	
 	action=this.addAction('editComponents...', mxUtils.bind(this, function()
 	{
