@@ -120,7 +120,7 @@ schematic.prototype.runDRC = function()
 		case "inputport2":			
 		case "inputport1":
 			if( node.numLinksOutOf() === 0 )
-				Messages.addWarning(module+" is unconnected",node);
+				Messages.addWarning(((node.value)?node.value:module)+" is unconnected",node);
 			numInputs++;
 			if( node.value == "" )
 				Messages.addWarning(module+" is unnamed: a default name will be provided",node);
@@ -324,7 +324,6 @@ schematic.prototype.runDRC = function()
 			if (in_error)
 				Messages.addError( in_error,node );
 			break;
-
 		// -Warning if not all inputs are connected
 		// -Error if output is not connected
 		// -Error if no inputs are connected
@@ -682,6 +681,8 @@ schematic.prototype.createVerilog=function()
 			link.size = size;
 			if ( size>1 )
 				link.value = size;
+			else	
+				link.value="";
 			setCellStyleAttribute( link, "strokeWidth", Math.log2(size)+1 );
 		});
 	}
