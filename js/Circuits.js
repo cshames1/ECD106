@@ -727,9 +727,9 @@ schematic.prototype.createVerilog=function()
 			setLinkSetSize(linksout, output_size);
 			break;
 		case "mux16": mux_size++;
-		case "mux8": mux_size++;
-		case "mux4": mux_size++;
-		case "mux2": mux_size++;
+		case "mux8":  mux_size++;
+		case "mux4":  mux_size++;
+		case "mux2":  mux_size++;
 			//find the width of the largest connected wire connected on the inputs and make the output that width
 			var output_size=1;
 			for (var i=0; i<(1<<mux_size); i++) {
@@ -746,9 +746,9 @@ schematic.prototype.createVerilog=function()
 				wireSet[output_size].add(gateName(node,"X") );
 			setLinkSetSize(linksout, output_size);
 			break;
-		case "decoder4":decoder_size++;
-		case "decoder3":decoder_size++;
-		case "decoder2":decoder_size++;
+		case "decoder4": decoder_size++;
+		case "decoder3": decoder_size++;
+		case "decoder2": decoder_size++;
 			//iterate through each of the output ports 
 			for( var i=0; i<(1<<decoder_size); i=i+1 )
 			{
@@ -775,9 +775,9 @@ schematic.prototype.createVerilog=function()
 			break;
 		case "fanIn32": fanin_size++;
 		case "fanIn16": fanin_size++;
-		case "fanIn8": fanin_size++;
-		case "fanIn4": fanin_size++;
-		case "fanIn2": fanin_size++;
+		case "fanIn8":  fanin_size++;
+		case "fanIn4":  fanin_size++;
+		case "fanIn2":  fanin_size++;
 			//determine if output net name is port name
 			var linksout=node.linksOutOf();
 			//if module connected to output is outputport, use outputport name
@@ -829,9 +829,9 @@ schematic.prototype.createVerilog=function()
 			break;
 		case "inputport32": inputport_size++;
 		case "inputport16": inputport_size++;
-		case "inputport8": inputport_size++;
-		case "inputport4": inputport_size++;
-		case "inputport2": inputport_size++;
+		case "inputport8":  inputport_size++;
+		case "inputport4":  inputport_size++;
+		case "inputport2":  inputport_size++;
 		case "inputport1":
 			//create port instantiation for top level module instatiation
 			if (inputport_size==0) 
@@ -842,9 +842,9 @@ schematic.prototype.createVerilog=function()
 			break;
 		case "outputport32": outputport_size++;
 		case "outputport16": outputport_size++;
-		case "outputport8": outputport_size++;
-		case "outputport4": outputport_size++;
-		case "outputport2": outputport_size++;
+		case "outputport8":  outputport_size++;
+		case "outputport4":  outputport_size++;
+		case "outputport2":  outputport_size++;
 		case "outputport1":
 			//create port instantiation for top level module instatiation
 			if (outputport_size==0)
@@ -894,9 +894,9 @@ schematic.prototype.createVerilog=function()
 			netList=netList+");";
 			break; 
 		case "mux16": mux_size++;
-		case "mux8": mux_size++;
-		case "mux4": mux_size++;
-		case "mux2": mux_size++;
+		case "mux8":  mux_size++;
+		case "mux4":  mux_size++;
+		case "mux2":  mux_size++;
 			//determine the output size of module. default is 1, otherwise it will be the largest bit width on the data inputs
 			var output_size=1;
 			for( var i=0; i<(1<<mux_size); i++ )
@@ -1081,7 +1081,7 @@ schematic.prototype.createVerilog=function()
 		}
 	});
 	//begin top level module instantiation with all of its port instantiations
-	verilogCode="module top (";
+	verilogCode="module top_level (";
 	if( inputList != '' || outputList != '')
 	{
 		verilogCode += inputList;
@@ -1096,7 +1096,7 @@ schematic.prototype.createVerilog=function()
 		if( wireList[(1<<i)] != "" )
 		{
 			wireList[(1<<i)]=wireList[(1<<i)].replace(/, *$/gi, '');
-			verilogCode+="wire [" + ((1<<i)-1) + ":0] "+wireList[(1<<i)]+";";
+			verilogCode+="\nwire [" + ((1<<i)-1) + ":0] "+wireList[(1<<i)]+";";
 		}
 	}
 	//Print 1-bit Wire declarations
