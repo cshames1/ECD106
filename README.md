@@ -7,7 +7,7 @@
  
   -RTL Implementation
       
-      -.v files can be imported from Logic Designer or DSD
+      -.v files can be imported from DSD
       
       -the bit width of the modules inputs is accounted for
       

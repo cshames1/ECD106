@@ -43,7 +43,7 @@ schematic.prototype.isNativeComponent = function( component ){
 	var native_components=["and", "nand", "or","nor","xor","xnor","buf", "not",
 					"mux2","mux4", "mux8","mux16",
 					"decoder2","decoder3","decoder4",
-					"register_en",
+					"register_en", "dff", "dff_en", "srlatch", "dsrlatch_en", "dlatch", "dlatch_en", 
 					"fanIn2",  "fanIn4",  "fanIn8",  "fanIn16",  "fanIn32",
 					"fanOut2",  "fanOut4", "fanOut8", "fanOut16", "fanOut32",
 					"inputport1", "inputport2", "inputport4", "inputport8", "inputport16", "inputport32",
@@ -254,12 +254,71 @@ schematic.prototype.runDRC = function()
 			if( node.numLinksOutOf() == 0 )
 				Messages.addWarning(module+" has unconnected output",node);
 			break;
+		case "srlatch_en":
+			var link_en = node.getLink("in_en",false);
+			if( link_en==null )
+				Messages.addError(module+" enable (en) input must be connected",node);
+			else if ( link_en.size>1 )
+				Messages.addError(module+" enable (en) input has a bus connected. Only single bit wires may be connected",node);
+		case "srlatch":
+			var link_S = node.getLink("in_S",false);
+			var link_R = node.getLink("in_R",false);
+			if( link_S==null )
+				Messages.addError(module+" S (S) input must be connected",node);
+			else if ( link_S.size>1 )
+				Messages.addError(module+" S (S) input has a bus connected. Only single bit wires may be connected",node);
+			if( link_R==null )
+				Messages.addError(module+" R (R) input must be connected",node);
+			else if ( link_R.size>1 )
+				Messages.addError(module+" R (R) input has a bus connected. Only single bit wires may be connected",node);
+			if( node.numLinksOutOf() == 0 )
+				Messages.addWarning(module+" has an unconnected output",node);
+			break;
+		case "dlatch_en":
+			var link_en = node.getLink("in_en",false);
+			if( link_en==null )
+				Messages.addError(module+" enable (en) input must be connected",node);
+			else if ( link_en.size>1 )
+				Messages.addError(module+" enable (en) input has a bus connected. Only single bit wires may be connected",node);
+		case "dlatch":
+			var link_D = node.getLink("in_D",false);
+			var link_G = node.getLink("in_G",false);
+			if( link_D==null )
+				Messages.addError(module+" D (D) input must be connected",node);
+			else if ( link_D.size>1 )
+				Messages.addError(module+" D (D) input has a bus connected. Only single bit wires may be connected",node);
+			if( link_G==null )
+				Messages.addError(module+" G (G) input must be connected",node);
+			else if ( link_G.size>1 )
+				Messages.addError(module+" G (G) input has a bus connected. Only single bit wires may be connected",node);
+			if( node.numLinksOutOf() == 0 )
+				Messages.addWarning(module+" has an unconnected output",node);
+			break;
+		case "dff_en":
+			var link_en = node.getLink("in_en",false);
+			if( link_en==null )
+				Messages.addError(module+" enable (en) input must be connected",node);
+			else if ( link_en.size>1 )
+				Messages.addError(module+" enable (en) input has a bus connected. Only single bit wires may be connected",node);
+		case "dff":
+			var link_D = node.getLink("in_D",false);
+			var link_clk = node.getLink("in_clk",false);
+			if( link_D==null )
+				Messages.addError(module+" D (D) input must be connected",node);
+			else if ( link_D.size>1 )
+				Messages.addError(module+" D (D) input has a bus connected. Only single bit wires may be connected",node);
+			if( link_clk==null )
+				Messages.addError(module+" clock (clk) input must be connected",node);
+			else if ( link_clk.size>1 )
+				Messages.addError(module+" clock (clk) input has a bus connected. Only single bit wires may be connected",node);
+			if( node.numLinksOutOf() == 0 )
+				Messages.addWarning(module+" has an unconnected output",node);
+			break;
 		//====================================================================================
 		//	BUS GROUP
 		//====================================================================================
-		
 		// -Warning if not all outputs are connected
-		// Warning if input is not the bus size of the fanout
+		// -Warning if input is not the bus size of the fanout
 		// -Error if input is not connected
 		// -Error if no outputs are connected
 		case "fanOut32": fanout_size++;
@@ -281,7 +340,7 @@ schematic.prototype.runDRC = function()
 		// -Warning if not all inputs are connected
 		// -Error if output is not connected
 		// -Error if no inputs are connected
-		// Error if input is not a 1-bit wire
+		// -Error if input is not a 1-bit wire
 		case "fanIn32":	fanin_size++;
 		case "fanIn16":	fanin_size++;
 		case "fanIn8":  fanin_size++;
@@ -335,7 +394,7 @@ schematic.prototype.runDRC = function()
 		Messages.addWarning("Schematic has unconnected inputs",null);
 	return Messages;
 };
-/* prototype method: function getUsedImportedComponents
+/* prototype method: function getImportedComponentsForExport
  *		Returns verilog code stored in cache memory associated with module
  * module: module whose Verilog code will be returned
  */
@@ -361,10 +420,10 @@ schematic.prototype.getImportedComponentVerilog=function( module ){
 	}
 	return newVerilog;
 }
-/* prototype method: function getUsedImportedComponents
+/* prototype method: function getImportedComponentsForExport
  *		Returns set of all imported components used in the schematic
  */
-schematic.prototype.getUsedImportedComponents=function(){
+schematic.prototype.getImportedComponentsForExport=function(){
 	var graph=this.graph;
 	nodes=graph.getChildVertices(graph.getDefaultParent());
 	var components = new Set();
@@ -376,6 +435,22 @@ schematic.prototype.getUsedImportedComponents=function(){
 	});
 	return components;
 }
+/* prototype method: function getNativeComponentsForExport
+ *		Returns set of all native components used in the schematic that
+ *      need .v files to be exported
+ */
+schematic.prototype.getNativeComponentsForExport=function(){/*
+	var graph=this.graph;
+	nodes=graph.getChildVertices(graph.getDefaultParent());
+	var components = new Set();
+	if( nodes ) nodes.forEach(function(item){
+		var style=graph.getCellStyle(item); 
+		var module = style["shape"];
+		if ( !schematic.prototype.isNativeComponent(module) ) 
+			components.add( module );
+	});
+	return components;
+*/}
 /* prototype method: function deleteClearedComponents
  *		After the user clears imported components, this function will delete
  *		any such components left on the graph
@@ -426,9 +501,9 @@ schematic.prototype.createVerilog=function()
 	var verilogCode="";
 	var graph=this.graph;
 	var gateNames={and:"and", nand:"nand",or:"or",nor:"nor",xor:"xor",xnor:"xnor",buffer:"buf", inverter:"not",
-					mux2:"mux2", mux4:"mux4", mux8:"mux8", mux16:"mux16",
-					decoder2:"decoder #(2,1)",decoder3:"decoder #(3,1)",decoder4:"decoder #(4,1)",
-					register_en:"register_en",
+					mux2:"mux #(2,", mux4:"mux #(4,", mux8:"mux #(8,", mux16:"mux #(16,",
+					decoder2:"decoder #(2)",decoder3:"decoder #(3)",decoder4:"decoder #(4)",
+					register_en:"register_en", dlatch:"d_latch",dlatch_en:"d_latch_en",dff:"dff",dff_en:"dff_en",srlatch:"sr_latch",srlatch_en:"sr_latch_en",
 					fanIn2: "fanIn2", fanIn4: "fanIn4", fanIn8: "fanIn8", fanIn16: "fanIn16", fanIn32: "fanIn32",
 					fanOut2: "fanOut2", fanOut4: "fanOut4", fanOut8: "fanOut8", fanOut16: "fanOut16", fanOut32: "fanOut32" 
 				};
@@ -675,7 +750,6 @@ schematic.prototype.createVerilog=function()
 		case "inputport4":  inputport_size++;
 		case "inputport2":  inputport_size++;
 		case "inputport1":
-			//set bit width of all wires coming out of inputport to corresponding bit width
 			var linksout=node.linksOutOf();
 			setLinkSetSize(linksout, (1<<inputport_size));
 			break;
@@ -688,7 +762,6 @@ schematic.prototype.createVerilog=function()
 			break;
 		case "constant0":
 		case "constant1":
-			//set bit width of all wires coming out of constants to 1
 			var linksout=node.linksOutOf();
 			setLinkSetSize(linksout, 1);
 			break;
@@ -700,37 +773,35 @@ schematic.prototype.createVerilog=function()
 		case "xnor":
 		case "buffer":
 		case "inverter":
+		case "dlatch":
+		case "dlatch_en":
+		case "srlatch":
+		case "srlatch_en":
+		case "dff":
+		case "dff_en":
 			var linksout=node.linksOutOf();
-			//If module connected to output is outputport, use outputport name
 			if( linksout.length == 1 && trgtNodeIs(linksout[0], "outputport") )
 				netAliases[netName(linksout[0])] = portName(linksout[0].target,"O");
-			//otherwise create wire and add it to set
 			else
 				wireSet[(1<<0)].add(gateName(node,"X") );
-			//set bit width of all wires coming out of basic gates to 1
 			setLinkSetSize(linksout, 1);
 			break;
 		case "register_en":
-			//default output bit width is 1. If any wire is connected to the data input, its bit width is used instead
 			var output_size=1;
 			var input = node.getLinks('in_D',false);
 			if(input[0] && input[0].size) 
 				output_size = input[0].size;
-			//if module connected to output is outputport, use outputport name
 			var linksout=node.linksOutOf();
 			if( linksout.length == 1 && trgtNodeIs(linksout[0], "outputport") ) 
 				netAliases[netName(linksout[0])] = portName(linksout[0].target,"O");
-			//if any other module is connected create wire and add it to set
 			else if( linksout.length ) 
 				wireSet[output_size].add(netName(linksout[0],"X"));
-			//set bit width of all wires coming out of registers to the output size
 			setLinkSetSize(linksout, output_size);
 			break;
 		case "mux16": mux_size++;
 		case "mux8":  mux_size++;
 		case "mux4":  mux_size++;
 		case "mux2":  mux_size++;
-			//find the width of the largest connected wire connected on the inputs and make the output that width
 			var output_size=1;
 			for (var i=0; i<(1<<mux_size); i++) {
 				var linkin = node.getLink('in'+i, false);
@@ -738,10 +809,8 @@ schematic.prototype.createVerilog=function()
 					output_size=linkin.size;
 			}
 			var linksout=node.linksOutOf();
-			//if module connected to output is outputport, use outputport name
 			if( linksout.length == 1 && trgtNodeIs(linksout[0], "outputport") ) 
 				netAliases[netName(linksout[0])] = portName(linksout[0].target,"O");
-			//otherwise create wire and add it to set
 			else
 				wireSet[output_size].add(gateName(node,"X") );
 			setLinkSetSize(linksout, output_size);
@@ -749,18 +818,13 @@ schematic.prototype.createVerilog=function()
 		case "decoder4": decoder_size++;
 		case "decoder3": decoder_size++;
 		case "decoder2": decoder_size++;
-			//iterate through each of the output ports 
 			for( var i=0; i<(1<<decoder_size); i=i+1 )
 			{
-				//take all wires coming out of the indexed port
 				var linksout=node.getLinks( 'out'+ i +'_d', true);
-				//if module connected to output is outputport, use outputport name
 				if( linksout.length == 1 && trgtNodeIs(linksout[0], "outputport") ) 
 					netAliases[netName(linksout[0])] = portName(linksout[0].target,"O");
-				//otherwise create wire and add it to set
 				else if( linksout.length )
 					wireSet[(1<<0)].add(netName(linksout[0],"X"));
-				//set bit width of all wires coming out of decoder to 1
 				setLinkSetSize(linksout, 1);
 			}
 			break;
@@ -769,7 +833,6 @@ schematic.prototype.createVerilog=function()
 		case "fanOut8": 
 		case "fanOut4": 
 		case "fanOut2": 
-			//set bit width of all wires coming out of fanOuts to 1
 			var linksout=node.linksOutOf();
 			setLinkSetSize(linksout, 1);
 			break;
@@ -778,35 +841,24 @@ schematic.prototype.createVerilog=function()
 		case "fanIn8":  fanin_size++;
 		case "fanIn4":  fanin_size++;
 		case "fanIn2":  fanin_size++;
-			//determine if output net name is port name
 			var linksout=node.linksOutOf();
-			//if module connected to output is outputport, use outputport name
 			if( linksout.length == 1 && trgtNodeIs(linksout[0], "outputport") ) 
 				netAliases[netName(linksout[0])] = portName(linksout[0].target,"O");
-			//set bit width of all wires coming out of fanOut to corresponding bit width
 			setLinkSetSize(linksout, (1<<fanin_size));
 			break;
 		default:
-			//get an object stored in cache memory with imported components that has 2 attributes:
-			//		object.input, an array containing bit widths of the modules inputports
-			//		object.output, an array containing bit widths of the modules outputports
 			var portSizes = getModulePortSizes(module);
 			var linksout=node.linksOutOf();
 			var outputs = new Set();
-			//create set of each output that has been connected to another module
 			linksout.forEach(function(link){
 				outputs.add( getSrcPortID(link) );
 			});
-			//iterate through each output of this set
 			outputs.forEach(function(id){
 				var linksout=node.getLinks( 'out' + id + '_', true);
-				//if module connected to output is outputport, use outputport name
 				if( linksout.length == 1 && trgtNodeIs(linksout[0], "outputport") ) 
 					netAliases[netName(linksout[0])] = portName(linksout[0].target,"O");
-				//if any other module is connected, create a wire with the correct bit width
 				if( linksout.length ) 
 					wireSet[portSizes.output[id]].add(netName(linksout[0],"X"));
-				//set the bit width of each wire connected to this port to its correct bit width
 				setLinkSetSize(linksout, portSizes.output[id]);					
 			});
 
@@ -833,10 +885,8 @@ schematic.prototype.createVerilog=function()
 		case "inputport4":  inputport_size++;
 		case "inputport2":  inputport_size++;
 		case "inputport1":
-			//create port instantiation for top level module instatiation
 			if (inputport_size==0) 
 				inputList+="\n\tinput " + portName(node,'I') +',';
-			//if port has bit width greater than 1, use bracket notation
 			else
 				inputList+="\n\tinput [" + ((1<<inputport_size)-1) + ':0] ' + portName(node,'I') +',';
 			break;
@@ -846,23 +896,18 @@ schematic.prototype.createVerilog=function()
 		case "outputport4":  outputport_size++;
 		case "outputport2":  outputport_size++;
 		case "outputport1":
-			//create port instantiation for top level module instatiation
 			if (outputport_size==0)
 				outputList+="\n\toutput " + portName(node,'O') + ',';
-			//if port has bit width greater than 1, use bracket notation
 			else
 				outputList+="\n\toutput [" + ((1<<outputport_size)-1) + ':0] ' + portName(node,'O') +',';
 			var link=node.linksInto();
-			//if outputport is unconnected, assign it to 1b'x
 			if( link.length == 0 )
 				outputAssignList += "\nassign " + portName(node,"O") + " = 1\'bx;" ;
-			//otherwise if it is connected to a wire, and that wire has other target modules, assign it to the wire
 			else if( getNameOrAlias( link[0]) != portName(node,"O")) 
 			{
 				outputAssignList += "\nassign " + portName(node,"O") + " = " ;
 				outputAssignList += getNameOrAlias( link[0])  + ";";
 			}
-			//otherwise, outputport will be used in port instantiation of source module
 			break;
 		case "and":
 		case "or":
@@ -872,21 +917,16 @@ schematic.prototype.createVerilog=function()
 		case "xnor":
 		case "inverter":
 		case "buffer":
-			//begin module instatiation 
 			netList += "\n\n" + gateNames[module] + ' ' + gateName(node,"U") + " ("; 
 			var links=node.linksOutOf();
-			//if any wire or outputport is connected on the modules output, add its alias to module instantiation
 			if( links.length )
 				netList += getNameOrAlias( links[0]);
-			//otherwise use placeholder wire name
 			else
 				netList += gateName(node,"X");
 			netList+=',';
 			var links=node.linksInto();
-			//if anything is connected on input, add its alias to module instantiation
 			if( links.length )
 				links.forEach( function(link){ netList += getNameOrAlias( link) + ', ';});
-			//otherwise, add 1b'x to module instantiation
 			else
 				netList += '1\'bx,';
 			//delete last comma
@@ -897,7 +937,6 @@ schematic.prototype.createVerilog=function()
 		case "mux8":  mux_size++;
 		case "mux4":  mux_size++;
 		case "mux2":  mux_size++;
-			//determine the output size of module. default is 1, otherwise it will be the largest bit width on the data inputs
 			var output_size=1;
 			for( var i=0; i<(1<<mux_size); i++ )
 			{
@@ -905,27 +944,21 @@ schematic.prototype.createVerilog=function()
 				if (linki && linki.size>output_size)
 					output_size = linki.size;
 			}
-			//begin module instatiation. Pass bit width as parameter
-			netList += "\n\n" + gateNames[module] + ' #(' + output_size +') '+gateName(node,"U") + " ("; 
+			netList += "\n\n" + gateNames[module] + output_size +') '+gateName(node,"U") + " ("; 
 			netList=netList+"\n\t";
-			//iterate through each data input
 			for( var i=0; i<(1<<mux_size); i++ )
 			{
 				var linki = node.getLink( 'in'+i,false);
-				//if anything is connected to indexed port, add it to module instantiation
 				if( linki ) 
 					netList += '.i' + i + '(' + getNameOrAlias( linki) + '), ';
 			}
-			//select input will be concatenation of each single bit wire connected on select input 
 			netList += '\n\t.sel( {';
 			//iterate through each select input
 			for( var i=mux_size-1; i>=0; i=i-1 )
 			{
 				var lnk=node.getLink( 'sel'+i,false);
-				//if anything is connected to indexed port, add its alias to concetenation
 				if( lnk ) 
 					netList+=getNameOrAlias( lnk);
-				//otherwise add 1b'x to concetenation
 				else 
 					netList+='1\'bx';
 				netList+=',';
@@ -934,51 +967,90 @@ schematic.prototype.createVerilog=function()
 			netList=netList.replace(/, *$/gi, '');
 			netList += '}),\n\t.q(';
 			var links=node.linksOutOf();
-			//if any module is connected on output, add its alias to port instantiation
 			if( links.length )
 				netList += getNameOrAlias( links[0]);
-			//otherwise use placeholder wire name
 			else
 				netList += gateName(node,"X");
 			netList += ')\n);';
 			break; 
 		case "register_en":
 			var linkin=node.getLink( 'in_D_',false);
-			//determine bit width of wire connected on data input
 			var output_size = (linkin)? linkin.size : 1;
-			//begin module instatiation. pass output size as parameter
 			netList += '\n\n' + gateNames[module] + ' #(' + output_size + ')' +  ' ' + gateName(node,'U') + ' ('; 
-			//if any wire is connected on data input add it to module instantiation
 			if( linkin )
-				netList += '\n\t.data_in(' + getNameOrAlias( linkin) + '),';
+				netList += '\n\t.in_D(' + getNameOrAlias( linkin) + ')';
 			var linkclk=node.getLink( 'in_clk_',false);
-			//if any wire is connected on clock input add it to module instantiation
 			if( linkclk )
-				netList += '\n\t.clk_in(' + getNameOrAlias( linkclk) + '),';
+				netList += ',\n\t.in_clk(' + getNameOrAlias( linkclk) + ')';
 			var linken=node.getLink( 'in_en_',false);
-			//if any wire is connected on enable input add it to module instantiation
 			if( linken ) 
-				netList += '\n\t.en_in(' + getNameOrAlias( linken) + '),';
+				netList += ',\n\t.in_en(' + getNameOrAlias( linken) + ')';
 			var linkq=node.linksOutOf();
-			//if any wire is connected on data output add it to module instantiation
 			if( linkq.length )
-				netList += '\n\t.q('+getNameOrAlias( linkq[0]) + ")";
+				netList += ',\n\t.out_q('+getNameOrAlias( linkq[0]) + ")";
 			netList=netList+"\n);";
+			break;
+		case "dlatch":
+		case "dlatch_en":
+			netList += '\n\n' + gateNames[module] +  ' ' + gateName(node,'U') + ' ('; 
+			var linkin=node.getLink( 'in_D_',false);
+			if( linkin )
+				netList += '\n\t.in_D(' + getNameOrAlias( linkin) + ')';
+			var linkg=node.getLink( 'in_G_',false);
+			if( linkg )
+				netList += ',\n\t.in_G(' + getNameOrAlias( linkg) + ')';
+			var linken=node.getLink( 'in_en_',false);
+			if( linken ) 
+				netList += ',\n\t.in_en(' + getNameOrAlias( linken) + ')';
+			var linkq=node.linksOutOf();
+			if( linkq.length )
+				netList += ',\n\t.out_q('+getNameOrAlias( linkq[0]) + ")";
+			netList=netList+"\n);"
+			break;
+		case "srlatch":
+		case "srlatch_en":
+			netList += '\n\n' + gateNames[module] +  ' ' + gateName(node,'U') + ' ('; 
+			var linkin=node.getLink( 'in_S_',false);
+			if( linkin )
+				netList += '\n\t.in_S(' + getNameOrAlias( linkin) + ')';
+			var linkr=node.getLink( 'in_R_',false);
+			if( linkr )
+				netList += ',\n\t.in_R(' + getNameOrAlias( linkr) + ')';
+			var linken=node.getLink( 'in_en_',false);
+			if( linken ) 
+				netList += ',\n\t.in_en(' + getNameOrAlias( linken) + ')';
+			var linkq=node.linksOutOf();
+			if( linkq.length )
+				netList += ',\n\t.out_q('+getNameOrAlias( linkq[0]) + ")";
+			netList=netList+"\n);"
+			break;
+		case "dff":
+		case "dff_en":
+			netList += '\n\n' + gateNames[module] +  ' ' + gateName(node,'U') + ' ('; 
+			var linkin=node.getLink( 'in_D_',false);
+			if( linkin )
+				netList += '\n\t.in_D(' + getNameOrAlias( linkin ) + ')';
+			var linkclk=node.getLink( 'in_clk_',false);
+			if( linkclk )
+				netList += ',\n\t.in_clk(' + getNameOrAlias( linkclk ) + ')';
+			var linken=node.getLink( 'in_en_',false);
+			if( linken ) 
+				netList += ',\n\t.in_en(' + getNameOrAlias( linken) + ')';
+			var linkq=node.linksOutOf();
+			if( linkq.length )
+				netList += ',\n\t.out_q('+getNameOrAlias( linkq[0]) + ")";
+			netList=netList+"\n);"
 			break;
 		case "decoder4": decoder_size++;
 		case "decoder3": decoder_size++;
 		case "decoder2": decoder_size++;
-			//begin module instatiation 
 			netList += "\n\n" + gateNames[module] + ' ' + gateName(node,"U") + " ("; 
 			netList += '\n\t.data_out( {';
-			//iterate through each outputport. Each single bit output will be concatenated into bus output
 			for( var i=(1<<decoder_size)-1; i>=0; i=i-1 )
 			{
 				var lnk=node.getLink( 'out'+(i)+'_d'+i,true);
-				//if anything is connected on port, add its alias to concatenation
 				if( lnk ) 
 					netList+=getNameOrAlias( lnk);
-				//otherwise add 1b'x to concatenation
 				else 
 					netList+='1\'bx';
 				netList+=', ';
@@ -986,14 +1058,11 @@ schematic.prototype.createVerilog=function()
 			//delete last comma
 			netList=netList.replace(/, *$/gi, '');
 			netList = netList+ '} ),\n\t.address_in( {';
-			//iterate through each address input. Each single bit input will be concatenated into bus input
 			for( var i=decoder_size-1; i>=0; i=i-1 )
 			{
 				var lnk=node.getLink( 'in'+i,false);
-				//if anything is connected on port, add its alias to concatenation
 				if( lnk ) 
 					netList+=getNameOrAlias( lnk);
-				//otherwise add 1b'x to concatenation
 				else 
 					netList+='1\'bx';
 				netList+=', ';
@@ -1002,7 +1071,6 @@ schematic.prototype.createVerilog=function()
 			netList=netList.replace(/, *$/gi, '');
 			netList=netList+"} ),\n\t.en_in( ";
 			var linken=node.getLink( 'in_en',false);
-			//if anything is connected on port, add its alias to port instantiation
 			if( linken ) 
 				netList+=getNameOrAlias( linken );
 			//otherwise add 1b'x to port instantiation
@@ -1018,25 +1086,20 @@ schematic.prototype.createVerilog=function()
 			break; 
 		case "fanIn32": fanin_size++;
 		case "fanIn16": fanin_size++;
-		case "fanIn8": fanin_size++;
-		case "fanIn4": fanin_size++;
-		case "fanIn2": fanin_size++;
+		case "fanIn8":  fanin_size++;
+		case "fanIn4":  fanin_size++;
+		case "fanIn2":  fanin_size++;
 			var assignment = "";
 			var links=node.linksOutOf();
-			//if target module is outportput, begin direct assignment
 			if(links.length == 1 && trgtNodeIs(links[0], "outputport") ) 
 				assignment += "\nassign "+getNameOrAlias( links[0]) +' = { ';
-			//otherwise begin wire assignment
 			else
 				assignment += "\nwire ["+((1<<fanin_size)-1)+":0] "+gateName(node,"X")+" = { ";
-			//output value will be concatenation of each value on the inputs. begin iterating through each input
 			for( var i=(1<<fanin_size)-1; i>=0; i=i-1 )
 			{
 				var lnk=node.getLink( 'in'+i,false);
-				//if anything is connected on port, add its alias to concatenation
 				if( lnk ) 
 					assignment+=getNameOrAlias( lnk);
-				//otherwise add 1b'x to concatenation
 				else 
 					assignment+='1\'bx';
 				assignment+=', ';
@@ -1044,33 +1107,23 @@ schematic.prototype.createVerilog=function()
 			//delete last comma
 			assignment=assignment.replace(/, *$/gi, '');
 			assignment=assignment+" };\n";
-			//if there is only 1 target module and it's an outputport, assign it directly to output value
 			if(links.length == 1 && trgtNodeIs(links[0], "outputport") ) 
 				outputAssignList += assignment;
-			//otherwise assign wire to output value
 			else
 				wireAssignList += assignment;
 			break; 
 		default: 
 			var ports = getModulePorts(module);
-			//begin module instatiation 
 			netList += "\n\n" + module + ' ' + gateName(node,"C") + " (";
 			var links=node.linksInto();
-			//iterate through each wire connected to inputs
 			if( links.length ) links.forEach( function(link){ 
-				//determine ID number of wire's target port
 				var id = getTrgtPortID(link);
-				//create port instantiation using name retreived from cache memory
 				netList += ("\n\t." + ports.input[id] + "(" + getNameOrAlias( link) + '),');
 			});
 			var links=node.linksOutOf();
-			//iterate through each wire connected to outputs
 			if( links.length ) links.forEach( function(link){ 
-				//determine ID number of wire's source port
 				var id = getSrcPortID(link);
-				//create port instantiation using name retreived from cache memory
-				var portInstantiation = "\n\t." + ports.output[id] + "(" + getNameOrAlias( link) + '),' 
-				//multiple wires may be sourced from 1 port, so to avoid redundant port instatiations only add it once to module instantiation
+				var portInstantiation = "\n\t." + ports.output[id] + "(" + getNameOrAlias( link) + '),' ;
 				if (!netList.includes(portInstantiation)) 
 					netList += portInstantiation;
 			});
@@ -1262,6 +1315,30 @@ schematic.prototype.updateGateOutput=function(node)
 	case "register_en":
 		if( !ckt.linkIsHigh(node.getLink("in_en")))
 			break;
+	case "srlatch_en":
+		if( !ckt.linkIsHigh(node.getLink("in_en")))
+			break;
+	case "srlatch":
+		if( ckt.linkIsHigh(node.getLink("in_S")))
+			ckt.setGateOutput( node,true);
+		else if( ckt.linkIsHigh(node.getLink("in_R")))
+			ckt.setGateOutput( node,false);
+		break;
+	case "dlatch_en":
+		if( !ckt.linkIsHigh(node.getLink("in_en")))
+			break;
+	case "dlatch":
+		if( ckt.linkIsHigh(node.getLink("in_G")))
+			ckt.setGateOutput( node,ckt.linkIsHigh( node.getLink("in_D")),);
+		break;
+	case "dff_en":
+		if( !ckt.linkIsHigh(node.getLink("in_en")))
+			break;
+	case "dff":
+		if( !node.clkLast && ckt.linkIsHigh(node.getLink("in_>")))
+			ckt.setGateOutput( node,ckt.linkIsHigh( node.getLink("in_D")));
+		node.clkLast = ckt.linkIsHigh( node.getLink("in_>")) ;
+		break;
 	default:
 	//------- never tested
 		sel+= ckt.linkIsHigh(node.getLink("in_a1")) ? 2 : 0;

@@ -3,17 +3,6 @@
  * (see license.txt for attributions)
  * 
  * 
- * 
- * ===================		TO-DO LIST		=======================================================================
-	1) 
-	2) Figure out how to properly orient the pop-ups when you hover over a shape. (Rotate tick marks and change left/right/up/down bias of names)
-	3) 
-	4) 
-	5) 
-	6) 
- * ========================================================================================================
- * 
- * 
  */
 function Sidebar(editorUi, container)
 {
@@ -912,7 +901,14 @@ Sidebar.prototype.createLatchComponentShapes = function()
 	var field = new mxCell('List Item', new mxGeometry(0, 0, 60, 26), 'text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;');
 	field.vertex = true;
 	return [
-		this.createVertexTemplateEntry('shape=register_en;editable=0;', 80, 80, '', 'Register with EN', null, null, 'Register with EN')
+		this.createVertexTemplateEntry('shape=register_en;editable=0;', 80, 80, '', 'Register with EN', null, null, 'Register with EN'),
+		this.createVertexTemplateEntry('shape=dlatch;editable=0;', 40, 60, '', 'D Latch', null, null, 'D-Latch'),
+	 	this.createVertexTemplateEntry('shape=dlatch_en;editable=0;', 40, 60, '', 'D Latch w/ enable', null, null, 'D-Latch'),
+	 	this.createVertexTemplateEntry('shape=dff;editable=0;', 40, 60, '', 'D Flip-Flop', null, null, 'D Flip-Flop'),
+	 	this.createVertexTemplateEntry('shape=dff_en;editable=0;', 40, 60, '', 'D Flip-Flop w/ enable', null, null, 'D Flip-Flop w/ enable'),
+	 	this.createVertexTemplateEntry('shape=srlatch;editable=0;', 40, 60, '', 'SR Latch', null, null, 'SR-Latch'),
+	 	this.createVertexTemplateEntry('shape=srlatch_en;editable=0;', 40, 60, '', 'SR Latch w/ enable', null, null, 'SR-Latch'),
+		
 	];
 };
 
