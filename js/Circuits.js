@@ -85,7 +85,16 @@ schematic.prototype.runDRC = function()
 	function getModulePorts ( moduleName ){
 		return searchStoredShapesFor( moduleName ).signals;
 	}
-
+	function getWarningsForModuleInputPort( port_flag, bit_width, node ){
+		var link = node.getLink( "in_"+port_flag,false );
+		var module = getModule( node );
+		var warning = "";
+		if( link==null)
+			warning += module+" input "+((port_flag)?"(":"")+port_flag+((port_flag)?")":"")+" must be connected";
+		else if ( bit_width && link.size!=bit_width )
+			warning += module+" input "+((port_flag)?"(":"")+port_flag+((port_flag)?")":"")+" has a "+link.size+"\'b wire connected. Only "+bit_width+"\'b wires may be connected";
+		return warning;
+	}
 	var Messages=new DRCMessages;
 
 	nodes=graph.getChildVertices(graph.getDefaultParent());
@@ -132,8 +141,6 @@ schematic.prototype.runDRC = function()
 		case "outputport4":  output_size++;
 		case "outputport2":  output_size++;
 		case "outputport1":  
-			if( node.numLinksInto() === 0 )
-				Messages.addError(module+" must be connected",node);
 			numOutputs++;
 			if( node.value == "" )
 				Messages.addWarning(module+" is unnamed: a default name will be provided",node);
@@ -149,10 +156,9 @@ schematic.prototype.runDRC = function()
 				Messages.addError("Port name "+node.value+ " is used on multiple outputs",node);
 			if( node.value != "" ) 
 				output_identifiers.add(node.value);
-			var link = node.getLink("in",false);
-			if ( link && link.size!=(1<<output_size) )
-				Messages.addError(module+" has "+link.size+"\'b input",node);
-			
+			var in_error =  getWarningsForModuleInputPort("",(1<<output_size),node);
+			if (in_error)
+				Messages.addError( in_error,node );
 			break;
 		//====================================================================================
 		//	BASIC GATE GROUP
@@ -161,8 +167,9 @@ schematic.prototype.runDRC = function()
 		case "inverter": 
 			if( node.numLinksOutOf() == 0 )
 				Messages.addWarning(module+" has an unconnected output",node);
-			if( node.numLinksInto() == 0 )
-				Messages.addError(module+" has an unconnected input",node);
+			var in_error =  getWarningsForModuleInputPort("",1,node);
+			if (in_error)
+				Messages.addError( in_error,node );
 			break;
 		case "and":
 		case "nand":
@@ -174,6 +181,13 @@ schematic.prototype.runDRC = function()
 				Messages.addWarning(module+" gate has an unconnected output",node);
 			if( node.numLinksInto() < 2 )
 				Messages.addError(module+" gate must have at least 2 inputs connected",node);
+			var links = node.linksInto();
+			for (var i=0; i<links.length; i++) {
+				if (links[i].size>1){
+					Messages.addError(module+" gate may only have single bit wires connected",node);
+					break;
+				}
+			}
 			break;
 		//====================================================================================
 		//	MUX GROUP
@@ -185,11 +199,9 @@ schematic.prototype.runDRC = function()
 			var data_inputs_connected = (1<<mux_size);
 			var input_sizes = new Array();
 			for (var i=0; i<mux_size; i++) {
-				var link = node.getLink('sel'+i,false);
-				if ( link==null )
-					data_inputs_connected--;
-				else if ( link.size>1 )
-					Messages.addError(module+" select (sel) input has a bus connected. Only single bit wires may be connected",node);
+				var sel_error = getWarningsForModuleInputPort("sel"+i,1,node);
+				if (sel_error)
+					Messages.addError(sel_error,node);
 			}
 			if( data_inputs_connected < (1<<mux_size))
 				Messages.addError("All "+module+" data (i) inputs must be connected",node);
@@ -238,79 +250,57 @@ schematic.prototype.runDRC = function()
 		//	REGISTER GROUP
 		//====================================================================================
 		case "register_en":
-			var link_en = node.getLink("in_en",false);
-			var link_clk = node.getLink("in_clk",false);
-			var link_d = node.getLink("in_D",false);
-			if( link_en==null)
-				Messages.addError(module+" enable (en) input must be connected",node);
-			else if ( link_en.size!=1 )
-				Messages.addError(module+" enable (en) input has a bus connected. Only single bit wires may be connected",node);
-			if( link_clk==null )
-				Messages.addError(module+" clock (clk) input must be connected",node);
-			else if ( link_clk.size!=1 )
-				Messages.addError(module+" clock (clk) input has a bus connected. Only single bit wires may be connected",node);
-			if( link_d==null )
-				Messages.addError(module+" data (D) input must be connected",node);
+			var en_error = getWarningsForModuleInputPort("en",1,node);
+			var clk_error = getWarningsForModuleInputPort("clk",1,node);
+			var D_error =  getWarningsForModuleInputPort("D",null,node);
+			if (en_error)
+				Messages.addError( en_error,node );
+			if (clk_error)
+				Messages.addError( clk_error,node );
+			if( D_error )
+				Messages.addError( D_error,node );
 			if( node.numLinksOutOf() == 0 )
 				Messages.addWarning(module+" has unconnected output",node);
 			break;
 		case "srlatch_en":
-			var link_en = node.getLink("in_en",false);
-			if( link_en==null )
-				Messages.addError(module+" enable (en) input must be connected",node);
-			else if ( link_en.size>1 )
-				Messages.addError(module+" enable (en) input has a bus connected. Only single bit wires may be connected",node);
+			var en_error = getWarningsForModuleInputPort("en",1,node);
+			if (en_error)
+				Messages.addError( en_error,node );
 		case "srlatch":
-			var link_S = node.getLink("in_S",false);
-			var link_R = node.getLink("in_R",false);
-			if( link_S==null )
-				Messages.addError(module+" S (S) input must be connected",node);
-			else if ( link_S.size>1 )
-				Messages.addError(module+" S (S) input has a bus connected. Only single bit wires may be connected",node);
-			if( link_R==null )
-				Messages.addError(module+" R (R) input must be connected",node);
-			else if ( link_R.size>1 )
-				Messages.addError(module+" R (R) input has a bus connected. Only single bit wires may be connected",node);
+			var S_error = getWarningsForModuleInputPort("S",1,node);
+			var R_error =  getWarningsForModuleInputPort("R",1,node);
+			if (S_error)
+				Messages.addError( S_error,node );
+			if (R_error)
+				Messages.addError( R_error,node );
 			if( node.numLinksOutOf() == 0 )
 				Messages.addWarning(module+" has an unconnected output",node);
 			break;
 		case "dlatch_en":
-			var link_en = node.getLink("in_en",false);
-			if( link_en==null )
-				Messages.addError(module+" enable (en) input must be connected",node);
-			else if ( link_en.size>1 )
-				Messages.addError(module+" enable (en) input has a bus connected. Only single bit wires may be connected",node);
+			var en_error = getWarningsForModuleInputPort("en",1,node);
+			if (en_error)
+				Messages.addError( en_error,node );
 		case "dlatch":
-			var link_D = node.getLink("in_D",false);
-			var link_G = node.getLink("in_G",false);
-			if( link_D==null )
-				Messages.addError(module+" D (D) input must be connected",node);
-			else if ( link_D.size>1 )
-				Messages.addError(module+" D (D) input has a bus connected. Only single bit wires may be connected",node);
-			if( link_G==null )
-				Messages.addError(module+" G (G) input must be connected",node);
-			else if ( link_G.size>1 )
-				Messages.addError(module+" G (G) input has a bus connected. Only single bit wires may be connected",node);
+			var D_error = getWarningsForModuleInputPort("D",1,node);
+			var G_error =  getWarningsForModuleInputPort("G",1,node);
+			if (D_error)
+				Messages.addError( D_error,node );
+			if (G_error)
+				Messages.addError( G_error,node );
 			if( node.numLinksOutOf() == 0 )
 				Messages.addWarning(module+" has an unconnected output",node);
 			break;
 		case "dff_en":
-			var link_en = node.getLink("in_en",false);
-			if( link_en==null )
-				Messages.addError(module+" enable (en) input must be connected",node);
-			else if ( link_en.size>1 )
-				Messages.addError(module+" enable (en) input has a bus connected. Only single bit wires may be connected",node);
+			var en_error = getWarningsForModuleInputPort("en",1,node);
+			if (en_error)
+				Messages.addError( en_error,node );
 		case "dff":
-			var link_D = node.getLink("in_D",false);
-			var link_clk = node.getLink("in_clk",false);
-			if( link_D==null )
-				Messages.addError(module+" D (D) input must be connected",node);
-			else if ( link_D.size>1 )
-				Messages.addError(module+" D (D) input has a bus connected. Only single bit wires may be connected",node);
-			if( link_clk==null )
-				Messages.addError(module+" clock (clk) input must be connected",node);
-			else if ( link_clk.size>1 )
-				Messages.addError(module+" clock (clk) input has a bus connected. Only single bit wires may be connected",node);
+			var D_error = getWarningsForModuleInputPort("D",1,node);
+			var clk_error =  getWarningsForModuleInputPort("clk",1,node);
+			if (D_error)
+				Messages.addError( D_error,node );
+			if (clk_error)
+				Messages.addError( clk_error,node );
 			if( node.numLinksOutOf() == 0 )
 				Messages.addWarning(module+" has an unconnected output",node);
 			break;
@@ -326,15 +316,13 @@ schematic.prototype.runDRC = function()
 		case "fanOut8":  fanout_size++;
 		case "fanOut4":	 fanout_size++;
 		case "fanOut2":  fanout_size++;
-			if ( node.numLinksInto() == 0)
-				Messages.addError(module+" input is unconnected",node);
 			if( node.numLinksOutOf() == 0 )
 				Messages.addError(module+" has no connected outputs",node);
 			else if( node.numLinksOutOf() != (1<<fanout_size) )
 				Messages.addWarning(module+" has " + ((1<<fanout_size)-node.numLinksOutOf()) + " unconnected outputs",node);
-			var linkin = node.getLink("in",false);
-			if ( linkin && linkin.size!=(1<<fanout_size) ) 
-				Messages.addError(module+" has "+linkin.size+"\'b bus connected on input. Only "+(1<<fanout_size)+"'b busses may be connected",node);
+			var in_error =  getWarningsForModuleInputPort("",(1<<fanout_size),node);
+			if (in_error)
+				Messages.addError( in_error,node );
 			break;
 
 		// -Warning if not all inputs are connected
@@ -367,18 +355,17 @@ schematic.prototype.runDRC = function()
 		default:
 			var ports_sizes = getModulePortSizes(module);
 			var ports = getModulePorts(module);
-			var num_links_in = node.numLinksInto();
-			if (num_links_in< ports.input.length)
+			if ( node.numLinksInto()<ports.input.length )
 				Messages.addWarning(module + " has unconnected inputs",node);
 			for (var i=0; i<ports_sizes.input.length; i++) {
 				var link = node.getLink('in'+i+'_w',false);
 				if ( link && link.size!=ports_sizes.input[i] )
-					Messages.addError(module + " has mismatched bit width connected on "+ports.input[i],node);
+					Messages.addError(module + " input ("+ports.input[i]+") has mismatched bit width",node);
 			}
 			for (var i=0; i<ports_sizes.output.length; i++) {
 				var link = node.getLink('out'+i+'_e',true);
 				if ( !link )
-					Messages.addWarning(module + " has unconnected output on port "+ports.output[i],node);
+					Messages.addWarning(module + " has unconnected output ("+ports.output[i]+')',node);
 			}
 			nameError=this.checkIdentifier(module);
 			if( nameError != "")
@@ -956,7 +943,7 @@ schematic.prototype.createVerilog=function()
 			//iterate through each select input
 			for( var i=mux_size-1; i>=0; i=i-1 )
 			{
-				var lnk=node.getLink( 'sel'+i,false);
+				var lnk=node.getLink( 'in_sel'+i,false);
 				if( lnk ) 
 					netList+=getNameOrAlias( lnk);
 				else 

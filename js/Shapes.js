@@ -84,7 +84,7 @@
 	BufferShape.prototype.getPorts = function()
 	{
 		var ports=new Array();
-		ports['in1_w'] = {x: 0, y: 0.5, perimeter: true, label:'in'};
+		ports['in_w'] = {x: 0, y: 0.5, perimeter: true, label:'in'};
 		ports['out_e'] = {x: 0.67, y: 0.5, perimeter: false, label:'out'};
 		return ports;
 	};
@@ -116,7 +116,7 @@
 	InverterShape.prototype.getPorts = function()
 	{
 		var ports=new Array();
-		ports['in1_w'] = {x: 0, y: 0.5, perimeter: true, label: 'in'};
+		ports['in_w'] = {x: 0, y: 0.5, perimeter: true, label: 'in'};
 		ports['out_e'] = {x: 1, y: 0.5, perimeter: true, label: 'out'};
 		return ports;
 	};
@@ -353,7 +353,7 @@
 			{
 				var x= 1- (1+i)/ ((s<2) ? (1+s) : (2+s));
 				var y=1-(.25*x);
-				ports['sel'+i+'_s'] = {x: [x], y:[y] , perimeter: false, label: 'sel'+i};
+				ports['in_sel'+i+'_s'] = {x: [x], y:[y] , perimeter: false, label: 'sel'+i};
 			}
 		}
 		ports['out_e'] = {x: 1, y: 0.5, perimeter: true, label: 'out'};

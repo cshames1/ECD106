@@ -1273,8 +1273,6 @@ var VerilogWindow = function(editorUi, x, y, w, h)
 		
 	});
 
-
-
 	exportBtn.className = 'geBtn';
 	div.appendChild(drcBtn);
 	div.appendChild(exportBtn);
