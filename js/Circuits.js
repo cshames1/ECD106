@@ -953,7 +953,7 @@ schematic.prototype.createVerilog=function()
 			}
 			//delete last comma
 			netList=netList.replace(/, *$/gi, '');
-			netList += '}),\n\t.q(';
+			netList += '}),\n\t.data_out(';
 			var links=node.linksOutOf();
 			if( links.length )
 				netList += getNameOrAlias( links[0]);
@@ -1057,7 +1057,7 @@ schematic.prototype.createVerilog=function()
 			}
 			//delete last comma
 			netList=netList.replace(/, *$/gi, '');
-			netList=netList+"} ),\n\t.en_in( ";
+			netList=netList+"} ),\n\t.in_en(";
 			var linken=node.getLink( 'in_en',false);
 			if( linken ) 
 				netList+=getNameOrAlias( linken );

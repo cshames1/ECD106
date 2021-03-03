@@ -86,6 +86,7 @@ Sidebar.prototype.init = function()
 	this.addBasicGatesPalette(false);
 	this.addMuxComponentPalette(false);
 	this.addDecoderComponentPalette(false);
+	this.addRegisterComponentPalette(false);
 	this.addLatchComponentPalette(false);
 	this.addBusComponentPalette(false);
 	this.addIOPalette(false);
@@ -890,18 +891,32 @@ Sidebar.prototype.createDecoderComponentShapes = function()
 };
 
 
-Sidebar.prototype.addLatchComponentPalette = function(expand)
+Sidebar.prototype.addRegisterComponentPalette = function(expand)
 {
-	this.addPaletteFunctions('registers', mxResources.get('registers'), false, this.createLatchComponentShapes());
+	this.addPaletteFunctions('registers', mxResources.get('registers'), false, this.createRegisterComponentPalette());
 };
 
-Sidebar.prototype.createLatchComponentShapes = function()
+Sidebar.prototype.createRegisterComponentPalette = function()
 {
 	var sb = this;
 	var field = new mxCell('List Item', new mxGeometry(0, 0, 60, 26), 'text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;');
 	field.vertex = true;
 	return [
-		this.createVertexTemplateEntry('shape=register_en;editable=0;', 80, 80, '', 'Register with EN', null, null, 'Register with EN'),
+		this.createVertexTemplateEntry('shape=register_en;editable=0;', 80, 80, '', 'Register with EN', null, null, 'Register with EN')
+	];
+};
+
+Sidebar.prototype.addLatchComponentPalette = function(expand)
+{
+	this.addPaletteFunctions('latches', mxResources.get('latches'), false, this.createLatchComponentPalette());
+};
+
+Sidebar.prototype.createLatchComponentPalette = function()
+{
+	var sb = this;
+	var field = new mxCell('List Item', new mxGeometry(0, 0, 60, 26), 'text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;');
+	field.vertex = true;
+	return [
 		this.createVertexTemplateEntry('shape=dlatch;editable=0;', 40, 60, '', 'D Latch', null, null, 'D-Latch'),
 	 	this.createVertexTemplateEntry('shape=dlatch_en;editable=0;', 40, 60, '', 'D Latch w/ enable', null, null, 'D-Latch'),
 	 	this.createVertexTemplateEntry('shape=dff;editable=0;', 40, 60, '', 'D Flip-Flop', null, null, 'D Flip-Flop'),
@@ -911,7 +926,6 @@ Sidebar.prototype.createLatchComponentShapes = function()
 		
 	];
 };
-
 
 Sidebar.prototype.addBusComponentPalette = function(expand)
 {
