@@ -67,7 +67,6 @@ Actions.prototype.init = function()
 	{
 		window.openNew = false;
 		window.openKey = 'editComponents';
-		
 
 		window.openFile = new OpenFile(mxUtils.bind(this, function()
 		{

@@ -99,9 +99,6 @@ Toolbar.prototype.init = function()
 		//add import and export buttons
 		this.addItems(['-', 'directImport','importVerilogComponent', 'exportVerilog']);
 	}
-
-
-
 };
 
 Toolbar.prototype.hideMenu = function()

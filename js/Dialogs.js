@@ -1392,12 +1392,20 @@ var VerilogWindow = function(editorUi, x, y, w, h)
 			exportveriloganchor.click();
 		}); 
 	
-		// TODO: ADD .V FILE DOWNLOADS FOR MUX, DECODER, REGISTER, AND LATCH
-		fetch('/verilog/test.v')
-		.then(response => response.text())
-		.then(data => {
-			console.log(data);
-		});
+		var native_components = editorUi.circuit.getNativeComponentsForExport(); 
+		if (native_components) native_components.forEach(function(module){
+			var text = "";
+			fetch('/verilog/test.v')//will have to add correct file name
+			.then(response => response.text())
+			.then(data => {
+				text = data;
+			});
+			var moduleVerilog = text;
+			blob = new Blob([moduleVerilog], { type: "text/plain"});
+			exportveriloganchor.download = module+".v";//this is the file name, will have to change
+			exportveriloganchor.href = window.URL.createObjectURL(blob);
+			exportveriloganchor.click();
+		}); 
 		
 	});
 

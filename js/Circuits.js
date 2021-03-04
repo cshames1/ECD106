@@ -425,18 +425,22 @@ schematic.prototype.getImportedComponentsForExport=function(){
  *		Returns set of all native components used in the schematic that
  *      need .v files to be exported
  */
-schematic.prototype.getNativeComponentsForExport=function(){/*
+schematic.prototype.getNativeComponentsForExport=function(){
+	var check_components = [	"mux2","mux4", "mux8","mux16",
+								"decoder2","decoder3","decoder4",
+								"register_en",
+								"dff", "dff_en", "srlatch", "srlatch_en", "dlatch", "dlatch_en"];
 	var graph=this.graph;
 	nodes=graph.getChildVertices(graph.getDefaultParent());
 	var components = new Set();
 	if( nodes ) nodes.forEach(function(item){
 		var style=graph.getCellStyle(item); 
 		var module = style["shape"];
-		if ( !schematic.prototype.isNativeComponent(module) ) 
+		if ( check_components.includes(module) ) 
 			components.add( module );
 	});
 	return components;
-*/}
+}
 /* prototype method: function deleteClearedComponents
  *		After the user clears imported components, this function will delete
  *		any such components left on the graph
