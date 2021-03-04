@@ -3468,29 +3468,25 @@ EditorUi.prototype.directImport = function() {
 	}), null, mxUtils.bind(this, function(name)
 	{
 		var storedShapes = JSON.parse(localStorage.getItem('storedShapes'));
-		var is_valid = true;
-		var is_available = true;
-		var passed_drc = true;
 		//check if name is valid in verilog
 		if ( this.circuit.checkIdentifier(name)!="" ) {
-			is_valid = false;
 			mxUtils.confirm(mxResources.get('invalidName'));
+			return false;
 		}
 		//check if name is used
 		for (var i=0; i<storedShapes.length; i++) {
 			if ( storedShapes[i].componentName==name ){
-				is_available = false;
 				mxUtils.confirm(mxResources.get('nameUsed'));
-				break;
+				return false;
 			}
 		}
 		//check if circuit passes DRC
-		drc_output = this.circuit.runDRC();
+		var drc_output = this.circuit.runDRC();
 		if ( drc_output.hasErrors() ) {
-			passed_drc = false;
 			mxUtils.confirm(mxResources.get('drcfailed'));
+			return false;
 		}
-		return is_valid && is_available && passed_drc;
+		return true;
 	}));
 	this.showDialog(dlg.container, 300, 100, true, true);
 	dlg.init();
