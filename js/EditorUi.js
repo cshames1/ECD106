@@ -3459,6 +3459,7 @@ EditorUi.prototype.renameFile = function()
 	this.showDialog(dlg.container, 300, 100, true, true);
 	dlg.init();
 };
+
 EditorUi.prototype.directImport = function() {
 	var dlg = new FilenameDialog(this, null, mxResources.get('directImport'), mxUtils.bind(this, function(name)
 	{

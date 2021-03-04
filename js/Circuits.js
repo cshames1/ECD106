@@ -1342,8 +1342,7 @@ schematic.prototype.updateGateOutput=function(node)
 	}
 };
 
-schematic.prototype.addComponent = function (verilog,compName)
-			{
+schematic.prototype.addComponent = function (verilog,compName){
 				remove_whitespace = function(text) {
 					var res = text.replace(/\s+/, '');
 					return res;
@@ -1388,13 +1387,15 @@ schematic.prototype.addComponent = function (verilog,compName)
 				var storedShapes = JSON.parse(localStorage.getItem('storedShapes'));
 				if(storedShapes == null)
 					storedShapes = []
-					storedShapes.push({
-						"componentName":compName.replace(".v", ""),
-						"signals":signals,
-						"signal_size":signal_size,
-						"verilogCode":verilog
-					});
+					if ( signals['input'].length!=0 && signals['input'].length!=0) {
+						storedShapes.push({
+							"componentName":compName.replace(".v", ""),
+							"signals":signals,
+							"signal_size":signal_size,
+							"verilogCode":verilog
+						});
+					}
 				localStorage.setItem('storedShapes', JSON.stringify(storedShapes));
 				//reload the page
 				location.reload();
-			}
+}
