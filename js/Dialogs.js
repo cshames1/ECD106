@@ -121,7 +121,7 @@ var FilenameDialog = function(editorUi, filename, buttonText, fn, label, validat
 	td.style.whiteSpace = 'nowrap';
 	td.style.fontSize = '10pt';
 	td.style.width = '120px';
-	mxUtils.write(td, (label || mxResources.get('filename')) + ':');
+	mxUtils.write(td, (label || mxResources.get('componentName')) + ':');
 
 	row.appendChild(td);
 
@@ -377,6 +377,134 @@ var newFileDialog = function(editorUi, filename, buttonText, fn, label, validate
 	html.appendChild(div);
 	html.appendChild(table);
 
+	this.container = html;
+};
+
+var directImportDialog = function(editorUi, filename, buttonText, fn, label, validateFn, content, helpLink, closeOnBtn, cancelFn)
+{
+	closeOnBtn = (closeOnBtn != null) ? closeOnBtn : true;
+	var row, td;
+
+	var html = document.createElement('table');
+	var table = document.createElement('table');
+	var tbody = document.createElement('tbody');
+	table.style.marginTop = '8px';
+
+	row = document.createElement('tr');
+	td = document.createElement('td');
+	td.style.whiteSpace = 'nowrap';
+	td.style.fontSize = '10pt';
+	td.style.width = '120px';
+	mxUtils.write(td, (label || mxResources.get('componentName')) + ':');
+	row.appendChild(td);
+
+	var nameInput = document.createElement('input');
+	nameInput.setAttribute('value', '!!');
+	nameInput.style.marginLeft = '4px';
+	nameInput.style.width = '180px';
+
+	var genericBtn = mxUtils.button(buttonText, null);
+	genericBtn.className = 'geBtn gePrimaryBtn';
+
+	this.init = function()
+	{
+		if (label == null && content != null)
+		{
+			return;
+		}
+
+		nameInput.focus();
+
+		if (mxClient.IS_GC || mxClient.IS_FF || document.documentMode >= 5 || mxClient.IS_QUIRKS)
+		{
+			nameInput.select();
+		}
+		else
+		{
+			document.execCommand('selectAll', false, null);
+		}
+
+
+	};
+
+	td = document.createElement('td');
+	td.appendChild(nameInput);
+	row.appendChild(td);
+
+	if (label != null || content == null)
+	{
+		tbody.appendChild(row);
+	}
+
+	if (content != null)
+	{
+		row = document.createElement('tr');
+		td = document.createElement('td');
+		td.colSpan = 2;
+		td.appendChild(content);
+		row.appendChild(td);
+		tbody.appendChild(row);
+	}
+
+	row = document.createElement('tr');
+	td = document.createElement('td');
+	td.colSpan = 2;
+	td.style.paddingTop = '20px';
+	td.style.whiteSpace = 'nowrap';
+	td.setAttribute('align', 'right');
+
+	var cancelBtn = mxUtils.button(mxResources.get('cancel'), function()
+	{
+		editorUi.hideDialog();
+
+		if (cancelFn != null)
+		{
+			cancelFn();
+		}
+	});
+	cancelBtn.className = 'geBtn';
+
+	if (editorUi.editor.cancelFirst)
+	{
+		td.appendChild(cancelBtn);
+	}
+
+	if (helpLink != null)
+	{
+		var helpBtn = mxUtils.button(mxResources.get('help'), function()
+		{
+			editorUi.editor.graph.openLink(helpLink);
+		});
+
+		helpBtn.className = 'geBtn';
+		td.appendChild(helpBtn);
+	}
+
+	mxEvent.addListener(nameInput, 'keypress', function(e)
+	{
+		if (e.keyCode == 13)
+		{
+			genericBtn.click();
+		}
+	});
+
+	td.appendChild(genericBtn);
+
+	if (!editorUi.editor.cancelFirst)
+	{
+		td.appendChild(cancelBtn);
+	}
+
+	row.appendChild(td);
+	tbody.appendChild(row);
+	table.appendChild(tbody);
+
+
+	var div = document.createElement('div');
+	div.style.fontSize = '8pt';
+	html.appendChild(div);
+	html.appendChild(table);
+	console.log(div);
 	this.container = html;
 };
 

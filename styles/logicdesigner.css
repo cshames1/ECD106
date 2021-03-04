@@ -655,6 +655,7 @@ div.mxWindow .geButton {
 .geSprite-verticalisometric { background-position: 0 -5995px; }
 .geSprite-exportverilog { background-position: 0 -6041px; }
 .geSprite-importverilogcomponent { background-position: 0 -4152px; }
+.geSprite-directimport { background-position: 0 -4152px; }
 
 html div.mxRubberband {
 	border-color:#0000DD;

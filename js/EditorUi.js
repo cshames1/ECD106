@@ -3459,6 +3459,42 @@ EditorUi.prototype.renameFile = function()
 	this.showDialog(dlg.container, 300, 100, true, true);
 	dlg.init();
 };
+EditorUi.prototype.directImport = function() {
+	var dlg = new FilenameDialog(this, null, mxResources.get('directImport'), mxUtils.bind(this, function(name)
+	{
+		//name is the new name the user
+		window.parent.openFile.setData(name);
+	}), null, mxUtils.bind(this, function(name)
+	{
+		var storedShapes = JSON.parse(localStorage.getItem('storedShapes'));
+		var is_valid = true;
+		var is_available = true;
+		var passed_drc = true;
+		//check if name is valid in verilog
+		if ( this.circuit.checkIdentifier(name)!="" ) {
+			is_valid = false;
+			mxUtils.confirm(mxResources.get('invalidName'));
+		}
+		//check if name is used
+		for (var i=0; i<storedShapes.length; i++) {
+			if ( storedShapes[i].componentName==name ){
+				is_available = false;
+				mxUtils.confirm(mxResources.get('nameUsed'));
+				break;
+			}
+		}
+		//check if circuit passes DRC
+		drc_output = this.circuit.runDRC();
+		if ( drc_output.hasErrors() ) {
+			passed_drc = false;
+			mxUtils.confirm(mxResources.get('drcfailed'));
+		}
+		return is_valid && is_available && passed_drc;
+	}));
+	this.showDialog(dlg.container, 300, 100, true, true);
+	dlg.init();
+};
+
 EditorUi.prototype.clearComponents = function()
 {
 	localStorage.removeItem('storedShapes');

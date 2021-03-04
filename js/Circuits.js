@@ -17,22 +17,22 @@ schematic.prototype.isVerilogReserved = function(str)
 
 schematic.prototype.checkPortName= function(newstr)
 {
+	var check_id_error = this.checkIdentifier(newstr);
+	if ( check_id_error )
+		return check_id_error;
 	if( /^[UX].*$/.test(newstr) )
 		return "Error ("+newstr+"): Port names cannot start with uppercase U or X";
-	if( newstr.length > this.maxPortnameLength )
-		return "Error ("+newstr+"): Port names must be less than" + this.maxPortnameLength + "characters";
-	if( ! /^[A-TV-WY-Za-z][A-Za-z0-9_]*$/.test(newstr))
-		return "Error ("+newstr+"): Port names must start with a letter (other than U or X) and contain only letters, numbers, or _";
-	if( this.isVerilogReserved(newstr) )
-		return  "Error ("+newstr+"):" + newstr + " is a Verilog reserved word and cannot be used as a port name";
 	return "";
 };
 
-schematic.prototype.checkIdentifier= function(newstr)
+schematic.prototype.checkIdentifier = function(newstr)
 {
+	function isAlpha(c){
+		return /^[A-Z]$/i.test(c);
+	}
 	if( newstr.length > this.maxPortnameLength )
 		return "Error ("+newstr+"): Identifiers must be less than" + this.maxPortnameLength + "characters";
-	if( ! /^[A-TV-WY-Za-z][A-Za-z0-9_]*$/.test(newstr))
+	if( !isAlpha(newstr[0]) && newstr[0]!='_' || newstr.includes(" ") ) 
 		return "Error ("+newstr+"): Identifiers must start with a letter or _ and may not contain whitespace";
 	if( this.isVerilogReserved(newstr) )
 		return  "Error:" + newstr + " is a Verilog reserved word and cannot be used as an identifier";
@@ -1337,3 +1337,60 @@ schematic.prototype.updateGateOutput=function(node)
 	//-------
 	}
 };
+
+schematic.prototype.addComponent = function (verilog,compName)
+			{
+				remove_whitespace = function(text) {
+					var res = text.replace(/\s+/, '');
+					return res;
+				};
+
+				remove_parenthesis = function(text) {
+					var res = text.replace(/[(\r\n]+/, '');
+					return res;
+				};
+
+				remove_commas = function(text) {
+					var res = text.replace(/,/, '');
+					return res;
+				};
+
+				//split verilog into array of lines separated by newline characters
+				var lines = verilog.split(/\n/g);
+				//retrieve name of module from from first line
+				var SymbolName = remove_parenthesis(lines[0].split(" ")[1]); 
+
+				//for each line after the first line, find the direction and name of each input/output
+				var signals = {input:[], output:[]};
+				var signal_size = {input:[], output:[]};
+				for(var i = 1; lines[i].indexOf(';') < 0; i++){
+
+					let words = lines[i].split(" ");
+					let port_size;
+					if (lines[i].includes('[')) {
+						port_size = lines[i].split('[')[1];
+						port_size = port_size.split(':')[0];
+						port_size++;
+					}
+					else	
+						port_size=1;
+						
+					let direction = remove_whitespace(words[0]);
+					let port_name = remove_whitespace(remove_commas(words[words.length - 1]));
+					signals[direction].push(port_name);
+					signal_size[direction].push(port_size);
+				}
+				//save the decoded shape to localstorage
+				var storedShapes = JSON.parse(localStorage.getItem('storedShapes'));
+				if(storedShapes == null)
+					storedShapes = []
+					storedShapes.push({
+						"componentName":compName.replace(".v", ""),
+						"signals":signals,
+						"signal_size":signal_size,
+						"verilogCode":verilog
+					});
+				localStorage.setItem('storedShapes', JSON.stringify(storedShapes));
+				//reload the page
+				location.reload();
+			}

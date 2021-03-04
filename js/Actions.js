@@ -87,7 +87,25 @@ Actions.prototype.init = function()
 			window.openFile = null;
 		});
 	}));
-	
+
+	action=this.addAction('directImport', mxUtils.bind(this, function()
+	{	
+		window.openNew = false;
+		window.openKey = 'directImport';
+
+		window.openFile = new OpenFile(mxUtils.bind(this, function()
+		{
+			ui.hideDialog();
+		}));
+		
+		window.openFile.setConsumer(mxUtils.bind(this, function(name)
+		{	
+			ui.circuit.addComponent(ui.circuit.createVerilog(), name);
+		}));
+
+		ui.directImport();
+	}), null, null, null );
+
 	action=this.addAction('exportVerilog', mxUtils.bind(this, function()
 	{
 		if (this.verilogWindow == null)
@@ -132,7 +150,7 @@ Actions.prototype.init = function()
 				for (var i = 0; i < allVerilog.length; i++)
 				{
 					(function(shape){
-						parseVerilog(shape.verilog,shape.name)
+						ui.circuit.addComponent(shape.verilog,shape.name)
 					})(allVerilog[i]);
 				}
 			}
@@ -140,77 +158,12 @@ Actions.prototype.init = function()
 			{
 				mxUtils.alert(mxResources.get('invalidOrMissingFile') + ': ' + e.message);
 			}
-
-			function parseVerilog(file,compName)
-			{
-				remove_whitespace = function(text) {
-					var res = text.replace(/\s+/, '');
-					return res;
-				};
-
-				remove_parenthesis = function(text) {
-					var res = text.replace(/[(\r\n]+/, '');
-					return res;
-				};
-
-				remove_commas = function(text) {
-					var res = text.replace(/,/, '');
-					return res;
-				};
-
-				//split file into array of lines separated by newline characters
-				var lines = file.split(/\n/g);
-				//retrieve name of module from from first line
-				var SymbolName = remove_parenthesis(lines[0].split(" ")[1]); 
-
-				//for each line after the first line, find the direction and name of each input/output
-				var signals = {input:[], output:[]};
-				var signal_size = {input:[], output:[]};
-				for(var i = 1; lines[i].indexOf(';') < 0; i++){
-
-					let words = lines[i].split(" ");
-					let port_size;
-					if (lines[i].includes('[')) {
-						port_size = lines[i].split('[')[1];
-						port_size = port_size.split(':')[0];
-						port_size++;
-					}
-					else	
-						port_size=1;
-						
-					let direction = remove_whitespace(words[0]);
-					let port_name = remove_whitespace(remove_commas(words[words.length - 1]));
-					signals[direction].push(port_name);
-					signal_size[direction].push(port_size);
-				}
-				//save the decoded shape to localstorage
-				var storedShapes = JSON.parse(localStorage.getItem('storedShapes'));
-				if(storedShapes == null)
-					storedShapes = []
-					storedShapes.push({
-						"componentName":compName.replace(".v", ""),
-						"signals":signals,
-						"signal_size":signal_size,
-						"verilogCode":file
-					});
-				localStorage.setItem('storedShapes', JSON.stringify(storedShapes));
-				//reload the page
-				location.reload();
-
-			}
 		}));
-
-
 		ui.showDialog(new ImportDialog(this).container, 320, 220, true, true, function()
 		{
 			window.openFile = null;
 		});
-
-		//------
-
-
 	}), null, null, null );
-
 
 	this.addAction('designRulesCheck', mxUtils.bind(this, function()
 	{
