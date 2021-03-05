@@ -43,7 +43,7 @@ schematic.prototype.isNativeComponent = function( component ){
 	var native_components=["and", "nand", "or","nor","xor","xnor","buf", "not",
 					"mux2","mux4", "mux8","mux16",
 					"decoder2","decoder3","decoder4",
-					"register_en", 
+					//"register_en", 
 					"dff", "dff_en", "srlatch", "srlatch_en", "dlatch", "dlatch_en", 
 					"fanIn2",  "fanIn4",  "fanIn8",  "fanIn16",  "fanIn32",
 					"fanOut2",  "fanOut4", "fanOut8", "fanOut16", "fanOut32",
@@ -248,9 +248,9 @@ schematic.prototype.runDRC = function()
 			}
 			break;
 		//====================================================================================
-		//	REGISTER GROUP
+		//	LATCH GROUP
 		//====================================================================================
-		case "register_en":
+		/*case "register_en":
 			var en_error = getWarningsForModuleInputPort("en",1,node);
 			var clk_error = getWarningsForModuleInputPort("clk",1,node);
 			var D_error =  getWarningsForModuleInputPort("D",null,node);
@@ -262,7 +262,7 @@ schematic.prototype.runDRC = function()
 				Messages.addError( D_error,node );
 			if( node.numLinksOutOf() == 0 )
 				Messages.addWarning(module+" has unconnected output",node);
-			break;
+			break;*/
 		case "srlatch_en":
 			var en_error = getWarningsForModuleInputPort("en",1,node);
 			if (en_error)
@@ -429,7 +429,7 @@ schematic.prototype.getImportedComponentsForExport=function(){
 schematic.prototype.getNativeComponentsForExport=function(){
 	var check_components = [	"mux2","mux4", "mux8","mux16",
 								"decoder2","decoder3","decoder4",
-								"register_en",
+								//"register_en",
 								"dff", "dff_en", "srlatch", "srlatch_en", "dlatch", "dlatch_en"];
 	var graph=this.graph;
 	nodes=graph.getChildVertices(graph.getDefaultParent());
@@ -494,7 +494,7 @@ schematic.prototype.createVerilog=function()
 	var gateNames={and:"and", nand:"nand",or:"or",nor:"nor",xor:"xor",xnor:"xnor",buffer:"buf", inverter:"not",
 					mux2:"mux #(2,", mux4:"mux #(4,", mux8:"mux #(8,", mux16:"mux #(16,",
 					decoder2:"decoder #(2)",decoder3:"decoder #(3)",decoder4:"decoder #(4)",
-					register_en:"register_en", 
+					//register_en:"register_en", 
 					dlatch:"d_latch",dlatch_en:"d_latch_en",dff:"dff",dff_en:"dff_en",srlatch:"sr_latch",srlatch_en:"sr_latch_en",
 					fanIn2: "fanIn2", fanIn4: "fanIn4", fanIn8: "fanIn8", fanIn16: "fanIn16", fanIn32: "fanIn32",
 					fanOut2: "fanOut2", fanOut4: "fanOut4", fanOut8: "fanOut8", fanOut16: "fanOut16", fanOut32: "fanOut32" 
@@ -780,7 +780,7 @@ schematic.prototype.createVerilog=function()
 				wireSet[(1<<0)].add(gateName(node,"X") );
 			setLinkSetSize(linksout, 1);
 			break;
-		case "register_en":
+		/*case "register_en":
 			var output_size=1;
 			var input = node.getLinks('in_D',false);
 			if(input[0] && input[0].size) 
@@ -791,7 +791,7 @@ schematic.prototype.createVerilog=function()
 			else if( linksout.length ) 
 				wireSet[output_size].add(netName(linksout[0],"X"));
 			setLinkSetSize(linksout, output_size);
-			break;
+			break;*/
 		case "mux16": mux_size++;
 		case "mux8":  mux_size++;
 		case "mux4":  mux_size++;
@@ -967,7 +967,7 @@ schematic.prototype.createVerilog=function()
 				netList += gateName(node,"X");
 			netList += ')\n);';
 			break; 
-		case "register_en":
+		/*case "register_en":
 			var linkin=node.getLink( 'in_D_',false);
 			var output_size = (linkin)? linkin.size : 1;
 			netList += '\n\n' + gateNames[module] + ' #(' + output_size + ')' +  ' ' + gateName(node,'U') + ' ('; 
@@ -983,7 +983,7 @@ schematic.prototype.createVerilog=function()
 			if( linkq.length )
 				netList += ',\n\t.out_q('+getNameOrAlias( linkq[0]) + ")";
 			netList=netList+"\n);";
-			break;
+			break;*/
 		case "dlatch":
 		case "dlatch_en":
 			netList += '\n\n' + gateNames[module] +  ' ' + gateName(node,'U') + ' ('; 
@@ -1306,9 +1306,9 @@ schematic.prototype.updateGateOutput=function(node)
 		sel+= ckt.linkIsHigh(node.getLink("in_a0")) ? 1 : 0;
 		ckt.setGateOutput( node,false);
 		ckt.setGateOutput( node,ckt.linkIsHigh( node.getLink("in_en")),"out"+(sel+1));
-	case "register_en":
+	/*case "register_en":
 		if( !ckt.linkIsHigh(node.getLink("in_en")))
-			break;
+			break;*/
 	case "srlatch_en":
 		if( !ckt.linkIsHigh(node.getLink("in_en")))
 			break;
