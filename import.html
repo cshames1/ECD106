@@ -127,17 +127,6 @@
 	}
 	return false;
     }
-	function isAlpha(c){
-		return /^[A-Z]$/i.test(c);
-	}
-	function nameIsValid(id,name){
-		var return_val = true;
-		if ( (!isAlpha(name[0])) && (name[0]!='_') ) 
-			return_val = false;
-		if ( name.includes(' ') ) 
-			return_val = false;
-		return return_val;
-	}
 
   	function changeFileName(id,newName){
 		changedNames[id] = newName;
