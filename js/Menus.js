@@ -150,7 +150,7 @@ Menus.prototype.init = function()
 	this.put('file', new Menu(mxUtils.bind(this, function(menu, parent)
 	{
 
-		this.addMenuItems(menu, ['new',  'importSchematic', 'saveSchematic', 'rename', 'editComponents', '-', 'pageSetup', 'print'], parent);
+		this.addMenuItems(menu, ['new',  'importSchematic', 'saveSchematic', 'rename', '-', 'pageSetup', 'print'], parent);
 	})));
 	this.put('edit', new Menu(mxUtils.bind(this, function(menu, parent)
 	{
@@ -160,7 +160,7 @@ Menus.prototype.init = function()
 	})));
 	this.put('design', new Menu(mxUtils.bind(this, function(menu, parent)
 	{
-		this.addMenuItems(menu, ['designRulesCheck', 'exportVerilog', 'importVerilogComponent', 'editDiagram', '-', 'simulate']);
+		this.addMenuItems(menu, ['designRulesCheck', 'exportVerilog', 'importVerilogComponent', 'editDiagram','editComponents', '-', 'simulate']);
 	})));
 
 
