@@ -6,11 +6,11 @@
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 </head>
 <script type="text/javascript">
-deletedIDS=[]
-changedNames=[]
+	deletedIDS=[];
+	changedNames=[];
+	var ui = this.editorUi;
 	// Reads files locally using js
-
-  var storedShapes = JSON.parse(localStorage.getItem('storedShapes'));
+  	var storedShapes = JSON.parse(localStorage.getItem('storedShapes'));
 
 	function handleFiles(files)
 	{
@@ -52,12 +52,24 @@ changedNames=[]
 		}
 	};
 
-  function functionCheckIfLastUpload(size){
-    var storedTMPShape = JSON.parse(localStorage.getItem('storedTMPShape'));
-    if (storedTMPShape.length == size){
-      window.parent.openFile.setData(storedTMPShape);
-    }
-  }
+  	function functionCheckIfLastUpload(size){
+		var storedTMPShape = JSON.parse(localStorage.getItem('storedTMPShape'));
+		if (storedTMPShape.length == size){
+		window.parent.openFile.setData(storedTMPShape);
+		}
+  	}
+	function checkVerilogIdentifier(newstr){
+		function isAlpha(c){
+			return /^[A-Z]$/i.test(c);
+		}
+		if( newstr.length > this.maxPortnameLength )
+			return false;
+		if( !isAlpha(newstr[0]) && newstr[0]!='_' || newstr.includes(" ") ) 
+			return false;
+		//if( this.isVerilogReserved(newstr) )
+		//	return false;
+		return true;
+	};
 
 	// Handles form-submit by preparing to process response
 	function handleSubmit()
@@ -128,42 +140,45 @@ changedNames=[]
 	}
 
   	function changeFileName(id,newName){
-		changedNames[id] = newName
-
-		isExistingFile = false
-
+		changedNames[id] = newName;
+		var disable_open = false;
+		var isExistingFile = false;
 		//check for duplicates
 		var form = window.openForm || document.getElementById('openForm');
 		var files = form.upfile.files
 		for (var i = 0; i < files.length; i++){
 				(function(file)
 				{
-			var name = file.name
+			var name = file.name;
 			if (changedNames[i]){name = changedNames[i]}
 
 			for (existingfile in storedShapes){
-			if (storedShapes[existingfile].componentName == name.replace(".v", "")){
-				isExistingFile = true
-				alert('"'+file.name +'" already exists. Please change the name.')
-			}
+				if (storedShapes[existingfile].componentName == name.replace(".v", "")){
+					isExistingFile = true;
+					alert('"'+file.name +'" already exists. Please change the name.');
+				}
+				if ( !checkVerilogIdentifier(name) )
+					disable_open = true;
 			}
 				})(files[i]);
 		}
-		if (!isExistingFile)
-				openButton.removeAttribute('disabled');
-			else
-				openButton.setAttribute('disabled', 'disabled');
+		if (disable_open)
+			alert('Module names must start with a letter or _ and may not contain whitespace.');
+		if ( !isExistingFile && !disable_open )
+			openButton.removeAttribute('disabled');
+		else
+			openButton.setAttribute('disabled', 'disabled');
   	}
 
   //file name change window
 	function fileChanged()
 	{
     var form = window.openForm || document.getElementById('openForm');
-    var files = form.upfile.files
+    var files = form.upfile.files;
+	var disable_open = false;
+    var output = "";
 
-    var output = ""
-
-    isExistingFile = false
+    var isExistingFile = false;
 
     //build the table of file names
     for (var i = 0; i < files.length; i++){
@@ -171,30 +186,30 @@ changedNames=[]
 			{
         for (existingfile in storedShapes){
           if (storedShapes[existingfile].componentName == file.name.replace(".v", "")){
-            isExistingFile = true
-            alert('"'+file.name +'" already exists. Please change the name.')
+            isExistingFile = true;
+            alert('"'+file.name +'" already exists. Please change the name.');
           }
+		  else if ( !checkVerilogIdentifier(file.name) ){
+			disable_open = true;
+		  }
         }
-				output += '<tr id="fileRow-'+i+'"> <td>'+(i+1)+'. </td> <td colspan="2" > <input style="width:100%" type="text" name="" onchange="changeFileName('+i+',this.value)" value="'+file.name+'"></td> <td><input type="button" value="X" onclick="removeFile('+i+')"></td> </tr>'
+		output += '<tr id="fileRow-'+i+'"> <td>'+(i+1)+'. </td> <td colspan="2" > <input style="width:100%" type="text" name="" onchange="changeFileName('+i+',this.value)" value="'+file.name+'"></td> <td><input type="button" value="X" onclick="removeFile('+i+')"></td> </tr>'
 			})(files[i]);
     }
 
     document.getElementById("allFileNames").innerHTML = output;
     //******for each file, show an optional renaming box******
+	var form = window.openForm || document.getElementById('openForm');
+	var openButton = document.getElementById('openButton');
 
-		var form = window.openForm || document.getElementById('openForm');
-		var openButton = document.getElementById('openButton');
+	if (disable_open)
+		alert('Module names must start with a letter or _ and may not contain whitespace.');
 
-
-//enable and disable the submit button
-		if (form.upfile.value.length > 0 && !isExistingFile)
-		{
-			openButton.removeAttribute('disabled');
-		}
-		else
-		{
-			openButton.setAttribute('disabled', 'disabled');
-		}
+	//enable and disable the submit button
+	if (form.upfile.value.length > 0 && !isExistingFile && !disable_open ) 
+		openButton.removeAttribute('disabled');
+	else
+		openButton.setAttribute('disabled', 'disabled');
 	}
 
 	function main()
@@ -295,7 +310,6 @@ changedNames=[]
 			var supportedText = document.getElementById('importSupported');
 			supportedText.innerHTML = window.parent.mxResources.get('importSupported');
 			var form = window.openForm || document.getElementById('openForm');
-
 			form.setAttribute('action', window.parent.OPEN_URL);
 		}
 	};

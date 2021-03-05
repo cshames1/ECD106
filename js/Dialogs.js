@@ -499,7 +499,6 @@ var directImportDialog = function(editorUi, filename, buttonText, fn, label, val
 	tbody.appendChild(row);
 	table.appendChild(tbody);
 
-
 	var div = document.createElement('div');
 	div.style.fontSize = '8pt';
 	html.appendChild(div);
