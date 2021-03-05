@@ -162,10 +162,6 @@ Menus.prototype.init = function()
 	{
 		this.addMenuItems(menu, ['designRulesCheck', 'exportVerilog', 'importVerilogComponent', 'editDiagram','editComponents', '-', 'simulate']);
 	})));
-
-
-
-
 	this.put('help', new Menu(mxUtils.bind(this, function(menu, parent)
 	{
 		this.addMenuItems(menu, ['help', '-', 'about']);

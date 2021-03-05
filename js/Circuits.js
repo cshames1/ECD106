@@ -43,7 +43,8 @@ schematic.prototype.isNativeComponent = function( component ){
 	var native_components=["and", "nand", "or","nor","xor","xnor","buf", "not",
 					"mux2","mux4", "mux8","mux16",
 					"decoder2","decoder3","decoder4",
-					"register_en", "dff", "dff_en", "srlatch", "srlatch_en", "dlatch", "dlatch_en", 
+					"register_en", 
+					"dff", "dff_en", "srlatch", "srlatch_en", "dlatch", "dlatch_en", 
 					"fanIn2",  "fanIn4",  "fanIn8",  "fanIn16",  "fanIn32",
 					"fanOut2",  "fanOut4", "fanOut8", "fanOut16", "fanOut32",
 					"inputport1", "inputport2", "inputport4", "inputport8", "inputport16", "inputport32",
@@ -493,7 +494,8 @@ schematic.prototype.createVerilog=function()
 	var gateNames={and:"and", nand:"nand",or:"or",nor:"nor",xor:"xor",xnor:"xnor",buffer:"buf", inverter:"not",
 					mux2:"mux #(2,", mux4:"mux #(4,", mux8:"mux #(8,", mux16:"mux #(16,",
 					decoder2:"decoder #(2)",decoder3:"decoder #(3)",decoder4:"decoder #(4)",
-					register_en:"register_en", dlatch:"d_latch",dlatch_en:"d_latch_en",dff:"dff",dff_en:"dff_en",srlatch:"sr_latch",srlatch_en:"sr_latch_en",
+					register_en:"register_en", 
+					dlatch:"d_latch",dlatch_en:"d_latch_en",dff:"dff",dff_en:"dff_en",srlatch:"sr_latch",srlatch_en:"sr_latch_en",
 					fanIn2: "fanIn2", fanIn4: "fanIn4", fanIn8: "fanIn8", fanIn16: "fanIn16", fanIn32: "fanIn32",
 					fanOut2: "fanOut2", fanOut4: "fanOut4", fanOut8: "fanOut8", fanOut16: "fanOut16", fanOut32: "fanOut32" 
 				};
