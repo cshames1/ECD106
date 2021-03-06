@@ -422,18 +422,18 @@ schematic.prototype.getImportedComponentsForExport=function(){
  *      need .v files to be exported
  */
 schematic.prototype.getNativeComponentsForExport=function(){
-	var check_components = [	"mux2","mux4", "mux8","mux16",
-								"decoder2","decoder3","decoder4",
-								//"register_en",
-								"dff", "dff_en", "srlatch", "srlatch_en", "dlatch", "dlatch_en"];
 	var graph=this.graph;
-	nodes=graph.getChildVertices(graph.getDefaultParent());
+	nodes=this.graph.getChildVertices(graph.getDefaultParent());
 	var components = new Set();
-	if( nodes ) nodes.forEach(function(item){
-		var style=graph.getCellStyle(item); 
+	var gateNames={ mux2:"mux", mux4:"mux", mux8:"mux", mux16:"mux",
+					decoder2:"decoder",decoder3:"decoder",decoder4:"decoder",
+					dlatch:"d_latch",dlatch_en:"d_latch_en",dff:"dff",dff_en:"dff_en",srlatch:"sr_latch",srlatch_en:"sr_latch_en",
+				};
+	if( nodes ) nodes.forEach(function(node){
+		var style=graph.getCellStyle(node); 
 		var module = style["shape"];
-		if ( check_components.includes(module) ) 
-			components.add( module );
+		if (module in gateNames)
+			components.add(gateNames[module]);
 	});
 	return components;
 }
@@ -728,7 +728,6 @@ schematic.prototype.createVerilog=function()
 	if( nodes ) nodes.forEach(function(node){
 		var decoder_size=1;
 		var fanin_size=0;
-		var mux_size=0;
 		var inputport_size=0;
 		var module = getModule( node );
 		switch( module )
@@ -921,29 +920,6 @@ schematic.prototype.createVerilog=function()
 		case "mux4":  mux_size++;
 		case "mux2":  mux_size++;
 			netList += "\n\n" + gateNames[module] +' '+gateName(node,"U") + " ("; 
-			netList=netList+"\n\t.data_in( {";
-			for( var i=0; i<(1<<mux_size); i++ )
-			{
-				var linki = node.getLink( 'in_'+i+'_',false);
-				console.log(linki);
-				if( linki ) 
-					netList += getNameOrAlias( linki) + ', ';
-				else
-					netList += "1\'bx, "
-			}
-			netList=netList.replace(/, *$/gi, '');
-			netList += '} ),\n\t.sel( {';
-			//iterate through each select input
-			for( var i=mux_size-1; i>=0; i=i-1 )
-			{
-				var lnk=node.getLink( 'in_sel'+i,false);
-				if( lnk ) 
-					netList+=getNameOrAlias( lnk);
-				else 
-					netList+='1\'bx';
-				netList+=',';
-			}
-			//delete last comma
 			netList=netList.replace(/, *$/gi, '');
 			netList += '}),\n\t.data_out(';
 			var links=node.linksOutOf();
@@ -951,7 +927,29 @@ schematic.prototype.createVerilog=function()
 				netList += getNameOrAlias( links[0]);
 			else
 				netList += gateName(node,"X");
-			netList += ')\n);';
+			netList=netList.replace(/, *$/gi, '');
+			netList += '),\n\t.select_in( {';
+			//iterate through each select input
+			for( var i=mux_size-1; i>=0; i=i-1 )
+			{
+				var lnk=node.getLink( 'in_sel'+i,false);
+				if( lnk ) 
+					netList+=getNameOrAlias( lnk)+', ';
+				else 
+					netList+='1\'bx,';
+			}	
+			netList=netList.replace(/, *$/gi, '');
+			netList=netList+"} ),\n\t.data_in( {";
+			for( var i=(1<<mux_size)-1; i>=0; i-- )
+			{
+				var linki = node.getLink( 'in_'+i+'_',false);
+				if( linki ) 
+					netList += getNameOrAlias( linki) + ', ';
+				else
+					netList += "1\'bx, "
+			}	
+			netList=netList.replace(/, *$/gi, '');
+			netList += "} )";
 			break; 
 		/*case "register_en":
 			var linkin=node.getLink( 'in_D_',false);
@@ -970,57 +968,156 @@ schematic.prototype.createVerilog=function()
 				netList += ',\n\t.out_q('+getNameOrAlias( linkq[0]) + ")";
 			netList=netList+"\n);";
 			break;*/
-		case "dlatch":
-		case "dlatch_en":
-			netList += '\n\n' + gateNames[module] +  ' ' + gateName(node,'U') + ' ('; 
-			var linkin=node.getLink( 'in_D_',false);
-			if( linkin )
-				netList += '\n\t.in_D(' + getNameOrAlias( linkin) + ')';
-			var linkg=node.getLink( 'in_G_',false);
-			if( linkg )
-				netList += ',\n\t.in_G(' + getNameOrAlias( linkg) + ')';
-			var linken=node.getLink( 'in_en_',false);
-			if( linken ) 
-				netList += ',\n\t.in_en(' + getNameOrAlias( linken) + ')';
-			var linkq=node.linksOutOf();
-			if( linkq.length )
-				netList += ',\n\t.out_q('+getNameOrAlias( linkq[0]) + ")";
-			netList=netList+"\n);"
-			break;
-		case "srlatch":
-		case "srlatch_en":
-			netList += '\n\n' + gateNames[module] +  ' ' + gateName(node,'U') + ' ('; 
-			var linkin=node.getLink( 'in_S_',false);
-			if( linkin )
-				netList += '\n\t.in_S(' + getNameOrAlias( linkin) + ')';
-			var linkr=node.getLink( 'in_R_',false);
-			if( linkr )
-				netList += ',\n\t.in_R(' + getNameOrAlias( linkr) + ')';
-			var linken=node.getLink( 'in_en_',false);
-			if( linken ) 
-				netList += ',\n\t.in_en(' + getNameOrAlias( linken) + ')';
-			var linkq=node.linksOutOf();
-			if( linkq.length )
-				netList += ',\n\t.out_q('+getNameOrAlias( linkq[0]) + ")";
-			netList=netList+"\n);"
-			break;
-		case "dff":
-		case "dff_en":
-			netList += '\n\n' + gateNames[module] +  ' ' + gateName(node,'U') + ' ('; 
-			var linkin=node.getLink( 'in_D_',false);
-			if( linkin )
-				netList += '\n\t.in_D(' + getNameOrAlias( linkin ) + ')';
-			var linkclk=node.getLink( 'in_clk_',false);
-			if( linkclk )
-				netList += ',\n\t.in_clk(' + getNameOrAlias( linkclk ) + ')';
-			var linken=node.getLink( 'in_en_',false);
-			if( linken ) 
-				netList += ',\n\t.in_en(' + getNameOrAlias( linken) + ')';
-			var linkq=node.linksOutOf();
-			if( linkq.length )
-				netList += ',\n\t.out_q('+getNameOrAlias( linkq[0]) + ")";
-			netList=netList+"\n);"
-			break;
+			case "dlatch":
+				netList += "\n\n" + gateNames[module] + ' ' + gateName(node,"U") + " ("; 
+				netList += '\n\t.data_out(';
+				var links=node.linksOutOf();
+				if( links.length )
+					netList += getNameOrAlias(links[0]);
+				else
+					netList += gateName(node,"X");
+				netList += '),\n\t.in_D( ';
+				{
+					var lnk=node.getLink( 'in_D',false);
+					if( lnk ) netList+=getNameOrAlias(lnk);
+					else netList+='1\'bx';
+				}
+				netList=netList+" ),\n\t.in_G( ";
+				{
+					var lnk=node.getLink( 'in_G',false);
+					if( lnk ) netList+=getNameOrAlias(lnk);
+					else netList+='1\'bx';
+				}
+				netList=netList+" )\n);";
+				break;
+			case "srlatch":
+				netList += "\n\n" + gateNames[module] + ' ' + gateName(node,"U") + " ("; 
+				netList += '\n\t.data_out(';
+				var links=node.linksOutOf();
+				if( links.length )
+					netList += getNameOrAlias(links[0]);
+				else
+					netList += gateName(node,"X");
+				netList += '),\n\t.in_S( ';
+				{
+					var lnk=node.getLink( 'in_S',false);
+					if( lnk ) netList+=getNameOrAlias(lnk);
+					else netList+='1\'bx';
+				}
+				netList=netList+" ),\n\t.in_R( ";
+				{
+					var lnk=node.getLink( 'in_R',false);
+					if( lnk ) netList+=getNameOrAlias(lnk);
+					else netList+='1\'bx';
+				}
+				netList=netList+" )\n);";
+				break;
+			case "srlatch_en":
+				netList += "\n\n" + gateNames[module] + ' ' + gateName(node,"U") + " ("; 
+				netList += '\n\t.data_out(';
+				var links=node.linksOutOf();
+				if( links.length )
+					netList += getNameOrAlias(links[0]);
+				else
+					netList += gateName(node,"X");
+				netList += '),\n\t.in_S( ';
+				{
+					var lnk=node.getLink( 'in_S',false);
+					if( lnk ) netList+=getNameOrAlias(lnk);
+					else netList+='1\'bx';
+				}
+				netList=netList+" ),\n\t.in_R( ";
+				{
+					var lnk=node.getLink( 'in_R',false);
+					if( lnk ) netList+=getNameOrAlias(lnk);
+					else netList+='1\'bx';
+				}
+				netList=netList+" ),\n\t.in_EN( ";
+				{
+					var lnk=node.getLink( 'in_en',false);
+					if( lnk ) netList+=getNameOrAlias(lnk);
+					else netList+='1\'bx';
+				}
+				netList=netList+" )\n);";
+				break;
+			case "dlatch_en":
+				netList += "\n\n" + gateNames[module] + ' ' + gateName(node,"U") + " ("; 
+				netList += '\n\t.data_out(';
+				var links=node.linksOutOf();
+				if( links.length )
+					netList += getNameOrAlias(links[0]);
+				else
+					netList += gateName(node,"X");
+				netList += '),\n\t.in_D( ';
+				{
+					var lnk=node.getLink( 'in_D',false);
+					if( lnk ) netList+=getNameOrAlias(lnk);
+					else netList+='1\'bx';
+				}
+				netList=netList+" ),\n\t.in_G( ";
+				{
+					var lnk=node.getLink( 'in_G',false);
+					if( lnk ) netList+=getNameOrAlias(lnk);
+					else netList+='1\'bx';
+				}
+				netList=netList+" ),\n\t.in_EN( ";
+				{
+					var lnk=node.getLink( 'in_en',false);
+					if( lnk ) netList+=getNameOrAlias(lnk);
+					else netList+='1\'bx';
+				}
+				netList=netList+" )\n);";
+				break;
+			case "dff":
+				netList += "\n\n" + gateNames[module] + ' ' + gateName(node,"U") + " ("; 
+				netList += '\n\t.data_out(';
+				var links=node.linksOutOf();
+				if( links.length )
+					netList += getNameOrAlias(links[0]);
+				else
+					netList += gateName(node,"X");
+				netList += '),\n\t.in_D( ';
+				{
+					var lnk=node.getLink( 'in_D',false);
+					if( lnk ) netList+=getNameOrAlias(lnk);
+					else netList+='1\'bx';
+				}
+				netList=netList+" ),\n\t.in_CLK( ";
+				{
+					var lnk=node.getLink( 'in_>',false);
+					if( lnk ) netList+=getNameOrAlias(lnk);
+					else netList+='1\'bx';
+				}
+				netList=netList+" )\n);";
+				break;
+			case "dff_en":
+				netList += "\n\n" + gateNames[module] + ' ' + gateName(node,"U") + " ("; 
+				netList += '\n\t.data_out(';
+				var links=node.linksOutOf();
+				if( links.length )
+					netList += getNameOrAlias(links[0]);
+				else
+					netList += gateName(node,"X");
+				netList += '),\n\t.in_D( ';
+				{
+					var lnk=node.getLink( 'in_D',false);
+					if( lnk ) netList+=getNameOrAlias(lnk);
+					else netList+='1\'bx';
+				}
+				netList=netList+" ),\n\t.in_CLK( ";
+				{
+					var lnk=node.getLink( 'in_>',false);
+					if( lnk ) netList+=getNameOrAlias(lnk);
+					else netList+='1\'bx';
+				}
+				netList=netList+" ),\n\t.in_EN( ";
+				{
+					var lnk=node.getLink( 'in_en',false);
+					if( lnk ) netList+=getNameOrAlias(lnk);
+					else netList+='1\'bx';
+				}
+				netList=netList+" )\n);";
+				break;
 		case "decoder4": decoder_size++;
 		case "decoder3": decoder_size++;
 		case "decoder2": decoder_size++;
@@ -1049,7 +1146,7 @@ schematic.prototype.createVerilog=function()
 			}
 			//delete last comma
 			netList=netList.replace(/, *$/gi, '');
-			netList=netList+"} ),\n\t.in_en(";
+			netList=netList+"} ),\n\t.en_in(";
 			var linken=node.getLink( 'in_en',false);
 			if( linken ) 
 				netList+=getNameOrAlias( linken );
