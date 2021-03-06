@@ -209,15 +209,10 @@ schematic.prototype.runDRC = function()
 			if( node.numLinksOutOf()==0 )
 				Messages.addWarning(module+" has unconnected output",node);
 			for (var i=0; i<(1<<mux_size); i++) {
-				var link = node.getLink('in'+i, false);
-				if (link)
-					input_sizes.push(link.size);
+				var in_error = getWarningsForModuleInputPort(""+i,1,node);
+				if (in_error)
+					Messages.addError(in_error,node);
 			}
-			if( input_sizes.length<(1<<mux_size) )
-				Messages.addWarning(module+" has unconnected data (i) input(s)",node);
-			var input_sizes_sorted = input_sizes.sort();
-			if (input_sizes_sorted[0]!=input_sizes_sorted[input_sizes_sorted.length-1] )
-				Messages.addError(module+" has busses of mismatched bit widths connected on data (i) inputs",node);
 			break;
 		//====================================================================================
 		//	DECODER GROUP
@@ -492,7 +487,7 @@ schematic.prototype.createVerilog=function()
 	var verilogCode="";
 	var graph=this.graph;
 	var gateNames={and:"and", nand:"nand",or:"or",nor:"nor",xor:"xor",xnor:"xnor",buffer:"buf", inverter:"not",
-					mux2:"mux #(2,", mux4:"mux #(4,", mux8:"mux #(8,", mux16:"mux #(16,",
+					mux2:"mux #(2)", mux4:"mux #(4)", mux8:"mux #(8)", mux16:"mux #(16)",
 					decoder2:"decoder #(2)",decoder3:"decoder #(3)",decoder4:"decoder #(4)",
 					//register_en:"register_en", 
 					dlatch:"d_latch",dlatch_en:"d_latch_en",dff:"dff",dff_en:"dff_en",srlatch:"sr_latch",srlatch_en:"sr_latch_en",
@@ -796,18 +791,12 @@ schematic.prototype.createVerilog=function()
 		case "mux8":  mux_size++;
 		case "mux4":  mux_size++;
 		case "mux2":  mux_size++;
-			var output_size=1;
-			for (var i=0; i<(1<<mux_size); i++) {
-				var linkin = node.getLink('in'+i, false);
-				if (linkin && linkin.size>output_size) 
-					output_size=linkin.size;
-			}
 			var linksout=node.linksOutOf();
 			if( linksout.length == 1 && trgtNodeIs(linksout[0], "outputport") ) 
 				netAliases[netName(linksout[0])] = portName(linksout[0].target,"O");
 			else
-				wireSet[output_size].add(gateName(node,"X") );
-			setLinkSetSize(linksout, output_size);
+				wireSet[1].add(gateName(node,"X") );
+			setLinkSetSize(linksout, 1);
 			break;
 		case "decoder4": decoder_size++;
 		case "decoder3": decoder_size++;
@@ -931,22 +920,19 @@ schematic.prototype.createVerilog=function()
 		case "mux8":  mux_size++;
 		case "mux4":  mux_size++;
 		case "mux2":  mux_size++;
-			var output_size=1;
+			netList += "\n\n" + gateNames[module] +' '+gateName(node,"U") + " ("; 
+			netList=netList+"\n\t.data_in( {";
 			for( var i=0; i<(1<<mux_size); i++ )
 			{
-				var linki = node.getLink( 'in'+i,false);
-				if (linki && linki.size>output_size)
-					output_size = linki.size;
-			}
-			netList += "\n\n" + gateNames[module] + output_size +') '+gateName(node,"U") + " ("; 
-			netList=netList+"\n\t";
-			for( var i=0; i<(1<<mux_size); i++ )
-			{
-				var linki = node.getLink( 'in'+i,false);
+				var linki = node.getLink( 'in_'+i+'_',false);
+				console.log(linki);
 				if( linki ) 
-					netList += '.i' + i + '(' + getNameOrAlias( linki) + '), ';
+					netList += getNameOrAlias( linki) + ', ';
+				else
+					netList += "1\'bx, "
 			}
-			netList += '\n\t.sel( {';
+			netList=netList.replace(/, *$/gi, '');
+			netList += '} ),\n\t.sel( {';
 			//iterate through each select input
 			for( var i=mux_size-1; i>=0; i=i-1 )
 			{
