@@ -1393,8 +1393,7 @@ var VerilogWindow = function(editorUi, x, y, w, h)
 	
 		var native_components = editorUi.circuit.getNativeComponentsForExport(); 
 		if (native_components) native_components.forEach(function(module){
-			console.log(module);
-			fetch('/verilog/'+module+'.v')//will have to add correct file name
+			fetch('/verilog/'+module+'.v')
 			.then(response => response.text())
 			.then(data => {
 				blob = new Blob([data], { type:"text/plain" });

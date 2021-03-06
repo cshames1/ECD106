@@ -425,15 +425,15 @@ schematic.prototype.getNativeComponentsForExport=function(){
 	var graph=this.graph;
 	nodes=this.graph.getChildVertices(graph.getDefaultParent());
 	var components = new Set();
-	var gateNames={ mux2:"mux", mux4:"mux", mux8:"mux", mux16:"mux",
+	var file_names={ mux2:"mux", mux4:"mux", mux8:"mux", mux16:"mux",
 					decoder2:"decoder",decoder3:"decoder",decoder4:"decoder",
-					dlatch:"d_latch",dlatch_en:"d_latch_en",dff:"dff",dff_en:"dff_en",srlatch:"sr_latch",srlatch_en:"sr_latch_en",
+					dlatch:"d_latch",dlatch_en:"d_latch_en",dff:"dff",dff_en:"dff_en",srlatch:"sr_latch",srlatch_en:"sr_latch_en"
 				};
 	if( nodes ) nodes.forEach(function(node){
 		var style=graph.getCellStyle(node); 
 		var module = style["shape"];
-		if (module in gateNames)
-			components.add(gateNames[module]);
+		if (module in file_names)
+			components.add(file_names[module]);
 	});
 	return components;
 }
