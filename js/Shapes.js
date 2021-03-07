@@ -348,7 +348,7 @@
 		var ports=new Array();
 		for( var i=0; i<n; i=i+1)
 		{
-			ports['in'+ i+'_w'] = {x: 0, y: [(i+1)/(1+n)], perimeter: false, label: 'i'+i};
+			ports['in_'+ i+'_w'] = {x: 0, y: [(i+1)/(1+n)], perimeter: false, label: 'i'+i};
 			if( i < s )
 			{
 				var x= 1- (1+i)/ ((s<2) ? (1+s) : (2+s));

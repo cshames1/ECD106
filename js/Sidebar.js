@@ -86,12 +86,12 @@ Sidebar.prototype.init = function()
 	this.addBasicGatesPalette(false);
 	this.addMuxComponentPalette(false);
 	this.addDecoderComponentPalette(false);
-	this.addRegisterComponentPalette(false);
+	//this.addRegisterComponentPalette(false);
 	this.addLatchComponentPalette(false);
-	this.addBusComponentPalette(false);
-	this.addIOPalette(false);
+	this.addSingleBitIOPalette(false);
 	this.addConstantPalette(false);
-
+	this.addIOPalette(false);
+	this.addBusComponentPalette(false);
 };
 
 Sidebar.prototype.collapsedImage = (!mxClient.IS_SVG) ? IMAGE_PATH + '/collapsed.gif' : 'data:image/gif;base64,R0lGODlhDQANAIABAJmZmf///yH/C1hNUCBEYXRhWE1QPD94cGFja2V0IGJlZ2luPSLvu78iIGlkPSJXNU0wTXBDZWhpSHpyZVN6TlRjemtjOWQiPz4gPHg6eG1wbWV0YSB4bWxuczp4PSJhZG9iZTpuczptZXRhLyIgeDp4bXB0az0iQWRvYmUgWE1QIENvcmUgNS4wLWMwNjAgNjEuMTM0Nzc3LCAyMDEwLzAyLzEyLTE3OjMyOjAwICAgICAgICAiPiA8cmRmOlJERiB4bWxuczpyZGY9Imh0dHA6Ly93d3cudzMub3JnLzE5OTkvMDIvMjItcmRmLXN5bnRheC1ucyMiPiA8cmRmOkRlc2NyaXB0aW9uIHJkZjphYm91dD0iIiB4bWxuczp4bXA9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC8iIHhtbG5zOnhtcE1NPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvbW0vIiB4bWxuczpzdFJlZj0iaHR0cDovL25zLmFkb2JlLmNvbS94YXAvMS4wL3NUeXBlL1Jlc291cmNlUmVmIyIgeG1wOkNyZWF0b3JUb29sPSJBZG9iZSBQaG90b3Nob3AgQ1M1IE1hY2ludG9zaCIgeG1wTU06SW5zdGFuY2VJRD0ieG1wLmlpZDozNUQyRTJFNjZGNUYxMUU1QjZEOThCNDYxMDQ2MzNCQiIgeG1wTU06RG9jdW1lbnRJRD0ieG1wLmRpZDozNUQyRTJFNzZGNUYxMUU1QjZEOThCNDYxMDQ2MzNCQiI+IDx4bXBNTTpEZXJpdmVkRnJvbSBzdFJlZjppbnN0YW5jZUlEPSJ4bXAuaWlkOjFERjc3MEUxNkY1RjExRTVCNkQ5OEI0NjEwNDYzM0JCIiBzdFJlZjpkb2N1bWVudElEPSJ4bXAuZGlkOjFERjc3MEUyNkY1RjExRTVCNkQ5OEI0NjEwNDYzM0JCIi8+IDwvcmRmOkRlc2NyaXB0aW9uPiA8L3JkZjpSREY+IDwveDp4bXBtZXRhPiA8P3hwYWNrZXQgZW5kPSJyIj8+Af/+/fz7+vn49/b19PPy8fDv7u3s6+rp6Ofm5eTj4uHg397d3Nva2djX1tXU09LR0M/OzczLysnIx8bFxMPCwcC/vr28u7q5uLe2tbSzsrGwr66trKuqqainpqWko6KhoJ+enZybmpmYl5aVlJOSkZCPjo2Mi4qJiIeGhYSDgoGAf359fHt6eXh3dnV0c3JxcG9ubWxramloZ2ZlZGNiYWBfXl1cW1pZWFdWVVRTUlFQT05NTEtKSUhHRkVEQ0JBQD8+PTw7Ojk4NzY1NDMyMTAvLi0sKyopKCcmJSQjIiEgHx4dHBsaGRgXFhUUExIREA8ODQwLCgkIBwYFBAMCAQAAIfkEAQAAAQAsAAAAAA0ADQAAAhSMj6lrwAjcC1GyahV+dcZJgeIIFgA7';
@@ -890,7 +890,7 @@ Sidebar.prototype.createDecoderComponentShapes = function()
 	];
 };
 
-
+/*
 Sidebar.prototype.addRegisterComponentPalette = function(expand)
 {
 	this.addPaletteFunctions('registers', mxResources.get('registers'), false, this.createRegisterComponentPalette());
@@ -905,7 +905,7 @@ Sidebar.prototype.createRegisterComponentPalette = function()
 		this.createVertexTemplateEntry('shape=register_en;editable=0;', 80, 80, '', 'Register with EN', null, null, 'Register with EN')
 	];
 };
-
+*/
 Sidebar.prototype.addLatchComponentPalette = function(expand)
 {
 	this.addPaletteFunctions('latches', mxResources.get('latches'), false, this.createLatchComponentPalette());
@@ -955,7 +955,7 @@ Sidebar.prototype.createBusComponentShapes = function()
 Sidebar.prototype.addIOPalette = function(expand)
 {
 
-	this.addPaletteFunctions('io', mxResources.get('io'), false, this.createIOShapes());
+	this.addPaletteFunctions('busio', mxResources.get('busio'), false, this.createIOShapes());
 };
 
 Sidebar.prototype.createIOShapes = function()
@@ -964,8 +964,6 @@ Sidebar.prototype.createIOShapes = function()
 	var field = new mxCell('List Item', new mxGeometry(0, 0, 60, 26), 'text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;');
 	field.vertex = true;
 	return [
-		this.createVertexTemplateEntry('shape=inputport1;', 60, 20, '', "Input 1'b", null, null, 'Input Port'),
-		this.createVertexTemplateEntry('shape=outputport1;', 60, 20, '', "Output 1'b", null, null, 'Output Port'),
 		this.createVertexTemplateEntry('shape=inputport2;', 60, 25, '', "Input 2'b", null, null, 'Input Port'),
 		this.createVertexTemplateEntry('shape=outputport2;', 60, 25, '', "Output 2'b", null, null, 'Output Port'),
 		this.createVertexTemplateEntry('shape=inputport4;', 60, 30, '', "Input 4'b", null, null, 'Input Port'),
@@ -979,6 +977,25 @@ Sidebar.prototype.createIOShapes = function()
 	];
 
 };
+
+
+Sidebar.prototype.addSingleBitIOPalette = function(expand)
+{
+
+	this.addPaletteFunctions('single bit io', mxResources.get('singlebitio'), false, this.createSingleBitIOShapes());
+};
+
+Sidebar.prototype.createSingleBitIOShapes = function()
+{
+	var sb = this;
+	var field = new mxCell('List Item', new mxGeometry(0, 0, 60, 26), 'text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;');
+	field.vertex = true;
+	return [
+		this.createVertexTemplateEntry('shape=inputport1;', 60, 20, '', "Input", null, null, 'Input Port'),
+		this.createVertexTemplateEntry('shape=outputport1;', 60, 20, '', "Output", null, null, 'Output Port')
+	];
+};
+
 Sidebar.prototype.addConstantPalette = function(expand)
 {
 

@@ -43,7 +43,7 @@ schematic.prototype.isNativeComponent = function( component ){
 	var native_components=["and", "nand", "or","nor","xor","xnor","buf", "not",
 					"mux2","mux4", "mux8","mux16",
 					"decoder2","decoder3","decoder4",
-					"register_en", 
+					//"register_en", 
 					"dff", "dff_en", "srlatch", "srlatch_en", "dlatch", "dlatch_en", 
 					"fanIn2",  "fanIn4",  "fanIn8",  "fanIn16",  "fanIn32",
 					"fanOut2",  "fanOut4", "fanOut8", "fanOut16", "fanOut32",
@@ -86,11 +86,13 @@ schematic.prototype.runDRC = function()
 	function getModulePorts ( moduleName ){
 		return searchStoredShapesFor( moduleName ).signals;
 	}
-	function getWarningsForModuleInputPort( port_flag, bit_width, node ){
-		var link = node.getLink( "in_"+port_flag,false );
+	function getErrorsForModuleInputPort( port_flag, bit_width, node ){
+		port_flag = port_flag.toString();
+		var link = node.getLink( "in"+port_flag,false );
 		var module = getModule( node );
 		var warning = "";
-		if( link==null)
+		port_flag = port_flag.replace('_', '');
+		if( link==null )
 			warning += module+" input "+((port_flag)?"(":"")+port_flag+((port_flag)?")":"")+" must be connected";
 		else if ( bit_width && link.size!=bit_width )
 			warning += module+" input "+((port_flag)?"(":"")+port_flag+((port_flag)?")":"")+" has a "+link.size+"\'b wire connected. Only "+bit_width+"\'b wires may be connected";
@@ -157,7 +159,7 @@ schematic.prototype.runDRC = function()
 				Messages.addError("Port name "+node.value+ " is used on multiple outputs",node);
 			if( node.value != "" ) 
 				output_identifiers.add(node.value);
-			var in_error =  getWarningsForModuleInputPort("",(1<<output_size),node);
+			var in_error =  getErrorsForModuleInputPort("",(1<<output_size),node);
 			if (in_error)
 				Messages.addError( in_error,node );
 			break;
@@ -168,7 +170,7 @@ schematic.prototype.runDRC = function()
 		case "inverter": 
 			if( node.numLinksOutOf() == 0 )
 				Messages.addWarning(module+" has an unconnected output",node);
-			var in_error =  getWarningsForModuleInputPort("",1,node);
+			var in_error =  getErrorsForModuleInputPort("",1,node);
 			if (in_error)
 				Messages.addError( in_error,node );
 			break;
@@ -198,9 +200,8 @@ schematic.prototype.runDRC = function()
 		case "mux4":  mux_size++;
 		case "mux2":  mux_size++;
 			var data_inputs_connected = (1<<mux_size);
-			var input_sizes = new Array();
 			for (var i=0; i<mux_size; i++) {
-				var sel_error = getWarningsForModuleInputPort("sel"+i,1,node);
+				var sel_error = getErrorsForModuleInputPort("sel"+i,1,node);
 				if (sel_error)
 					Messages.addError(sel_error,node);
 			}
@@ -209,15 +210,10 @@ schematic.prototype.runDRC = function()
 			if( node.numLinksOutOf()==0 )
 				Messages.addWarning(module+" has unconnected output",node);
 			for (var i=0; i<(1<<mux_size); i++) {
-				var link = node.getLink('in'+i, false);
-				if (link)
-					input_sizes.push(link.size);
+				var in_error = getErrorsForModuleInputPort(""+i,1,node);
+				if (in_error)
+					Messages.addError(in_error,node);
 			}
-			if( input_sizes.length<(1<<mux_size) )
-				Messages.addWarning(module+" has unconnected data (i) input(s)",node);
-			var input_sizes_sorted = input_sizes.sort();
-			if (input_sizes_sorted[0]!=input_sizes_sorted[input_sizes_sorted.length-1] )
-				Messages.addError(module+" has busses of mismatched bit widths connected on data (i) inputs",node);
 			break;
 		//====================================================================================
 		//	DECODER GROUP
@@ -225,21 +221,14 @@ schematic.prototype.runDRC = function()
 		case "decoder4": decoder_size++;
 		case "decoder3": decoder_size++;
 		case "decoder2": decoder_size++;
-			var link_en = node.getLink("in_en",false);
-			var address_inputs_connected = decoder_size;
 			for (var i=0; i<decoder_size; i++){
-				var link = node.getLink("in"+i+"_a", false);
-				if ( link==null )
-					address_inputs_connected--;
-				else if ( link.size>1 )
-					Messages.addError(module+" has unconnected address inputs",node);
+				var in_error = getErrorsForModuleInputPort(i,1,node);
+				if (in_error)
+					Messages.addError(in_error,node);
 			}
-			if( address_inputs_connected < decoder_size)
-				Messages.addError("All "+module+" address (addr) inputs must be connected",node);
-			if( link_en==null )
-				Messages.addError(module+" enable (en) input must be connected",node);
-			else if ( link_en.size>1 )
-				Messages.addError(module+" enable (en) input has a bus connected. Only single bit wires may be connected",node);
+			var en_error = getErrorsForModuleInputPort('_en',1,node);
+			if (en_error)
+				Messages.addError(en_error,node);
 			for( var i=0; i<(1<<decoder_size); i++ ) {
 				if( node.getLinks("out"+i,true).length == 0) {
 					Messages.addWarning(module+" has an unconnected data output(s)",node);
@@ -248,12 +237,12 @@ schematic.prototype.runDRC = function()
 			}
 			break;
 		//====================================================================================
-		//	REGISTER GROUP
+		//	LATCH GROUP
 		//====================================================================================
-		case "register_en":
-			var en_error = getWarningsForModuleInputPort("en",1,node);
-			var clk_error = getWarningsForModuleInputPort("clk",1,node);
-			var D_error =  getWarningsForModuleInputPort("D",null,node);
+		/*case "register_en":
+			var en_error = getErrorsForModuleInputPort("en",1,node);
+			var clk_error = getErrorsForModuleInputPort("clk",1,node);
+			var D_error =  getErrorsForModuleInputPort("D",null,node);
 			if (en_error)
 				Messages.addError( en_error,node );
 			if (clk_error)
@@ -262,14 +251,14 @@ schematic.prototype.runDRC = function()
 				Messages.addError( D_error,node );
 			if( node.numLinksOutOf() == 0 )
 				Messages.addWarning(module+" has unconnected output",node);
-			break;
+			break;*/
 		case "srlatch_en":
-			var en_error = getWarningsForModuleInputPort("en",1,node);
+			var en_error = getErrorsForModuleInputPort("_en",1,node);
 			if (en_error)
 				Messages.addError( en_error,node );
 		case "srlatch":
-			var S_error = getWarningsForModuleInputPort("S",1,node);
-			var R_error =  getWarningsForModuleInputPort("R",1,node);
+			var S_error = getErrorsForModuleInputPort("_S",1,node);
+			var R_error =  getErrorsForModuleInputPort("_R",1,node);
 			if (S_error)
 				Messages.addError( S_error,node );
 			if (R_error)
@@ -278,12 +267,12 @@ schematic.prototype.runDRC = function()
 				Messages.addWarning(module+" has an unconnected output",node);
 			break;
 		case "dlatch_en":
-			var en_error = getWarningsForModuleInputPort("en",1,node);
+			var en_error = getErrorsForModuleInputPort("_en",1,node);
 			if (en_error)
 				Messages.addError( en_error,node );
 		case "dlatch":
-			var D_error = getWarningsForModuleInputPort("D",1,node);
-			var G_error =  getWarningsForModuleInputPort("G",1,node);
+			var D_error = getErrorsForModuleInputPort("_D",1,node);
+			var G_error =  getErrorsForModuleInputPort("_G",1,node);
 			if (D_error)
 				Messages.addError( D_error,node );
 			if (G_error)
@@ -292,12 +281,12 @@ schematic.prototype.runDRC = function()
 				Messages.addWarning(module+" has an unconnected output",node);
 			break;
 		case "dff_en":
-			var en_error = getWarningsForModuleInputPort("en",1,node);
+			var en_error = getErrorsForModuleInputPort("_en",1,node);
 			if (en_error)
 				Messages.addError( en_error,node );
 		case "dff":
-			var D_error = getWarningsForModuleInputPort("D",1,node);
-			var clk_error =  getWarningsForModuleInputPort("clk",1,node);
+			var D_error = getErrorsForModuleInputPort("_D",1,node);
+			var clk_error =  getErrorsForModuleInputPort("_clk",1,node);
 			if (D_error)
 				Messages.addError( D_error,node );
 			if (clk_error)
@@ -318,10 +307,10 @@ schematic.prototype.runDRC = function()
 		case "fanOut4":	 fanout_size++;
 		case "fanOut2":  fanout_size++;
 			if( node.numLinksOutOf() == 0 )
-				Messages.addError(module+" has no connected outputs",node);
+				Messages.addWarning(module+" has no connected outputs",node);
 			else if( node.numLinksOutOf() != (1<<fanout_size) )
 				Messages.addWarning(module+" has " + ((1<<fanout_size)-node.numLinksOutOf()) + " unconnected outputs",node);
-			var in_error =  getWarningsForModuleInputPort("",(1<<fanout_size),node);
+			var in_error =  getErrorsForModuleInputPort("",(1<<fanout_size),node);
 			if (in_error)
 				Messages.addError( in_error,node );
 			break;
@@ -341,9 +330,10 @@ schematic.prototype.runDRC = function()
 			else if( node.numLinksInto() < (1<<fanin_size) )
 				Messages.addWarning(module+" has " + ((1<<fanin_size)-node.numLinksInto()) + " unconnected inputs",node);
 			for (var i=0; i<(1<<fanin_size); i++) {
+				var error = getErrorsForModuleInputPort( i,1,node );
 				var link = node.getLink('in'+i+'_w');
-				if ( link && link.size!=(1<<fanin_size) )
-					Messages.addError(module+" has a bus connected on input  port in"+i+". Only single bit wires may be connected",node);		
+				if ( error )
+					Messages.addError(error,node);		
 			}
 			break;
 		//====================================================================================
@@ -360,7 +350,7 @@ schematic.prototype.runDRC = function()
 			for (var i=0; i<ports_sizes.input.length; i++) {
 				var link = node.getLink('in'+i+'_w',false);
 				if ( link && link.size!=ports_sizes.input[i] )
-					Messages.addError(module + " input ("+ports.input[i]+") has mismatched bit width",node);
+					Messages.addError(module + " input ("+ports.input[i]+") has "+link.size+"\'b wire connected. Only "+ports_sizes.input[i]+"\'b wires may be connected",node);
 			}
 			for (var i=0; i<ports_sizes.output.length; i++) {
 				var link = node.getLink('out'+i+'_e',true);
@@ -427,18 +417,18 @@ schematic.prototype.getImportedComponentsForExport=function(){
  *      need .v files to be exported
  */
 schematic.prototype.getNativeComponentsForExport=function(){
-	var check_components = [	"mux2","mux4", "mux8","mux16",
-								"decoder2","decoder3","decoder4",
-								"register_en",
-								"dff", "dff_en", "srlatch", "srlatch_en", "dlatch", "dlatch_en"];
 	var graph=this.graph;
-	nodes=graph.getChildVertices(graph.getDefaultParent());
+	nodes=this.graph.getChildVertices(graph.getDefaultParent());
 	var components = new Set();
-	if( nodes ) nodes.forEach(function(item){
-		var style=graph.getCellStyle(item); 
+	var file_names={ mux2:"mux", mux4:"mux", mux8:"mux", mux16:"mux",
+					decoder2:"decoder",decoder3:"decoder",decoder4:"decoder",
+					dlatch:"d_latch",dlatch_en:"d_latch_en",dff:"dff",dff_en:"dff_en",srlatch:"sr_latch",srlatch_en:"sr_latch_en"
+				};
+	if( nodes ) nodes.forEach(function(node){
+		var style=graph.getCellStyle(node); 
 		var module = style["shape"];
-		if ( check_components.includes(module) ) 
-			components.add( module );
+		if (module in file_names)
+			components.add(file_names[module]);
 	});
 	return components;
 }
@@ -492,9 +482,9 @@ schematic.prototype.createVerilog=function()
 	var verilogCode="";
 	var graph=this.graph;
 	var gateNames={and:"and", nand:"nand",or:"or",nor:"nor",xor:"xor",xnor:"xnor",buffer:"buf", inverter:"not",
-					mux2:"mux #(2,", mux4:"mux #(4,", mux8:"mux #(8,", mux16:"mux #(16,",
+					mux2:"mux #(2)", mux4:"mux #(4)", mux8:"mux #(8)", mux16:"mux #(16)",
 					decoder2:"decoder #(2)",decoder3:"decoder #(3)",decoder4:"decoder #(4)",
-					register_en:"register_en", 
+					//register_en:"register_en", 
 					dlatch:"d_latch",dlatch_en:"d_latch_en",dff:"dff",dff_en:"dff_en",srlatch:"sr_latch",srlatch_en:"sr_latch_en",
 					fanIn2: "fanIn2", fanIn4: "fanIn4", fanIn8: "fanIn8", fanIn16: "fanIn16", fanIn32: "fanIn32",
 					fanOut2: "fanOut2", fanOut4: "fanOut4", fanOut8: "fanOut8", fanOut16: "fanOut16", fanOut32: "fanOut32" 
@@ -733,7 +723,6 @@ schematic.prototype.createVerilog=function()
 	if( nodes ) nodes.forEach(function(node){
 		var decoder_size=1;
 		var fanin_size=0;
-		var mux_size=0;
 		var inputport_size=0;
 		var module = getModule( node );
 		switch( module )
@@ -780,7 +769,7 @@ schematic.prototype.createVerilog=function()
 				wireSet[(1<<0)].add(gateName(node,"X") );
 			setLinkSetSize(linksout, 1);
 			break;
-		case "register_en":
+		/*case "register_en":
 			var output_size=1;
 			var input = node.getLinks('in_D',false);
 			if(input[0] && input[0].size) 
@@ -791,23 +780,17 @@ schematic.prototype.createVerilog=function()
 			else if( linksout.length ) 
 				wireSet[output_size].add(netName(linksout[0],"X"));
 			setLinkSetSize(linksout, output_size);
-			break;
-		case "mux16": mux_size++;
-		case "mux8":  mux_size++;
-		case "mux4":  mux_size++;
-		case "mux2":  mux_size++;
-			var output_size=1;
-			for (var i=0; i<(1<<mux_size); i++) {
-				var linkin = node.getLink('in'+i, false);
-				if (linkin && linkin.size>output_size) 
-					output_size=linkin.size;
-			}
+			break;*/
+		case "mux16": 
+		case "mux8":  
+		case "mux4":  
+		case "mux2":  
 			var linksout=node.linksOutOf();
 			if( linksout.length == 1 && trgtNodeIs(linksout[0], "outputport") ) 
 				netAliases[netName(linksout[0])] = portName(linksout[0].target,"O");
 			else
-				wireSet[output_size].add(gateName(node,"X") );
-			setLinkSetSize(linksout, output_size);
+				wireSet[1].add(gateName(node,"X") );
+			setLinkSetSize(linksout, 1);
 			break;
 		case "decoder4": decoder_size++;
 		case "decoder3": decoder_size++;
@@ -931,43 +914,39 @@ schematic.prototype.createVerilog=function()
 		case "mux8":  mux_size++;
 		case "mux4":  mux_size++;
 		case "mux2":  mux_size++;
-			var output_size=1;
-			for( var i=0; i<(1<<mux_size); i++ )
-			{
-				var linki = node.getLink( 'in'+i,false);
-				if (linki && linki.size>output_size)
-					output_size = linki.size;
-			}
-			netList += "\n\n" + gateNames[module] + output_size +') '+gateName(node,"U") + " ("; 
-			netList=netList+"\n\t";
-			for( var i=0; i<(1<<mux_size); i++ )
-			{
-				var linki = node.getLink( 'in'+i,false);
-				if( linki ) 
-					netList += '.i' + i + '(' + getNameOrAlias( linki) + '), ';
-			}
-			netList += '\n\t.sel( {';
-			//iterate through each select input
-			for( var i=mux_size-1; i>=0; i=i-1 )
-			{
-				var lnk=node.getLink( 'in_sel'+i,false);
-				if( lnk ) 
-					netList+=getNameOrAlias( lnk);
-				else 
-					netList+='1\'bx';
-				netList+=',';
-			}
-			//delete last comma
+			netList += "\n\n" + gateNames[module] +' '+gateName(node,"U")+' ('; 
 			netList=netList.replace(/, *$/gi, '');
-			netList += '}),\n\t.data_out(';
+			netList += '\n\t.data_out( ';
 			var links=node.linksOutOf();
 			if( links.length )
 				netList += getNameOrAlias( links[0]);
 			else
 				netList += gateName(node,"X");
-			netList += ')\n);';
+			netList=netList.replace(/, *$/gi, '');
+			netList += ' ),\n\t.select_in( {';
+			//iterate through each select input
+			for( var i=mux_size-1; i>=0; i=i-1 )
+			{
+				var lnk=node.getLink( 'in_sel'+i,false);
+				if( lnk ) 
+					netList+=getNameOrAlias( lnk)+', ';
+				else 
+					netList+='1\'bx,';
+			}	
+			netList=netList.replace(/, *$/gi, '');
+			netList=netList+"} ),\n\t.data_in( {";
+			for( var i=(1<<mux_size)-1; i>=0; i-- )
+			{
+				var linki = node.getLink( 'in_'+i+'_',false);
+				if( linki ) 
+					netList += getNameOrAlias( linki) + ', ';
+				else
+					netList += "1\'bx, "
+			}	
+			netList=netList.replace(/, *$/gi, '');
+			netList += "} )\n);";
 			break; 
-		case "register_en":
+		/*case "register_en":
 			var linkin=node.getLink( 'in_D_',false);
 			var output_size = (linkin)? linkin.size : 1;
 			netList += '\n\n' + gateNames[module] + ' #(' + output_size + ')' +  ' ' + gateName(node,'U') + ' ('; 
@@ -983,58 +962,157 @@ schematic.prototype.createVerilog=function()
 			if( linkq.length )
 				netList += ',\n\t.out_q('+getNameOrAlias( linkq[0]) + ")";
 			netList=netList+"\n);";
-			break;
-		case "dlatch":
-		case "dlatch_en":
-			netList += '\n\n' + gateNames[module] +  ' ' + gateName(node,'U') + ' ('; 
-			var linkin=node.getLink( 'in_D_',false);
-			if( linkin )
-				netList += '\n\t.in_D(' + getNameOrAlias( linkin) + ')';
-			var linkg=node.getLink( 'in_G_',false);
-			if( linkg )
-				netList += ',\n\t.in_G(' + getNameOrAlias( linkg) + ')';
-			var linken=node.getLink( 'in_en_',false);
-			if( linken ) 
-				netList += ',\n\t.in_en(' + getNameOrAlias( linken) + ')';
-			var linkq=node.linksOutOf();
-			if( linkq.length )
-				netList += ',\n\t.out_q('+getNameOrAlias( linkq[0]) + ")";
-			netList=netList+"\n);"
-			break;
-		case "srlatch":
-		case "srlatch_en":
-			netList += '\n\n' + gateNames[module] +  ' ' + gateName(node,'U') + ' ('; 
-			var linkin=node.getLink( 'in_S_',false);
-			if( linkin )
-				netList += '\n\t.in_S(' + getNameOrAlias( linkin) + ')';
-			var linkr=node.getLink( 'in_R_',false);
-			if( linkr )
-				netList += ',\n\t.in_R(' + getNameOrAlias( linkr) + ')';
-			var linken=node.getLink( 'in_en_',false);
-			if( linken ) 
-				netList += ',\n\t.in_en(' + getNameOrAlias( linken) + ')';
-			var linkq=node.linksOutOf();
-			if( linkq.length )
-				netList += ',\n\t.out_q('+getNameOrAlias( linkq[0]) + ")";
-			netList=netList+"\n);"
-			break;
-		case "dff":
-		case "dff_en":
-			netList += '\n\n' + gateNames[module] +  ' ' + gateName(node,'U') + ' ('; 
-			var linkin=node.getLink( 'in_D_',false);
-			if( linkin )
-				netList += '\n\t.in_D(' + getNameOrAlias( linkin ) + ')';
-			var linkclk=node.getLink( 'in_clk_',false);
-			if( linkclk )
-				netList += ',\n\t.in_clk(' + getNameOrAlias( linkclk ) + ')';
-			var linken=node.getLink( 'in_en_',false);
-			if( linken ) 
-				netList += ',\n\t.in_en(' + getNameOrAlias( linken) + ')';
-			var linkq=node.linksOutOf();
-			if( linkq.length )
-				netList += ',\n\t.out_q('+getNameOrAlias( linkq[0]) + ")";
-			netList=netList+"\n);"
-			break;
+			break;*/
+			case "dlatch":
+				netList += "\n\n" + gateNames[module] + ' ' + gateName(node,"U") + " ("; 
+				netList += '\n\t.data_out( ';
+				var links=node.linksOutOf();
+				if( links.length )
+					netList += getNameOrAlias(links[0]);
+				else
+					netList += gateName(node,"X");
+				netList += ' ),\n\t.in_D( ';
+				{
+					var lnk=node.getLink( 'in_D',false);
+					if( lnk ) netList+=getNameOrAlias(lnk);
+					else netList+='1\'bx';
+				}
+				netList=netList+" ),\n\t.in_G( ";
+				{
+					var lnk=node.getLink( 'in_G',false);
+					if( lnk ) netList+=getNameOrAlias(lnk);
+					else netList+='1\'bx';
+				}
+				netList=netList+" )\n);";
+				break;
+			case "srlatch":
+				netList += "\n\n" + gateNames[module] + ' ' + gateName(node,"U") + " ("; 
+				netList += '\n\t.data_out( ';
+				var links=node.linksOutOf();
+				if( links.length )
+					netList += getNameOrAlias(links[0]);
+				else
+					netList += gateName(node,"X");
+				netList += ' ),\n\t.in_S( ';
+				{
+					var lnk=node.getLink( 'in_S',false);
+					if( lnk ) netList+=getNameOrAlias(lnk);
+					else netList+='1\'bx';
+				}
+				netList=netList+" ),\n\t.in_R( ";
+				{
+					var lnk=node.getLink( 'in_R',false);
+					if( lnk ) netList+=getNameOrAlias(lnk);
+					else netList+='1\'bx';
+				}
+				netList=netList+" )\n);";
+				break;
+			case "srlatch_en":
+				netList += "\n\n" + gateNames[module] + ' ' + gateName(node,"U") + " ("; 
+				netList += '\n\t.data_out( ';
+				var links=node.linksOutOf();
+				if( links.length )
+					netList += getNameOrAlias(links[0]);
+				else
+					netList += gateName(node,"X");
+				netList += ' ),\n\t.in_S( ';
+				{
+					var lnk=node.getLink( 'in_S',false);
+					if( lnk ) netList+=getNameOrAlias(lnk);
+					else netList+='1\'bx';
+				}
+				netList=netList+" ),\n\t.in_R( ";
+				{
+					var lnk=node.getLink( 'in_R',false);
+					if( lnk ) netList+=getNameOrAlias(lnk);
+					else netList+='1\'bx';
+				}
+				netList=netList+" ),\n\t.in_EN( ";
+				{
+					var lnk=node.getLink( 'in_en',false);
+					if( lnk ) netList+=getNameOrAlias(lnk);
+					else netList+='1\'bx';
+				}
+				netList=netList+" )\n);";
+				break;
+			case "dlatch_en":
+				netList += "\n\n" + gateNames[module] + ' ' + gateName(node,"U") + " ("; 
+				netList += '\n\t.data_out( ';
+				var links=node.linksOutOf();
+				if( links.length )
+					netList += getNameOrAlias(links[0]);
+				else
+					netList += gateName(node,"X");
+				netList += ' ),\n\t.in_D( ';
+				{
+					var lnk=node.getLink( 'in_D',false);
+					if( lnk ) netList+=getNameOrAlias(lnk);
+					else netList+='1\'bx';
+				}
+				netList=netList+" ),\n\t.in_G( ";
+				{
+					var lnk=node.getLink( 'in_G',false);
+					if( lnk ) netList+=getNameOrAlias(lnk);
+					else netList+='1\'bx';
+				}
+				netList=netList+" ),\n\t.in_EN( ";
+				{
+					var lnk=node.getLink( 'in_en',false);
+					if( lnk ) netList+=getNameOrAlias(lnk);
+					else netList+='1\'bx';
+				}
+				netList=netList+" )\n);";
+				break;
+			case "dff":
+				netList += "\n\n" + gateNames[module] + ' ' + gateName(node,"U") + " ("; 
+				netList += '\n\t.data_out( ';
+				var links=node.linksOutOf();
+				if( links.length )
+					netList += getNameOrAlias(links[0]);
+				else
+					netList += gateName(node,"X");
+				netList += ' ),\n\t.in_D( ';
+				{
+					var lnk=node.getLink( 'in_D',false);
+					if( lnk ) netList+=getNameOrAlias(lnk);
+					else netList+='1\'bx';
+				}
+				netList=netList+" ),\n\t.in_CLK( ";
+				{
+					var lnk=node.getLink( 'in_>',false);
+					if( lnk ) netList+=getNameOrAlias(lnk);
+					else netList+='1\'bx';
+				}
+				netList=netList+" )\n);";
+				break;
+			case "dff_en":
+				netList += "\n\n" + gateNames[module] + ' ' + gateName(node,"U") + " ("; 
+				netList += '\n\t.data_out( ';
+				var links=node.linksOutOf();
+				if( links.length )
+					netList += getNameOrAlias(links[0]);
+				else
+					netList += gateName(node,"X");
+				netList += ' ),\n\t.in_D( ';
+				{
+					var lnk=node.getLink( 'in_D',false);
+					if( lnk ) netList+=getNameOrAlias(lnk);
+					else netList+='1\'bx';
+				}
+				netList=netList+" ),\n\t.in_CLK( ";
+				{
+					var lnk=node.getLink( 'in_>',false);
+					if( lnk ) netList+=getNameOrAlias(lnk);
+					else netList+='1\'bx';
+				}
+				netList=netList+" ),\n\t.in_EN( ";
+				{
+					var lnk=node.getLink( 'in_en',false);
+					if( lnk ) netList+=getNameOrAlias(lnk);
+					else netList+='1\'bx';
+				}
+				netList=netList+" )\n);";
+				break;
 		case "decoder4": decoder_size++;
 		case "decoder3": decoder_size++;
 		case "decoder2": decoder_size++;
@@ -1063,7 +1141,7 @@ schematic.prototype.createVerilog=function()
 			}
 			//delete last comma
 			netList=netList.replace(/, *$/gi, '');
-			netList=netList+"} ),\n\t.in_en(";
+			netList=netList+"} ),\n\t.en_in(";
 			var linken=node.getLink( 'in_en',false);
 			if( linken ) 
 				netList+=getNameOrAlias( linken );
@@ -1306,9 +1384,9 @@ schematic.prototype.updateGateOutput=function(node)
 		sel+= ckt.linkIsHigh(node.getLink("in_a0")) ? 1 : 0;
 		ckt.setGateOutput( node,false);
 		ckt.setGateOutput( node,ckt.linkIsHigh( node.getLink("in_en")),"out"+(sel+1));
-	case "register_en":
+	/*case "register_en":
 		if( !ckt.linkIsHigh(node.getLink("in_en")))
-			break;
+			break;*/
 	case "srlatch_en":
 		if( !ckt.linkIsHigh(node.getLink("in_en")))
 			break;

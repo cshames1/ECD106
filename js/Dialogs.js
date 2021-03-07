@@ -1393,19 +1393,15 @@ var VerilogWindow = function(editorUi, x, y, w, h)
 	
 		var native_components = editorUi.circuit.getNativeComponentsForExport(); 
 		if (native_components) native_components.forEach(function(module){
-			var text = "";
-			fetch('/verilog/test.v')//will have to add correct file name
+			fetch('/verilog/'+module+'.v')
 			.then(response => response.text())
 			.then(data => {
-				text = data;
+				blob = new Blob([data], { type:"text/plain" });
+				exportveriloganchor.download = module+".v";
+				exportveriloganchor.href = window.URL.createObjectURL(blob);
+				exportveriloganchor.click();
 			});
-			var moduleVerilog = text;
-			blob = new Blob([moduleVerilog], { type: "text/plain"});
-			exportveriloganchor.download = module+".v";//this is the file name, will have to change
-			exportveriloganchor.href = window.URL.createObjectURL(blob);
-			exportveriloganchor.click();
 		}); 
-		
 	});
 
 	exportBtn.className = 'geBtn';

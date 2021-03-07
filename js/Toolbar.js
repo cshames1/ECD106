@@ -97,7 +97,7 @@ Toolbar.prototype.init = function()
 	if (sw >= 780)
 	{
 		//add import and export buttons
-		this.addItems(['-', 'directImport','importVerilogComponent', 'exportVerilog']);
+		this.addItems(['-', 'directImport', '-','importVerilogComponent', 'exportVerilog']);
 	}
 };
 
