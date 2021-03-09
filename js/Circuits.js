@@ -201,7 +201,7 @@ schematic.prototype.runDRC = function()
 		case "mux2":  mux_size++;
 			var data_inputs_connected = (1<<mux_size);
 			for (var i=0; i<mux_size; i++) {
-				var sel_error = getErrorsForModuleInputPort("sel"+i,1,node);
+				var sel_error = getErrorsForModuleInputPort("_sel"+i,1,node);
 				if (sel_error)
 					Messages.addError(sel_error,node);
 			}
@@ -210,7 +210,7 @@ schematic.prototype.runDRC = function()
 			if( node.numLinksOutOf()==0 )
 				Messages.addWarning(module+" has unconnected output",node);
 			for (var i=0; i<(1<<mux_size); i++) {
-				var in_error = getErrorsForModuleInputPort(""+i,1,node);
+				var in_error = getErrorsForModuleInputPort("_"+i,1,node);
 				if (in_error)
 					Messages.addError(in_error,node);
 			}
@@ -306,10 +306,12 @@ schematic.prototype.runDRC = function()
 		case "fanOut8":  fanout_size++;
 		case "fanOut4":	 fanout_size++;
 		case "fanOut2":  fanout_size++;
-			if( node.numLinksOutOf() == 0 )
-				Messages.addWarning(module+" has no connected outputs",node);
-			else if( node.numLinksOutOf() != (1<<fanout_size) )
-				Messages.addWarning(module+" has " + ((1<<fanout_size)-node.numLinksOutOf()) + " unconnected outputs",node);
+			for( var i=0; i<(1<<fanout_size); i++ ) {
+				if( node.getLinks("out"+i,true).length == 0) {
+					Messages.addWarning(module+" has an unconnected data output(s)",node);
+					break;
+				}
+			}
 			var in_error =  getErrorsForModuleInputPort("",(1<<fanout_size),node);
 			if (in_error)
 				Messages.addError( in_error,node );
@@ -1240,6 +1242,7 @@ schematic.prototype.createVerilog=function()
 	verilogCode+="\n\nendmodule\n";
 	//refresh the graph because wires' bit widths may have changed
 	graph.refresh();
+	console.log(netAliases);
 	return verilogCode;
 };
 
