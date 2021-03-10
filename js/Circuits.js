@@ -880,8 +880,19 @@ schematic.prototype.createVerilog=function()
 			else
 				outputList+="\n\toutput [" + ((1<<outputport_size)-1) + ':0] ' + portName(node,'O') +',';
 			var link=node.linksInto();
-			if( link.length == 0 )
-				outputAssignList += "\nassign " + portName(node,"O") + " = 1\'bx;" ;
+			if( link.length == 0 ){
+				outputAssignList += "\nassign "+portName(node,"O")+" = ";
+				if (outputport_size==0)
+					outputAssignList += "1\'bx;" ;
+				else {
+					outputAssignList += "{ " ;
+					for (var i=0; i<(1<<outputport_size); i++) {
+						outputAssignList += "1\'bx, " ;
+					}
+					outputAssignList = outputAssignList.replace(/, *$/gi, '');
+					outputAssignList += ' };'
+				}
+			}
 			else if( getNameOrAlias( link[0]) != portName(node,"O")) 
 			{
 				outputAssignList += "\nassign " + portName(node,"O") + " = " ;
@@ -1242,7 +1253,6 @@ schematic.prototype.createVerilog=function()
 	verilogCode+="\n\nendmodule\n";
 	//refresh the graph because wires' bit widths may have changed
 	graph.refresh();
-	console.log(netAliases);
 	return verilogCode;
 };
 
