@@ -881,17 +881,11 @@ schematic.prototype.createVerilog=function()
 				outputList+="\n\toutput [" + ((1<<outputport_size)-1) + ':0] ' + portName(node,'O') +',';
 			var link=node.linksInto();
 			if( link.length == 0 ){
-				outputAssignList += "\nassign "+portName(node,"O")+" = ";
-				if (outputport_size==0)
-					outputAssignList += "1\'bx;" ;
-				else {
-					outputAssignList += "{ " ;
-					for (var i=0; i<(1<<outputport_size); i++) {
-						outputAssignList += "1\'bx, " ;
-					}
-					outputAssignList = outputAssignList.replace(/, *$/gi, '');
-					outputAssignList += ' };'
+				outputAssignList += "\nassign "+portName(node,"O")+" = " + (1<<outputport_size)+"\'b";
+				for (var i=0; i<(1<<outputport_size); i++) {
+					outputAssignList += "x" ;
 				}
+				outputAssignList += ";";
 			}
 			else if( getNameOrAlias( link[0]) != portName(node,"O")) 
 			{
