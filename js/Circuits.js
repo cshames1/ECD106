@@ -1086,7 +1086,7 @@ schematic.prototype.createVerilog=function()
 				}
 				netList=netList+" ),\n\t.in_CLK( ";
 				{
-					var lnk=node.getLink( 'in_>',false);
+					var lnk=node.getLink( 'in_clk',false);
 					if( lnk ) netList+=getNameOrAlias(lnk);
 					else netList+='1\'bx';
 				}
@@ -1108,7 +1108,7 @@ schematic.prototype.createVerilog=function()
 				}
 				netList=netList+" ),\n\t.in_CLK( ";
 				{
-					var lnk=node.getLink( 'in_>',false);
+					var lnk=node.getLink( 'in_clk',false);
 					if( lnk ) netList+=getNameOrAlias(lnk);
 					else netList+='1\'bx';
 				}
@@ -1414,9 +1414,9 @@ schematic.prototype.updateGateOutput=function(node)
 		if( !ckt.linkIsHigh(node.getLink("in_en")))
 			break;
 	case "dff":
-		if( !node.clkLast && ckt.linkIsHigh(node.getLink("in_>")))
+		if( !node.clkLast && ckt.linkIsHigh(node.getLink("in_clk")))
 			ckt.setGateOutput( node,ckt.linkIsHigh( node.getLink("in_D")));
-		node.clkLast = ckt.linkIsHigh( node.getLink("in_>")) ;
+		node.clkLast = ckt.linkIsHigh( node.getLink("in_clk")) ;
 		break;
 	default:
 	//------- never tested
