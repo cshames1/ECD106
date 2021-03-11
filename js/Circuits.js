@@ -840,7 +840,6 @@ schematic.prototype.createVerilog=function()
 					wireSet[portSizes.output[id]].add(netName(linksout[0],"X"));
 				setLinkSetSize(linksout, portSizes.output[id]);					
 			});
-
 			break;
 		}
 	});
