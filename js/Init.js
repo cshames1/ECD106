@@ -14,6 +14,7 @@ window.STENCIL_PATH = window.STENCIL_PATH || 'stencils';
 window.IMAGE_PATH = window.IMAGE_PATH || 'images';
 window.STYLE_PATH = window.STYLE_PATH || 'styles';
 window.CSS_PATH = window.CSS_PATH || 'styles';
+window.VERILOG_PATH = window.VERILOG_PATH || 'verilog';
 window.OPEN_FORM = window.OPEN_FORM || 'open.html';
 window.IMPORT_FORM = window.IMPORT_FORM || 'import.html';
 window.EDIT_FORM = window.EDIT_FORM || 'edit.html';

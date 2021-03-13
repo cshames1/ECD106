@@ -201,7 +201,7 @@ schematic.prototype.runDRC = function()
 		case "mux2":  mux_size++;
 			var data_inputs_connected = (1<<mux_size);
 			for (var i=0; i<mux_size; i++) {
-				var sel_error = getErrorsForModuleInputPort("sel"+i,1,node);
+				var sel_error = getErrorsForModuleInputPort("_sel"+i,1,node);
 				if (sel_error)
 					Messages.addError(sel_error,node);
 			}
@@ -210,7 +210,7 @@ schematic.prototype.runDRC = function()
 			if( node.numLinksOutOf()==0 )
 				Messages.addWarning(module+" has unconnected output",node);
 			for (var i=0; i<(1<<mux_size); i++) {
-				var in_error = getErrorsForModuleInputPort(""+i,1,node);
+				var in_error = getErrorsForModuleInputPort("_"+i,1,node);
 				if (in_error)
 					Messages.addError(in_error,node);
 			}
@@ -306,10 +306,12 @@ schematic.prototype.runDRC = function()
 		case "fanOut8":  fanout_size++;
 		case "fanOut4":	 fanout_size++;
 		case "fanOut2":  fanout_size++;
-			if( node.numLinksOutOf() == 0 )
-				Messages.addWarning(module+" has no connected outputs",node);
-			else if( node.numLinksOutOf() != (1<<fanout_size) )
-				Messages.addWarning(module+" has " + ((1<<fanout_size)-node.numLinksOutOf()) + " unconnected outputs",node);
+			for( var i=0; i<(1<<fanout_size); i++ ) {
+				if( node.getLinks("out"+i,true).length == 0) {
+					Messages.addWarning(module+" has an unconnected data output(s)",node);
+					break;
+				}
+			}
 			var in_error =  getErrorsForModuleInputPort("",(1<<fanout_size),node);
 			if (in_error)
 				Messages.addError( in_error,node );
@@ -838,7 +840,6 @@ schematic.prototype.createVerilog=function()
 					wireSet[portSizes.output[id]].add(netName(linksout[0],"X"));
 				setLinkSetSize(linksout, portSizes.output[id]);					
 			});
-
 			break;
 		}
 	});
@@ -878,8 +879,13 @@ schematic.prototype.createVerilog=function()
 			else
 				outputList+="\n\toutput [" + ((1<<outputport_size)-1) + ':0] ' + portName(node,'O') +',';
 			var link=node.linksInto();
-			if( link.length == 0 )
-				outputAssignList += "\nassign " + portName(node,"O") + " = 1\'bx;" ;
+			if( link.length == 0 ){
+				outputAssignList += "\nassign "+portName(node,"O")+" = " + (1<<outputport_size)+"\'b";
+				for (var i=0; i<(1<<outputport_size); i++) {
+					outputAssignList += "x" ;
+				}
+				outputAssignList += ";";
+			}
 			else if( getNameOrAlias( link[0]) != portName(node,"O")) 
 			{
 				outputAssignList += "\nassign " + portName(node,"O") + " = " ;
@@ -1079,7 +1085,7 @@ schematic.prototype.createVerilog=function()
 				}
 				netList=netList+" ),\n\t.in_CLK( ";
 				{
-					var lnk=node.getLink( 'in_>',false);
+					var lnk=node.getLink( 'in_clk',false);
 					if( lnk ) netList+=getNameOrAlias(lnk);
 					else netList+='1\'bx';
 				}
@@ -1101,7 +1107,7 @@ schematic.prototype.createVerilog=function()
 				}
 				netList=netList+" ),\n\t.in_CLK( ";
 				{
-					var lnk=node.getLink( 'in_>',false);
+					var lnk=node.getLink( 'in_clk',false);
 					if( lnk ) netList+=getNameOrAlias(lnk);
 					else netList+='1\'bx';
 				}
@@ -1407,9 +1413,9 @@ schematic.prototype.updateGateOutput=function(node)
 		if( !ckt.linkIsHigh(node.getLink("in_en")))
 			break;
 	case "dff":
-		if( !node.clkLast && ckt.linkIsHigh(node.getLink("in_>")))
+		if( !node.clkLast && ckt.linkIsHigh(node.getLink("in_clk")))
 			ckt.setGateOutput( node,ckt.linkIsHigh( node.getLink("in_D")));
-		node.clkLast = ckt.linkIsHigh( node.getLink("in_>")) ;
+		node.clkLast = ckt.linkIsHigh( node.getLink("in_clk")) ;
 		break;
 	default:
 	//------- never tested

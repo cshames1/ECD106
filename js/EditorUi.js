@@ -3534,25 +3534,21 @@ EditorUi.prototype.save = function()
 			{
 				if (xml.length < MAX_REQUEST_SIZE) //check file size
 				{
-
-//download the schematic file
-   var text = xml;
-    var blob = new Blob([text], { type: "text/plain"});
-    var anchor = document.createElement("a");
-    anchor.download = this.editor.getOrCreateFilename();
-    anchor.href = window.URL.createObjectURL(blob);
-    anchor.target ="_blank";
-    anchor.style.display = "none";
-    document.body.appendChild(anchor);
-    anchor.click();
-
-
+					//download the schematic file
+					var text = xml;
+					var blob = new Blob([text], { type: "text/plain"});
+					var anchor = document.createElement("a");
+					anchor.download = this.editor.getOrCreateFilename();
+					anchor.href = window.URL.createObjectURL(blob);
+					anchor.target ="_blank";
+					anchor.style.display = "none";
+					document.body.appendChild(anchor);
+					anchor.click();
 				}
 				else
 				{
 					mxUtils.alert(mxResources.get('drawingTooLarge'));
 					mxUtils.popup(xml);
-
 					return;
 				}
 			}
