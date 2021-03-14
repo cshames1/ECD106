@@ -3474,10 +3474,12 @@ EditorUi.prototype.directImport = function() {
 			return false;
 		}
 		//check if name is used
-		for (var i=0; i<storedShapes.length; i++) {
-			if ( storedShapes[i].componentName==name ){
-				mxUtils.confirm(mxResources.get('nameUsed'));
-				return false;
+		if ( storedShapes ) {
+			for (var i=0; i<storedShapes.length; i++) {
+				if ( storedShapes[i].componentName==name ){
+					mxUtils.confirm(mxResources.get('nameUsed'));
+					return false;
+				}
 			}
 		}
 		//check if circuit passes DRC

@@ -1429,59 +1429,54 @@ schematic.prototype.updateGateOutput=function(node)
 };
 
 schematic.prototype.addComponent = function (verilog,compName){
-				remove_whitespace = function(text) {
-					var res = text.replace(/\s+/, '');
-					return res;
-				};
+	remove_whitespace = function(text) {
+		var res = text.replace(/\s+/, '');
+		return res;
+	};
+	remove_parenthesis = function(text) {
+		var res = text.replace(/[(\r\n]+/, '');
+		return res;
+	};
+	remove_commas = function(text) {
+		var res = text.replace(/,/, '');
+		return res;
+	};
+	//split verilog into array of lines separated by newline characters
+	var lines = verilog.split(/\n/g);
 
-				remove_parenthesis = function(text) {
-					var res = text.replace(/[(\r\n]+/, '');
-					return res;
-				};
+	//for each line after the first line, find the direction and name of each input/output
+	var signals = {input:[], output:[]};
+	var signal_size = {input:[], output:[]};
+	for(var i = 1; lines[i].indexOf(';') < 0; i++){
 
-				remove_commas = function(text) {
-					var res = text.replace(/,/, '');
-					return res;
-				};
+		let words = lines[i].split(" ");
+		let port_size;
+		if (lines[i].includes('[')) {
+			port_size = lines[i].split('[')[1];
+			port_size = port_size.split(':')[0];
+			port_size++;
+		}
+		else	
+			port_size=1;
 
-				//split verilog into array of lines separated by newline characters
-				var lines = verilog.split(/\n/g);
-				//retrieve name of module from from first line
-				var SymbolName = remove_parenthesis(lines[0].split(" ")[1]); 
-
-				//for each line after the first line, find the direction and name of each input/output
-				var signals = {input:[], output:[]};
-				var signal_size = {input:[], output:[]};
-				for(var i = 1; lines[i].indexOf(';') < 0; i++){
-
-					let words = lines[i].split(" ");
-					let port_size;
-					if (lines[i].includes('[')) {
-						port_size = lines[i].split('[')[1];
-						port_size = port_size.split(':')[0];
-						port_size++;
-					}
-					else	
-						port_size=1;
-						
-					let direction = remove_whitespace(words[0]);
-					let port_name = remove_whitespace(remove_commas(words[words.length - 1]));
-					signals[direction].push(port_name);
-					signal_size[direction].push(port_size);
-				}
-				//save the decoded shape to localstorage
-				var storedShapes = JSON.parse(localStorage.getItem('storedShapes'));
-				if(storedShapes == null)
-					storedShapes = []
-					if ( signals['input'].length!=0 && signals['input'].length!=0) {
-						storedShapes.push({
-							"componentName":compName.replace(".v", ""),
-							"signals":signals,
-							"signal_size":signal_size,
-							"verilogCode":verilog
-						});
-					}
-				localStorage.setItem('storedShapes', JSON.stringify(storedShapes));
-				//reload the page
-				location.reload();
+			let direction = remove_whitespace(words[0]);
+			let port_name = remove_whitespace(remove_commas(words[words.length - 1]));
+			signals[direction].push(port_name);
+			signal_size[direction].push(port_size);
+	}
+	//save the decoded shape to localstorage
+	var storedShapes = JSON.parse(localStorage.getItem('storedShapes'));
+	if(storedShapes == null)
+		storedShapes = []
+	if ( signals['input'].length!=0 && signals['input'].length!=0) {
+		storedShapes.push({
+			"componentName":compName.replace(".v", ""),
+			"signals":signals,
+			"signal_size":signal_size,
+			"verilogCode":verilog
+		});
+	}
+	localStorage.setItem('storedShapes', JSON.stringify(storedShapes));
+	//reload the page
+	location.reload();
 }

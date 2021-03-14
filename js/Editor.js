@@ -14,7 +14,10 @@ Editor = function(chromeless, themes, model, graph, editable)
 
 	this.getOrCreateFilename = function()
 	{
-		return this.filename || mxResources.get('schematic', [Editor.pageCounter]) + '.sch';
+		var name = ( this.filename || mxResources.get('schematic', [Editor.pageCounter]) );
+		if ( !name.endsWith(".sch") )
+			name += ".sch";
+		return name;
 	};
 
 	this.getFilename = function()
