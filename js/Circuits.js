@@ -1126,7 +1126,7 @@ schematic.prototype.createVerilog=function()
 			netList += '\n\t.data_out( {';
 			for( var i=(1<<decoder_size)-1; i>=0; i=i-1 )
 			{
-				var lnk=node.getLink( 'out'+(i)+'_d'+i,true);
+				var lnk=node.getLink( 'out'+i+'_d',true);
 				if( lnk ) 
 					netList+=getNameOrAlias( lnk);
 				else 
@@ -1370,29 +1370,25 @@ schematic.prototype.updateGateOutput=function(node)
 			links.forEach(function(link){ count=count+(ckt.linkIsHigh(link)?1:0);} );
 		ckt.setGateOutput(node,(1+count)%2 );
 		break;
-		
 	case "mux16":
-		sel+= ckt.linkIsHigh(node.getLink("in_s3")) ? 8 : 0;
+		sel+= ckt.linkIsHigh(node.getLink("in_sel3")) ? 8 : 0;
 	case "mux8":
-		sel+= ckt.linkIsHigh(node.getLink("in_s2")) ? 4 : 0;
+		sel+= ckt.linkIsHigh(node.getLink("in_sel2")) ? 4 : 0;
 	case "mux4":
-		sel+= ckt.linkIsHigh(node.getLink("in_s1")) ? 2 : 0;
+		sel+= ckt.linkIsHigh(node.getLink("in_sel1")) ? 2 : 0;
 	case "mux2":
-		sel+= ckt.linkIsHigh(node.getLink("in_s0")) ? 1 : 0;
-		ckt.setGateOutput( node,ckt.linkIsHigh( node.getLink("in_i"+sel+"_")));
+		sel+= ckt.linkIsHigh(node.getLink("in_sel0")) ? 1 : 0;
+		ckt.setGateOutput( node,ckt.linkIsHigh( node.getLink("in_"+sel+"_")));
 		break;
 	case "decoder4":
-		sel+= ckt.linkIsHigh(node.getLink("in_a3")) ? 8 : 0;
+		sel+= ckt.linkIsHigh(node.getLink("in3_a")) ? 8 : 0;
 	case "decoder3":
-		sel+= ckt.linkIsHigh(node.getLink("in_a2")) ? 4 : 0;
+		sel+= ckt.linkIsHigh(node.getLink("in2_a")) ? 4 : 0;
 	case "decoder2":
-		sel+= ckt.linkIsHigh(node.getLink("in_a1")) ? 2 : 0;
-		sel+= ckt.linkIsHigh(node.getLink("in_a0")) ? 1 : 0;
+		sel+= ckt.linkIsHigh(node.getLink("in1_a")) ? 2 : 0;
+		sel+= ckt.linkIsHigh(node.getLink("in0_a")) ? 1 : 0;
 		ckt.setGateOutput( node,false);
-		ckt.setGateOutput( node,ckt.linkIsHigh( node.getLink("in_en")),"out"+(sel+1));
-	/*case "register_en":
-		if( !ckt.linkIsHigh(node.getLink("in_en")))
-			break;*/
+		ckt.setGateOutput( node,ckt.linkIsHigh( node.getLink("in_en")),"out"+(sel));
 	case "srlatch_en":
 		if( !ckt.linkIsHigh(node.getLink("in_en")))
 			break;
@@ -1417,13 +1413,13 @@ schematic.prototype.updateGateOutput=function(node)
 			ckt.setGateOutput( node,ckt.linkIsHigh( node.getLink("in_D")));
 		node.clkLast = ckt.linkIsHigh( node.getLink("in_clk")) ;
 		break;
-	default:
+	/*default:
 	//------- never tested
 		sel+= ckt.linkIsHigh(node.getLink("in_a1")) ? 2 : 0;
 		sel+= ckt.linkIsHigh(node.getLink("in_a0")) ? 1 : 0;
 		ckt.setGateOutput( node,false);
 		ckt.setGateOutput( node,ckt.linkIsHigh( node.getLink("in_en")),"out"+(sel+1));
-		break;
+		break;*/
 	//-------
 	}
 };
