@@ -906,7 +906,7 @@ schematic.prototype.createVerilog=function()
 				netList += getNameOrAlias( links[0]);
 			else
 				netList += gateName(node,"X");
-			netList+=',';
+			netList+=', ';
 			var links=node.linksInto();
 			if( links.length )
 				links.forEach( function(link){ netList += getNameOrAlias( link) + ', ';});
@@ -1388,7 +1388,7 @@ schematic.prototype.updateGateOutput=function(node)
 		sel+= ckt.linkIsHigh(node.getLink("in1_a")) ? 2 : 0;
 		sel+= ckt.linkIsHigh(node.getLink("in0_a")) ? 1 : 0;
 		ckt.setGateOutput( node,false);
-		ckt.setGateOutput( node,ckt.linkIsHigh( node.getLink("in_en")),"out"+(sel));
+		ckt.setGateOutput( node,ckt.linkIsHigh( node.getLink("in_en")),"out"+sel+'_d');
 	case "srlatch_en":
 		if( !ckt.linkIsHigh(node.getLink("in_en")))
 			break;
@@ -1413,13 +1413,13 @@ schematic.prototype.updateGateOutput=function(node)
 			ckt.setGateOutput( node,ckt.linkIsHigh( node.getLink("in_D")));
 		node.clkLast = ckt.linkIsHigh( node.getLink("in_clk")) ;
 		break;
-	/*default:
+	default:
 	//------- never tested
 		sel+= ckt.linkIsHigh(node.getLink("in_a1")) ? 2 : 0;
 		sel+= ckt.linkIsHigh(node.getLink("in_a0")) ? 1 : 0;
 		ckt.setGateOutput( node,false);
 		ckt.setGateOutput( node,ckt.linkIsHigh( node.getLink("in_en")),"out"+(sel+1));
-		break;*/
+		break;
 	//-------
 	}
 };
