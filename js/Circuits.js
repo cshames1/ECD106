@@ -40,7 +40,7 @@ schematic.prototype.checkIdentifier = function(newstr)
 };
 
 schematic.prototype.isNativeComponent = function( component ){
-	var native_components=["and", "nand", "or","nor","xor","xnor","buf", "not",
+	var native_components=["and", "nand", "or","nor","xor","xnor","buf", "inverter",
 					"mux2","mux4", "mux8","mux16",
 					"decoder2","decoder3","decoder4",
 					//"register_en", 
@@ -863,10 +863,12 @@ schematic.prototype.createVerilog=function()
 		case "inputport4":  inputport_size++;
 		case "inputport2":  inputport_size++;
 		case "inputport1":
-			if (inputport_size==0) 
-				inputList+="\n\tinput " + portName(node,'I') +',';
-			else
-				inputList+="\n\tinput [" + ((1<<inputport_size)-1) + ':0] ' + portName(node,'I') +',';
+			if ( !inputList.includes(portName(node,'I')) ) {
+				if (inputport_size==0) 
+					inputList+="\n\tinput " + portName(node,'I') +',';
+				else
+					inputList+="\n\tinput [" + ((1<<inputport_size)-1) + ':0] ' + portName(node,'I') +',';
+			}
 			break;
 		case "outputport32": outputport_size++;
 		case "outputport16": outputport_size++;
