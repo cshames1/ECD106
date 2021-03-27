@@ -115,47 +115,61 @@
 		window.parent.openFile.cancel(cancel);
 	}
 
-  function removeFile(id){
-    document.getElementById('fileRow-'+id).innerHTML = "";
-    deletedIDS.push(id)
-  }
+ 	function removeFile(id){
+    	document.getElementById('fileRow-'+id).innerHTML = "";
+    	deletedIDS.push(id)
+  	}
 
-  function nameIsUsed(id,name){
+    function nameIsUsed(id,name){
 	for (var i=0; i<storedShapes.length; i++) {
 		if((i!=id) && (name==storedShapes[i].componentName))
 			return true;
 	}
 	return false;
     }
-
+	function isNativeComponent ( component ){
+		var native_components=["and", "nand", "or","nor","xor","xnor","buf", "inverter",
+					"mux2","mux4", "mux8","mux16",
+					"decoder2","decoder3","decoder4",
+					"dff", "dff_en", "srlatch", "srlatch_en", "dlatch", "dlatch_en", 
+					"fanIn2",  "fanIn4",  "fanIn8",  "fanIn16",  "fanIn32",
+					"fanOut2",  "fanOut4", "fanOut8", "fanOut16", "fanOut32",
+					"inputport1", "inputport2", "inputport4", "inputport8", "inputport16", "inputport32",
+					"outputport1", "outputport2", "outputport4", "outputport8", "outputport16", "outputport32",
+					"constant0", "constant1" ];
+		return native_components.includes( component );
+	};
   	function changeFileName(id,newName){
 		changedNames[id] = newName;
-		var disable_open = false;
+		var invalid_id = false;
 		var isExistingFile = false;
 		//check for duplicates
 		var form = window.openForm || document.getElementById('openForm');
-		var files = form.upfile.files
+		var files = form.upfile.files;
+		var used_names = new Set();;
 		for (var i = 0; i < files.length; i++){
-				(function(file)
-				{
-			var name = file.name;
-			if (changedNames[i]){name = changedNames[i]}
-
-			for (existingfile in storedShapes){
-				if (storedShapes[existingfile].componentName == name.replace(".v", "")){
-					isExistingFile = true;
-					alert('"'+file.name +'" already exists. Please change the name.');
+			(function(file){
+				var name = file.name;
+				if (changedNames[i]){name = changedNames[i]}
+				if ( !deletedIDS.includes(i) ) {
+					for (existingfile in storedShapes){
+						if (storedShapes[existingfile].componentName == name.replace(".v", "") || isNativeComponent(name.replace(".v", "")) ){
+							isExistingFile = true;
+							used_names.add( name.replace(".v", "") );
+						}
+						if ( !checkVerilogIdentifier(name) )
+							invalid_id = true;
+					}
 				}
-				if ( !checkVerilogIdentifier(name) )
-					disable_open = true;
-			}
-				})(files[i]);
+			})(files[i]);
 		}
-		if (disable_open)
+		if (invalid_id)
 			alert('Module names must start with a letter or _ and may not contain whitespace.');
-		if ( !isExistingFile && !disable_open )
+		if (used_names.size)
+			used_names.forEach(function(name){alert('"'+name +'" already exists. Please change the name.');});
+		if ( !isExistingFile && !invalid_id )//enable
 			openButton.removeAttribute('disabled');
-		else
+		else//disable
 			openButton.setAttribute('disabled', 'disabled');
   	}
 

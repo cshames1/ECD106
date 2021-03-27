@@ -99,7 +99,7 @@ Actions.prototype.init = function()
 		
 		window.openFile.setConsumer(mxUtils.bind(this, function(name)
 		{	
-			ui.circuit.addComponent(ui.circuit.createVerilog(), name);
+			schematic.addComponent(ui.circuit.createVerilog(), name);
 		}));
 
 		ui.directImport();
@@ -149,7 +149,7 @@ Actions.prototype.init = function()
 				for (var i = 0; i < allVerilog.length; i++)
 				{
 					(function(shape){
-						ui.circuit.addComponent(shape.verilog,shape.name)
+						schematic.addComponent(shape.verilog,shape.name)
 					})(allVerilog[i]);
 				}
 			}

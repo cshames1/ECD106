@@ -3469,8 +3469,8 @@ EditorUi.prototype.directImport = function() {
 	{
 		var storedShapes = JSON.parse(localStorage.getItem('storedShapes'));
 		//check if name is valid in verilog
-		if ( this.circuit.checkIdentifier(name)!="" ) {
-			mxUtils.confirm(mxResources.get('invalidName'));
+		if ( schematic.getIDerror(name)!="" ) {
+			mxUtils.confirm(schematic.getIDerror(name));
 			return false;
 		}
 		//check if name is used

@@ -3,54 +3,109 @@
  *
  */
 
-function schematic( graph )
+class schematic
 {
-	this.graph = graph;
-	this.maxPortnameLength=20;
-}
+	constructor(graph) {
+		this.graph = graph;
+		this.maxPortnameLength=20;
+	}
+	static isNativeComponent( component ){
+		var native_components=["and", "nand", "or","nor","xor","xnor","buf", "inverter",
+						"mux2","mux4", "mux8","mux16",
+						"decoder2","decoder3","decoder4",
+						//"register_en", 
+						"dff", "dff_en", "srlatch", "srlatch_en", "dlatch", "dlatch_en", 
+						"fanIn2",  "fanIn4",  "fanIn8",  "fanIn16",  "fanIn32",
+						"fanOut2",  "fanOut4", "fanOut8", "fanOut16", "fanOut32",
+						"inputport1", "inputport2", "inputport4", "inputport8", "inputport16", "inputport32",
+						"outputport1", "outputport2", "outputport4", "outputport8", "outputport16", "outputport32",
+						"constant0", "constant1" ];
+		return native_components.includes( component );
+	}; 
+	static isVerilogReserved( str ){
+		var verilogReserved=new Set( ["always", "ifnone", "rpmos", "and", "initial", "rtran", "assign", "inout", "rtranif0", "begin", "input", "rtranif1", "buf", "integer", "scalared", "bufif0", "join", "small", "bufif1", "large", "specify", "case", "macromodule", "specparam", "casex", "medium", "strong0", "casez", "module", "strong1", "cmos", "nand", "supply0", "deassign", "negedge", "supply1", "default", "nmos", "table", "defparam", "nor", "task", "disable", "not", "time", "edge", "notif0", "tran", "else", "notif1", "tranif0", "end", "or", "tranif1", "endcase", "output", "tri", "endmodule", "parameter", "tri0", "endfunction", "pmos", "tri1", "endprimitive", "posedge", "triand", "endspecify", "primitive", "trior", "endtable", "pull0", "trireg", "endtask", "pull1", "vectored", "event", "pullup", "wait", "for", "pulldown", "wand", "force", "rcmos", "weak0", "forever", "real", "weak1", "fork", "realtime", "while", "function", "reg", "wire", "highz0", "release", "wor", "highz1", "repeat", "xnor", "if", "rnmos", "xor"]);
+		return verilogReserved.has(str);
+	};
+	static getIDerror( newstr ){
+		function isAlpha(c){
+			return /^[A-Z]$/i.test(c);
+		}
+		if( newstr.length > this.maxPortnameLength )
+			return "Error ("+newstr+"): Identifiers must be less than" + this.maxPortnameLength + "characters";
+		if( !isAlpha(newstr[0]) && newstr[0]!='_' || newstr.includes(" ") ) 
+			return "Error ("+newstr+"): Identifiers must start with a letter or _ and may not contain whitespace";
+		if( schematic.isVerilogReserved(newstr) )
+			return  "Error:" + newstr + " is a Verilog reserved word and cannot be used as an identifier";
+		return "";
+	};
+	static addComponent( verilog,compName ){
+		function remove_whitespace(text) {
+			var res = text.replace(/\s+/, '');
+			return res;
+		};
+		function remove_parenthesis (text) {
+			var res = text.replace(/[(\r\n]+/, '');
+			return res;
+		};
+		function remove_commas (text) {
+			var res = text.replace(/,/, '');
+			return res;
+		};
+		//split verilog into array of lines separated by newline characters
+		var lines = verilog.split(/\n/g);
+		
+		var nsignals = {input:[], output:[]};
+		var nsignal_size = {input:[], output:[]};
+		console.log(lines);
 
-schematic.prototype.isVerilogReserved = function(str)
-{
-	var verilogReserved=new Set( ["always", "ifnone", "rpmos", "and", "initial", "rtran", "assign", "inout", "rtranif0", "begin", "input", "rtranif1", "buf", "integer", "scalared", "bufif0", "join", "small", "bufif1", "large", "specify", "case", "macromodule", "specparam", "casex", "medium", "strong0", "casez", "module", "strong1", "cmos", "nand", "supply0", "deassign", "negedge", "supply1", "default", "nmos", "table", "defparam", "nor", "task", "disable", "not", "time", "edge", "notif0", "tran", "else", "notif1", "tranif0", "end", "or", "tranif1", "endcase", "output", "tri", "endmodule", "parameter", "tri0", "endfunction", "pmos", "tri1", "endprimitive", "posedge", "triand", "endspecify", "primitive", "trior", "endtable", "pull0", "trireg", "endtask", "pull1", "vectored", "event", "pullup", "wait", "for", "pulldown", "wand", "force", "rcmos", "weak0", "forever", "real", "weak1", "fork", "realtime", "while", "function", "reg", "wire", "highz0", "release", "wor", "highz1", "repeat", "xnor", "if", "rnmos", "xor"]);
-	return verilogReserved.has(str);
-};
+		//for each line after the first line, find the direction and name of each input/output
+		var signals = {input:[], output:[]};
+		var signal_size = {input:[], output:[]};
+		for(var i = 1; lines[i].indexOf(';') < 0; i++){
+	
+			let words = lines[i].split(" ");
+			let port_size;
+			if (lines[i].includes('[')) {
+				port_size = lines[i].split('[')[1];
+				port_size = port_size.split(':')[0];
+				port_size++;
+			}
+			else	
+				port_size=1;
+	
+				let direction = remove_whitespace(words[0]);
+				let port_name = remove_whitespace(remove_commas(words[words.length - 1]));
+				signals[direction].push(port_name);
+				signal_size[direction].push(port_size);
+				console.log(signals);
+				console.log(signal_size);
+		}
+		//save the decoded shape to localstorage
+		var storedShapes = JSON.parse(localStorage.getItem('storedShapes'));
+		if(storedShapes == null)
+			storedShapes = []
+		if ( signals['input'].length!=0 && signals['input'].length!=0) {
+			storedShapes.push({
+				"componentName":compName.replace(".v", ""),
+				"signals":signals,
+				"signal_size":signal_size,
+				"verilogCode":verilog
+			});
+		}
+		localStorage.setItem('storedShapes', JSON.stringify(storedShapes));
+		//reload the page
+		location.reload();
+	};
+}
 
 schematic.prototype.checkPortName= function(newstr)
 {
-	var check_id_error = this.checkIdentifier(newstr);
+	var check_id_error = schematic.getIDerror(newstr);
 	if ( check_id_error )
 		return check_id_error;
 	if( /^[UX].*$/.test(newstr) )
 		return "Error ("+newstr+"): Port names cannot start with uppercase U or X";
 	return "";
-};
-
-schematic.prototype.checkIdentifier = function(newstr)
-{
-	function isAlpha(c){
-		return /^[A-Z]$/i.test(c);
-	}
-	if( newstr.length > this.maxPortnameLength )
-		return "Error ("+newstr+"): Identifiers must be less than" + this.maxPortnameLength + "characters";
-	if( !isAlpha(newstr[0]) && newstr[0]!='_' || newstr.includes(" ") ) 
-		return "Error ("+newstr+"): Identifiers must start with a letter or _ and may not contain whitespace";
-	if( this.isVerilogReserved(newstr) )
-		return  "Error:" + newstr + " is a Verilog reserved word and cannot be used as an identifier";
-	return "";
-};
-
-schematic.prototype.isNativeComponent = function( component ){
-	var native_components=["and", "nand", "or","nor","xor","xnor","buf", "inverter",
-					"mux2","mux4", "mux8","mux16",
-					"decoder2","decoder3","decoder4",
-					//"register_en", 
-					"dff", "dff_en", "srlatch", "srlatch_en", "dlatch", "dlatch_en", 
-					"fanIn2",  "fanIn4",  "fanIn8",  "fanIn16",  "fanIn32",
-					"fanOut2",  "fanOut4", "fanOut8", "fanOut16", "fanOut32",
-					"inputport1", "inputport2", "inputport4", "inputport8", "inputport16", "inputport32",
-					"outputport1", "outputport2", "outputport4", "outputport8", "outputport16", "outputport32",
-					"constant0", "constant1" ];
-	return native_components.includes( component );
 };
 
 schematic.prototype.runDRC = function()
@@ -359,7 +414,7 @@ schematic.prototype.runDRC = function()
 				if ( !link )
 					Messages.addWarning(module + " has unconnected output ("+ports.output[i]+')',node);
 			}
-			nameError=this.checkIdentifier(module);
+			nameError=schematic.getIDerror(module);
 			if( nameError != "")
 				Messages.addError(nameError,node);
 			break;
@@ -409,7 +464,7 @@ schematic.prototype.getImportedComponentsForExport=function(){
 	if( nodes ) nodes.forEach(function(item){
 		var style=graph.getCellStyle(item); 
 		var module = style["shape"];
-		if ( !schematic.prototype.isNativeComponent(module) ) 
+		if ( !schematic.isNativeComponent(module) ) 
 			components.add( module );
 	});
 	return components;
@@ -457,7 +512,7 @@ schematic.prototype.deleteClearedComponents = function(){
 	if( nodes ) nodes.forEach(function(node){
 		var style=graph.getCellStyle(node); 
 		var module = style["shape"];
-		if ( !schematic.prototype.isNativeComponent(module) && !storedShapesIncludes(module) ){
+		if ( !schematic.isNativeComponent(module) && !storedShapesIncludes(module) ){
 			cells.push(node);
 		}
 	});
@@ -1426,55 +1481,3 @@ schematic.prototype.updateGateOutput=function(node)
 	}
 };
 
-schematic.prototype.addComponent = function (verilog,compName){
-	remove_whitespace = function(text) {
-		var res = text.replace(/\s+/, '');
-		return res;
-	};
-	remove_parenthesis = function(text) {
-		var res = text.replace(/[(\r\n]+/, '');
-		return res;
-	};
-	remove_commas = function(text) {
-		var res = text.replace(/,/, '');
-		return res;
-	};
-	//split verilog into array of lines separated by newline characters
-	var lines = verilog.split(/\n/g);
-
-	//for each line after the first line, find the direction and name of each input/output
-	var signals = {input:[], output:[]};
-	var signal_size = {input:[], output:[]};
-	for(var i = 1; lines[i].indexOf(';') < 0; i++){
-
-		let words = lines[i].split(" ");
-		let port_size;
-		if (lines[i].includes('[')) {
-			port_size = lines[i].split('[')[1];
-			port_size = port_size.split(':')[0];
-			port_size++;
-		}
-		else	
-			port_size=1;
-
-			let direction = remove_whitespace(words[0]);
-			let port_name = remove_whitespace(remove_commas(words[words.length - 1]));
-			signals[direction].push(port_name);
-			signal_size[direction].push(port_size);
-	}
-	//save the decoded shape to localstorage
-	var storedShapes = JSON.parse(localStorage.getItem('storedShapes'));
-	if(storedShapes == null)
-		storedShapes = []
-	if ( signals['input'].length!=0 && signals['input'].length!=0) {
-		storedShapes.push({
-			"componentName":compName.replace(".v", ""),
-			"signals":signals,
-			"signal_size":signal_size,
-			"verilogCode":verilog
-		});
-	}
-	localStorage.setItem('storedShapes', JSON.stringify(storedShapes));
-	//reload the page
-	location.reload();
-}

@@ -5,12 +5,12 @@
     <link rel="stylesheet" type="text/css" href="styles/logicdesigner.css" />
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 </head>
+
 <script type="text/javascript">
-	
 	// Reads files locally using js
   	var storedShapes = JSON.parse(localStorage.getItem('storedShapes'));
 	var deletedIDs = new Array();
-
+	
 	function handleSubmit(){
 		var newShapes = new Array();
 		for (var i=0; i<storedShapes.length; i++) {
@@ -33,6 +33,18 @@
 		}
 		return false;
 	}
+	function isNativeComponent ( component ){
+		var native_components=["and", "nand", "or","nor","xor","xnor","buf", "inverter",
+					"mux2","mux4", "mux8","mux16",
+					"decoder2","decoder3","decoder4",
+					"dff", "dff_en", "srlatch", "srlatch_en", "dlatch", "dlatch_en", 
+					"fanIn2",  "fanIn4",  "fanIn8",  "fanIn16",  "fanIn32",
+					"fanOut2",  "fanOut4", "fanOut8", "fanOut16", "fanOut32",
+					"inputport1", "inputport2", "inputport4", "inputport8", "inputport16", "inputport32",
+					"outputport1", "outputport2", "outputport4", "outputport8", "outputport16", "outputport32",
+					"constant0", "constant1" ];
+		return native_components.includes( component );
+	};
 	function isAlpha(c){
 		return /^[A-Z]$/i.test(c);
 	}
@@ -45,7 +57,7 @@
 		return return_val;
 	}
     function changeFileName(id,newName){
-		if ( nameIsUsed(id,newName) ){
+		if ( nameIsUsed(id,newName) || isNativeComponent(newName) ){
 			alert('"'+ newName +'" already exists. Please change the name.');
 		}
 		else if ( !nameIsValid(id,newName) ) {
