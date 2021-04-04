@@ -1,7 +1,7 @@
-/**
+/*
  * Copyright (c) 2018, Douglas H. Summerville, Binghamton University
  * (see license.txt for attributions)
- * 
+ * Updated by 2021 [ECD106] Charlie Shames, Thomas Nicolino, Ben Picone, Joseph Luciano; Advisor: Meghana Jain
  * 
  */
 function Sidebar(editorUi, container)

@@ -1,21 +1,12 @@
 /*
  * Copyright (c) 2018, Douglas H. Summerville, Binghamton University
- * (see license.txt for attributions)
+ * (see license.txt for attributions)Updated by 2020 [WCP28] Jacob Richman, Tomer Itzhaki, Xuan Do; Advisor: Meghana Jain
+ * Updated by 2021 [ECD106] Charlie Shames, Thomas Nicolino, Ben Picone, Joseph Luciano; Advisor: Meghana Jain
  * 
- * 
- * ===================		KEY		=======================================================================
- c =>	identifier for the shape object itself
- x =>	X coordinate of the shape no matter what size it is. 0 if left border, 1 is right border.
- y =>	Y coordinate of the shape no matter what size it is. 0 if top border, 1 is bottom border.
- w =>	Width of the full size shape when added to the canvas.
- h =>	Height of the full size shape when added to the canvas.
- 
- '(i+.5)/(number_of_ports)' =>	Algorithm to evenly space the ith port along an axis.
- * ========================================================================================================
  */
 
-(function()
-{
+ //Updated by 2020 [WCP28] Jacob Richman, Tomer Itzhaki, Xuan Do; Advisor: Meghana Jain
+(function() {
 	//read saved components from local storage
 	var storedShapes = JSON.parse(localStorage.getItem('storedShapes'));
 	if(storedShapes == null)

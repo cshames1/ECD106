@@ -1,6 +1,7 @@
 /**
  * Copyright (c) 2018, Douglas H. Summerville, Binghamton University
- *
+ * Updated by 2020 [WCP28] Jacob Richman, Tomer Itzhaki, Xuan Do; Advisor: Meghana Jain
+ * Updated by 2021 [ECD106] Charlie Shames, Thomas Nicolino, Ben Picone, Joseph Luciano; Advisor: Meghana Jain
  */
 
 class schematic
@@ -12,8 +13,7 @@ class schematic
 	static isNativeComponent( component ){
 		var native_components=["and", "nand", "or","nor","xor","xnor","buf", "inverter",
 						"mux2","mux4", "mux8","mux16",
-						"decoder2","decoder3","decoder4",
-						//"register_en", 
+						"decoder2","decoder3","decoder4", 
 						"dff", "dff_en", "srlatch", "srlatch_en", "dlatch", "dlatch_en", 
 						"fanIn2",  "fanIn4",  "fanIn8",  "fanIn16",  "fanIn32",
 						"fanOut2",  "fanOut4", "fanOut8", "fanOut16", "fanOut32",
@@ -53,10 +53,6 @@ class schematic
 		};
 		//split verilog into array of lines separated by newline characters
 		var lines = verilog.split(/\n/g);
-		
-		var nsignals = {input:[], output:[]};
-		var nsignal_size = {input:[], output:[]};
-		console.log(lines);
 
 		//for each line after the first line, find the direction and name of each input/output
 		var signals = {input:[], output:[]};
@@ -294,19 +290,6 @@ schematic.prototype.runDRC = function()
 		//====================================================================================
 		//	LATCH GROUP
 		//====================================================================================
-		/*case "register_en":
-			var en_error = getErrorsForModuleInputPort("en",1,node);
-			var clk_error = getErrorsForModuleInputPort("clk",1,node);
-			var D_error =  getErrorsForModuleInputPort("D",null,node);
-			if (en_error)
-				Messages.addError( en_error,node );
-			if (clk_error)
-				Messages.addError( clk_error,node );
-			if( D_error )
-				Messages.addError( D_error,node );
-			if( node.numLinksOutOf() == 0 )
-				Messages.addWarning(module+" has unconnected output",node);
-			break;*/
 		case "srlatch_en":
 			var en_error = getErrorsForModuleInputPort("_en",1,node);
 			if (en_error)
@@ -736,7 +719,6 @@ schematic.prototype.createVerilog=function()
 				link.value = size;
 			else	
 				link.value="";
-			setCellStyleAttribute( link, "strokeWidth", Math.log2(size)+1 );
 		});
 	}
 	//nodes must be sorted so any module which can determine a wire's bit width is processed before modules that can't
@@ -826,18 +808,6 @@ schematic.prototype.createVerilog=function()
 				wireSet[(1<<0)].add(gateName(node,"X") );
 			setLinkSetSize(linksout, 1);
 			break;
-		/*case "register_en":
-			var output_size=1;
-			var input = node.getLinks('in_D',false);
-			if(input[0] && input[0].size) 
-				output_size = input[0].size;
-			var linksout=node.linksOutOf();
-			if( linksout.length == 1 && trgtNodeIs(linksout[0], "outputport") ) 
-				netAliases[netName(linksout[0])] = portName(linksout[0].target,"O");
-			else if( linksout.length ) 
-				wireSet[output_size].add(netName(linksout[0],"X"));
-			setLinkSetSize(linksout, output_size);
-			break;*/
 		case "mux16": 
 		case "mux8":  
 		case "mux4":  
@@ -1009,173 +979,156 @@ schematic.prototype.createVerilog=function()
 			netList=netList.replace(/, *$/gi, '');
 			netList += "} )\n);";
 			break; 
-		/*case "register_en":
-			var linkin=node.getLink( 'in_D_',false);
-			var output_size = (linkin)? linkin.size : 1;
-			netList += '\n\n' + gateNames[module] + ' #(' + output_size + ')' +  ' ' + gateName(node,'U') + ' ('; 
-			if( linkin )
-				netList += '\n\t.in_D(' + getNameOrAlias( linkin) + ')';
-			var linkclk=node.getLink( 'in_clk_',false);
-			if( linkclk )
-				netList += ',\n\t.in_clk(' + getNameOrAlias( linkclk) + ')';
-			var linken=node.getLink( 'in_en_',false);
-			if( linken ) 
-				netList += ',\n\t.in_en(' + getNameOrAlias( linken) + ')';
-			var linkq=node.linksOutOf();
-			if( linkq.length )
-				netList += ',\n\t.out_q('+getNameOrAlias( linkq[0]) + ")";
-			netList=netList+"\n);";
-			break;*/
-			case "dlatch":
-				netList += "\n\n" + gateNames[module] + ' ' + gateName(node,"U") + " ("; 
-				netList += '\n\t.data_out( ';
-				var links=node.linksOutOf();
-				if( links.length )
-					netList += getNameOrAlias(links[0]);
-				else
-					netList += gateName(node,"X");
-				netList += ' ),\n\t.in_D( ';
-				{
-					var lnk=node.getLink( 'in_D',false);
-					if( lnk ) netList+=getNameOrAlias(lnk);
-					else netList+='1\'bx';
-				}
-				netList=netList+" ),\n\t.in_G( ";
-				{
-					var lnk=node.getLink( 'in_G',false);
-					if( lnk ) netList+=getNameOrAlias(lnk);
-					else netList+='1\'bx';
-				}
-				netList=netList+" )\n);";
-				break;
-			case "srlatch":
-				netList += "\n\n" + gateNames[module] + ' ' + gateName(node,"U") + " ("; 
-				netList += '\n\t.data_out( ';
-				var links=node.linksOutOf();
-				if( links.length )
-					netList += getNameOrAlias(links[0]);
-				else
-					netList += gateName(node,"X");
-				netList += ' ),\n\t.in_S( ';
-				{
-					var lnk=node.getLink( 'in_S',false);
-					if( lnk ) netList+=getNameOrAlias(lnk);
-					else netList+='1\'bx';
-				}
-				netList=netList+" ),\n\t.in_R( ";
-				{
-					var lnk=node.getLink( 'in_R',false);
-					if( lnk ) netList+=getNameOrAlias(lnk);
-					else netList+='1\'bx';
-				}
-				netList=netList+" )\n);";
-				break;
-			case "srlatch_en":
-				netList += "\n\n" + gateNames[module] + ' ' + gateName(node,"U") + " ("; 
-				netList += '\n\t.data_out( ';
-				var links=node.linksOutOf();
-				if( links.length )
-					netList += getNameOrAlias(links[0]);
-				else
-					netList += gateName(node,"X");
-				netList += ' ),\n\t.in_S( ';
-				{
-					var lnk=node.getLink( 'in_S',false);
-					if( lnk ) netList+=getNameOrAlias(lnk);
-					else netList+='1\'bx';
-				}
-				netList=netList+" ),\n\t.in_R( ";
-				{
-					var lnk=node.getLink( 'in_R',false);
-					if( lnk ) netList+=getNameOrAlias(lnk);
-					else netList+='1\'bx';
-				}
-				netList=netList+" ),\n\t.in_EN( ";
-				{
-					var lnk=node.getLink( 'in_en',false);
-					if( lnk ) netList+=getNameOrAlias(lnk);
-					else netList+='1\'bx';
-				}
-				netList=netList+" )\n);";
-				break;
-			case "dlatch_en":
-				netList += "\n\n" + gateNames[module] + ' ' + gateName(node,"U") + " ("; 
-				netList += '\n\t.data_out( ';
-				var links=node.linksOutOf();
-				if( links.length )
-					netList += getNameOrAlias(links[0]);
-				else
-					netList += gateName(node,"X");
-				netList += ' ),\n\t.in_D( ';
-				{
-					var lnk=node.getLink( 'in_D',false);
-					if( lnk ) netList+=getNameOrAlias(lnk);
-					else netList+='1\'bx';
-				}
-				netList=netList+" ),\n\t.in_G( ";
-				{
-					var lnk=node.getLink( 'in_G',false);
-					if( lnk ) netList+=getNameOrAlias(lnk);
-					else netList+='1\'bx';
-				}
-				netList=netList+" ),\n\t.in_EN( ";
-				{
-					var lnk=node.getLink( 'in_en',false);
-					if( lnk ) netList+=getNameOrAlias(lnk);
-					else netList+='1\'bx';
-				}
-				netList=netList+" )\n);";
-				break;
-			case "dff":
-				netList += "\n\n" + gateNames[module] + ' ' + gateName(node,"U") + " ("; 
-				netList += '\n\t.data_out( ';
-				var links=node.linksOutOf();
-				if( links.length )
-					netList += getNameOrAlias(links[0]);
-				else
-					netList += gateName(node,"X");
-				netList += ' ),\n\t.in_D( ';
-				{
-					var lnk=node.getLink( 'in_D',false);
-					if( lnk ) netList+=getNameOrAlias(lnk);
-					else netList+='1\'bx';
-				}
-				netList=netList+" ),\n\t.in_CLK( ";
-				{
-					var lnk=node.getLink( 'in_clk',false);
-					if( lnk ) netList+=getNameOrAlias(lnk);
-					else netList+='1\'bx';
-				}
-				netList=netList+" )\n);";
-				break;
-			case "dff_en":
-				netList += "\n\n" + gateNames[module] + ' ' + gateName(node,"U") + " ("; 
-				netList += '\n\t.data_out( ';
-				var links=node.linksOutOf();
-				if( links.length )
-					netList += getNameOrAlias(links[0]);
-				else
-					netList += gateName(node,"X");
-				netList += ' ),\n\t.in_D( ';
-				{
-					var lnk=node.getLink( 'in_D',false);
-					if( lnk ) netList+=getNameOrAlias(lnk);
-					else netList+='1\'bx';
-				}
-				netList=netList+" ),\n\t.in_CLK( ";
-				{
-					var lnk=node.getLink( 'in_clk',false);
-					if( lnk ) netList+=getNameOrAlias(lnk);
-					else netList+='1\'bx';
-				}
-				netList=netList+" ),\n\t.in_EN( ";
-				{
-					var lnk=node.getLink( 'in_en',false);
-					if( lnk ) netList+=getNameOrAlias(lnk);
-					else netList+='1\'bx';
-				}
-				netList=netList+" )\n);";
-				break;
+		case "dlatch":
+			netList += "\n\n" + gateNames[module] + ' ' + gateName(node,"U") + " ("; 
+			netList += '\n\t.data_out( ';
+			var links=node.linksOutOf();
+			if( links.length )
+				netList += getNameOrAlias(links[0]);
+			else
+				netList += gateName(node,"X");
+			netList += ' ),\n\t.in_D( ';
+			{
+				var lnk=node.getLink( 'in_D',false);
+				if( lnk ) netList+=getNameOrAlias(lnk);
+				else netList+='1\'bx';
+			}
+			netList=netList+" ),\n\t.in_G( ";
+			{
+				var lnk=node.getLink( 'in_G',false);
+				if( lnk ) netList+=getNameOrAlias(lnk);
+				else netList+='1\'bx';
+			}
+			netList=netList+" )\n);";
+			break;
+		case "srlatch":
+			netList += "\n\n" + gateNames[module] + ' ' + gateName(node,"U") + " ("; 
+			netList += '\n\t.data_out( ';
+			var links=node.linksOutOf();
+			if( links.length )
+				netList += getNameOrAlias(links[0]);
+			else
+				netList += gateName(node,"X");
+			netList += ' ),\n\t.in_S( ';
+			{
+				var lnk=node.getLink( 'in_S',false);
+				if( lnk ) netList+=getNameOrAlias(lnk);
+				else netList+='1\'bx';
+			}
+			netList=netList+" ),\n\t.in_R( ";
+			{
+				var lnk=node.getLink( 'in_R',false);
+				if( lnk ) netList+=getNameOrAlias(lnk);
+				else netList+='1\'bx';
+			}
+			netList=netList+" )\n);";
+			break;
+		case "srlatch_en":
+			netList += "\n\n" + gateNames[module] + ' ' + gateName(node,"U") + " ("; 
+			netList += '\n\t.data_out( ';
+			var links=node.linksOutOf();
+			if( links.length )
+				netList += getNameOrAlias(links[0]);
+			else
+				netList += gateName(node,"X");
+			netList += ' ),\n\t.in_S( ';
+			{
+				var lnk=node.getLink( 'in_S',false);
+				if( lnk ) netList+=getNameOrAlias(lnk);
+				else netList+='1\'bx';
+			}
+			netList=netList+" ),\n\t.in_R( ";
+			{
+				var lnk=node.getLink( 'in_R',false);
+				if( lnk ) netList+=getNameOrAlias(lnk);
+				else netList+='1\'bx';
+			}
+			netList=netList+" ),\n\t.in_EN( ";
+			{
+				var lnk=node.getLink( 'in_en',false);
+				if( lnk ) netList+=getNameOrAlias(lnk);
+				else netList+='1\'bx';
+			}
+			netList=netList+" )\n);";
+			break;
+		case "dlatch_en":
+			netList += "\n\n" + gateNames[module] + ' ' + gateName(node,"U") + " ("; 
+			netList += '\n\t.data_out( ';
+			var links=node.linksOutOf();
+			if( links.length )
+				netList += getNameOrAlias(links[0]);
+			else
+				netList += gateName(node,"X");
+			netList += ' ),\n\t.in_D( ';
+			{
+				var lnk=node.getLink( 'in_D',false);
+				if( lnk ) netList+=getNameOrAlias(lnk);
+				else netList+='1\'bx';
+			}
+			netList=netList+" ),\n\t.in_G( ";
+			{
+				var lnk=node.getLink( 'in_G',false);
+				if( lnk ) netList+=getNameOrAlias(lnk);
+				else netList+='1\'bx';
+			}
+			netList=netList+" ),\n\t.in_EN( ";
+			{
+				var lnk=node.getLink( 'in_en',false);
+				if( lnk ) netList+=getNameOrAlias(lnk);
+				else netList+='1\'bx';
+			}
+			netList=netList+" )\n);";
+			break;
+		case "dff":
+			netList += "\n\n" + gateNames[module] + ' ' + gateName(node,"U") + " ("; 
+			netList += '\n\t.data_out( ';
+			var links=node.linksOutOf();
+			if( links.length )
+				netList += getNameOrAlias(links[0]);
+			else
+				netList += gateName(node,"X");
+			netList += ' ),\n\t.in_D( ';
+			{
+				var lnk=node.getLink( 'in_D',false);
+				if( lnk ) netList+=getNameOrAlias(lnk);
+				else netList+='1\'bx';
+			}
+			netList=netList+" ),\n\t.in_CLK( ";
+			{
+				var lnk=node.getLink( 'in_clk',false);
+				if( lnk ) netList+=getNameOrAlias(lnk);
+				else netList+='1\'bx';
+			}
+			netList=netList+" )\n);";
+			break;
+		case "dff_en":
+			netList += "\n\n" + gateNames[module] + ' ' + gateName(node,"U") + " ("; 
+			netList += '\n\t.data_out( ';
+			var links=node.linksOutOf();
+			if( links.length )
+				netList += getNameOrAlias(links[0]);
+			else
+				netList += gateName(node,"X");
+			netList += ' ),\n\t.in_D( ';
+			{
+				var lnk=node.getLink( 'in_D',false);
+				if( lnk ) netList+=getNameOrAlias(lnk);
+				else netList+='1\'bx';
+			}
+			netList=netList+" ),\n\t.in_CLK( ";
+			{
+				var lnk=node.getLink( 'in_clk',false);
+				if( lnk ) netList+=getNameOrAlias(lnk);
+				else netList+='1\'bx';
+			}
+			netList=netList+" ),\n\t.in_EN( ";
+			{
+				var lnk=node.getLink( 'in_en',false);
+				if( lnk ) netList+=getNameOrAlias(lnk);
+				else netList+='1\'bx';
+			}
+			netList=netList+" )\n);";
+			break;
 		case "decoder4": decoder_size++;
 		case "decoder3": decoder_size++;
 		case "decoder2": decoder_size++;

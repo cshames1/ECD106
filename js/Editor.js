@@ -1,6 +1,9 @@
-/**
+/*
  * Copyright (c) 2018, Douglas H. Summerville, Binghamton University
  * (see license.txt for attributions)
+ * Updated by 2020 [WCP28] Jacob Richman, Tomer Itzhaki, Xuan Do; Advisor: Meghana Jain
+ * Updated by 2021 [ECD106] Charlie Shames, Thomas Nicolino, Ben Picone, Joseph Luciano; Advisor: Meghana Jain
+ * 
  */
 Editor = function(chromeless, themes, model, graph, editable)
 {
