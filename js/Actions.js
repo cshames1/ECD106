@@ -586,7 +586,7 @@ Actions.prototype.init = function()
 	{
 		if (!showingAbout)
 		{
-			ui.showDialog(new AboutDialog(ui).container, 320, 280, true, true, function()
+			ui.showDialog(new AboutDialog(ui).container, 320, 350, true, true, function()
 			{
 				showingAbout = false;
 			});

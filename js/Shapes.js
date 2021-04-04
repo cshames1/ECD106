@@ -5,7 +5,7 @@
  * 
  */
 
- //Updated by 2020 [WCP28] Jacob Richman, Tomer Itzhaki, Xuan Do; Advisor: Meghana Jain
+ //Created by 2020 [WCP28] Jacob Richman, Tomer Itzhaki, Xuan Do; Advisor: Meghana Jain
 (function() {
 	//read saved components from local storage
 	var storedShapes = JSON.parse(localStorage.getItem('storedShapes'));

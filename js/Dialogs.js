@@ -81,22 +81,27 @@ var AboutDialog = function(editorUi)
 	div.appendChild(img);
 	mxUtils.br(div);
 	mxUtils.br(div);
-	mxUtils.write(div, 'Created by:');
+	mxUtils.write(div, 'Created by [2020-2021]:');
 	mxUtils.br(div);
-
 	mxUtils.br(div);
 	var link = document.createElement('a');
 	link.setAttribute('href', 'https://www.binghamton.edu/electrical-computer-engineering/index.html');
 	link.setAttribute('target', '_blank');
 	mxUtils.write(link, 'Binghamton University ECE Department');
 	div.appendChild(link);
+	var ecd = document.createElement('p');
+	mxUtils.write(ecd, 'ECD106');
 	mxUtils.br(div);
-	mxUtils.br(div);
+	var advisor = document.createElement('p');
+	mxUtils.write(advisor, 'Advisor: Professor Meghana Jain');
+	div.appendChild(advisor);
+	var names = document.createElement('p');
+	mxUtils.write(names, 'Charlie Shames, Thomas Nicolino, Ben Picone, Joseph Luciano');
+	div.appendChild(names);
 	mxUtils.br(div);
 	var copy=document.createElement('small');
 	mxUtils.write(copy,'(c) 2018-2019 Douglas H. Summerville, Binghamton University.  All rights reserved.');
 	div.append(copy);
-	mxUtils.br(div);
 	mxUtils.br(div);
 	mxUtils.br(div);
 	var closeBtn = mxUtils.button(mxResources.get('close'), function()
