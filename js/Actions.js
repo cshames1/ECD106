@@ -75,12 +75,23 @@ Actions.prototype.init = function()
 			ui.hideDialog();
 		}));
 
-		window.openFile.setConsumer(mxUtils.bind(this, function(allVerilog)
+		window.openFile.setConsumer(mxUtils.bind(this, function(allVerilog, xml)
 		{	
-			localStorage.removeItem('storedShapes');
-			localStorage.setItem('storedShapes', JSON.stringify(allVerilog));
-			ui.circuit.deleteClearedComponents();
-			location.reload();
+			if (xml==null) {
+				localStorage.removeItem('storedShapes');
+				localStorage.setItem('storedShapes', JSON.stringify(allVerilog));
+				ui.circuit.deleteClearedComponents();
+				location.reload();
+			}
+			else {
+				try {
+					var doc = mxUtils.parseXml(xml);
+					editor.graph.setSelectionCells(editor.graph.importGraphModel(doc.documentElement));
+				}
+				catch (e){
+					mxUtils.alert(mxResources.get('invalidOrMissingFile') + ': ' + e.message);
+				}
+			}
 		}));
 
 		ui.showDialog(new EditComponentDialog(this).container, 320, 220, true, true, function()
@@ -90,7 +101,7 @@ Actions.prototype.init = function()
 	}));
 
 	action=this.addAction('directImport', mxUtils.bind(this, function()
-	{	
+	{		
 		window.openNew = false;
 		window.openKey = 'directImport';
 
@@ -101,7 +112,7 @@ Actions.prototype.init = function()
 		
 		window.openFile.setConsumer(mxUtils.bind(this, function(name)
 		{	
-			schematic.addComponent(ui.circuit.createVerilog(), name);
+			schematic.addComponent(ui.circuit.createVerilog(), name, mxUtils.getPrettyXml(ui.editor.getGraphXml()));
 		}));
 
 		ui.directImport();
@@ -109,6 +120,16 @@ Actions.prototype.init = function()
 
 	action=this.addAction('exportVerilog', mxUtils.bind(this, function()
 	{
+		/*try
+		{
+		var xml = mxUtils.getPrettyXml(ui.editor.getGraphXml());
+		var doc = mxUtils.parseXml(xml);
+		editor.graph.setSelectionCells(editor.graph.importGraphModel(doc.documentElement));
+		}
+		catch (e)
+		{
+			mxUtils.alert(mxResources.get('invalidOrMissingFile') + ': ' + e.message);
+		}*/
 		if (this.verilogWindow == null)
 		{
 
@@ -151,7 +172,7 @@ Actions.prototype.init = function()
 				for (var i = 0; i < allVerilog.length; i++)
 				{
 					(function(shape){
-						schematic.addComponent(shape.verilog,shape.name)
+						schematic.addComponent(shape.verilog,shape.name,null)
 					})(allVerilog[i]);
 				}
 			}

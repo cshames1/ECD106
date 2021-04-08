@@ -38,7 +38,7 @@ class schematic
 			return  "Error:" + newstr + " is a Verilog reserved word and cannot be used as an identifier";
 		return "";
 	};
-	static addComponent( verilog,compName ){
+	static addComponent( verilog,compName,xml ){
 		function remove_whitespace(text) {
 			var res = text.replace(/\s+/, '');
 			return res;
@@ -85,7 +85,8 @@ class schematic
 				"componentName":compName.replace(".v", ""),
 				"signals":signals,
 				"signal_size":signal_size,
-				"verilogCode":verilog
+				"verilogCode":verilog,
+				"xml":xml
 			});
 		}
 		localStorage.setItem('storedShapes', JSON.stringify(storedShapes));
