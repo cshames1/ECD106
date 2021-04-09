@@ -1460,7 +1460,7 @@ var VerilogWindow = function(editorUi, x, y, w, h)
 	this.update = function(){ update();};
 	function update()
 	{
-		textarea.value=editorUi.circuit.createVerilog(editorUi.editor.graph);
+		textarea.value=editorUi.circuit.createVerilog();
 	};
 	graph.getModel().addListener(mxEvent.CHANGE, update);
 	update();

@@ -718,6 +718,7 @@ schematic.prototype.createVerilog=function()
 				link.value = size;
 			else	
 				link.value="";
+			setCellStyleAttribute(link, 'strokeWidth', Math.log2(size)+1);
 		});
 	}
 	//nodes must be sorted so any module which can determine a wire's bit width is processed before modules that can't

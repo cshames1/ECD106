@@ -28,6 +28,7 @@ EditorUi = function(editor, container, lightbox)
 	mxCellOverlay.prototype.graph=graph;
 	this.isInSimulationMode=false;
 	this.circuit=new schematic(graph);
+	this.circuit.createVerilog();
 
 	mxConnectionHandler.prototype.select = false;
 	mxGraph.prototype.enterStopsCellEditing = true;
@@ -38,45 +39,45 @@ EditorUi = function(editor, container, lightbox)
 	}
     graph.connectionHandler.addListener(mxEvent.CONNECT, function(sender, evt)
     {
-	circuit=new schematic(graph);
-	circuit.createVerilog();
-	var edge = evt.getProperty('cell');
-	var style = graph.getCellStyle(edge);
-	var srcPortId = style[mxConstants.STYLE_SOURCE_PORT];
-	var trgPortId = style[mxConstants.STYLE_TARGET_PORT];
 	
+		var edge = evt.getProperty('cell');
+		var style = graph.getCellStyle(edge);
+		var srcPortId = style[mxConstants.STYLE_SOURCE_PORT];
+		var trgPortId = style[mxConstants.STYLE_TARGET_PORT];
 	
-	if( edge.source == edge.target )
-	{
-		deleteEdge(edge);
-		return;
-	}
-	if( srcPortId.startsWith("out") && trgPortId.startsWith("out") ||
-	    srcPortId.startsWith("in")  && trgPortId.startsWith("in") )
-	{
-		deleteEdge(edge);
-		return;
-	}
+		if( edge.source == edge.target )
+		{
+			deleteEdge(edge);
+			return;
+		}
+		if( srcPortId.startsWith("out") && trgPortId.startsWith("out") ||
+			srcPortId.startsWith("in")  && trgPortId.startsWith("in") )
+		{
+			deleteEdge(edge);
+			return;
+		}
 
-	if( srcPortId.startsWith("in") && trgPortId.startsWith("out") )
-	{
-		var temp=edge.target;
-		edge.setTerminal(edge.source, false);
-		edge.setTerminal(temp, true);
-		graph.setCellStyles(mxConstants.STYLE_SOURCE_PORT, trgPortId, new Array(edge));
-		graph.setCellStyles(mxConstants.STYLE_TARGET_PORT, srcPortId, new Array(edge));
-	}
-    style = graph.getCellStyle(edge);
-	var trgPortId=style[mxConstants.STYLE_TARGET_PORT];
-	var truecount=0;
-	edge.target.linksInto().forEach(function(link) {
-		var x=graph.getCellStyle(link)[mxConstants.STYLE_TARGET_PORT];
-		if( x == trgPortId )
-			truecount++
-	});
-	if( truecount != 1 )
-		deleteEdge(edge);
-	graph.refresh();
+		if( srcPortId.startsWith("in") && trgPortId.startsWith("out") )
+		{
+			var temp=edge.target;
+			edge.setTerminal(edge.source, false);
+			edge.setTerminal(temp, true);
+			graph.setCellStyles(mxConstants.STYLE_SOURCE_PORT, trgPortId, new Array(edge));
+			graph.setCellStyles(mxConstants.STYLE_TARGET_PORT, srcPortId, new Array(edge));
+		}
+		style = graph.getCellStyle(edge);
+		var trgPortId=style[mxConstants.STYLE_TARGET_PORT];
+		var truecount=0;
+		edge.target.linksInto().forEach(function(link) {
+			var x=graph.getCellStyle(link)[mxConstants.STYLE_TARGET_PORT];
+			if( x == trgPortId )
+				truecount++
+		});
+		if( truecount != 1 )
+			deleteEdge(edge);
+		var circuit=new schematic(graph);
+		circuit.createVerilog();
+		graph.refresh();
     });
 
 	graph.setPortsEnabled(false);
@@ -86,6 +87,7 @@ EditorUi = function(editor, container, lightbox)
 	graph.pointImages=new Array();
 	graph.pointImages['i0_w'] = new mxImage('images/bullseye_i0_w.png', 60, 60);
 	graph.pointImages['default'] = new mxImage('images/bullseye.png', 7, 7);
+	
 
 	graph.connectionHandler.constraintHandler.getImageForConstraint=function(state,constraint,point)
 	{
@@ -169,9 +171,6 @@ EditorUi = function(editor, container, lightbox)
 				var constraintName=this.constraints[i].label;
 				var id = this.constraints[i].id; 
 				var orientation = id[id.length-1];
-				//===============================================================================================
-				// Port labels created here
-				//===============================================================================================
 				icon=new portShape(bounds,constraintName,orientation);
 				icon.dialect = (this.graph.dialect != mxConstants.DIALECT_SVG) ?
 						mxConstants.DIALECT_MIXEDHTML : mxConstants.DIALECT_SVG;
@@ -248,9 +247,6 @@ EditorUi = function(editor, container, lightbox)
 
 				for (var id in ports)
 				{
-				//===============================================================================================
-				// Port labels passed to constraint here
-				//===============================================================================================
 					var port = ports[id];
 					var cstr = new mxConnectionConstraint(new mxPoint(port.x, port.y), port.perimeter);
 					cstr.id = id;
