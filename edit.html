@@ -83,10 +83,15 @@
 			var i;
 			if (storedShapes!=null && storedShapes.length>0) {
 				for (i=0; i<storedShapes.length; i++) {
-					output += '<tr id="fileRow-'+i+'"> <td>'+(i+1)+'. </td> <td colspan="2" > <input style="width:100%" type="text" name="" onchange="changeFileName('+i+',this.value)" value="'+storedShapes[i].componentName+'"></td> <td><input type="button" value="Delete" onclick="removeFile('+i+')"><input type="button" value="Open" onclick="openFileXML('+i+')"></td> </tr>'
+					output += '<tr id="fileRow-'+i+'"> <td>'+(i+1)+'. </td> <td colspan="2" > <input style="width:100%" type="text" name="" onchange="changeFileName('+i+',this.value)" value="'+storedShapes[i].componentName+'"></td> <td><input type="button" value="Delete" onclick="removeFile('+i+')"><input type="button" disabled id="schematic_btn'+i+'" value="Schematic" onclick="openFileXML('+i+')"></td> </tr>'
 				}
 			}
 			document.getElementById("allFileNames").innerHTML = output;
+			for (i=0; i<storedShapes.length; i++) {
+				if (storedShapes[i].xml!=null)
+				var schematic_btn = document.getElementById('schematic_btn'+i);
+				schematic_btn.removeAttribute('disabled');
+			}
 		}
 	};
 </script>

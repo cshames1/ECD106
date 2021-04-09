@@ -58,7 +58,7 @@ var EditComponentDialog = function()
 
 	var dx = (mxClient.IS_VML && (document.documentMode == null || document.documentMode < 8)) ? 20 : 0;
 
-	iframe.setAttribute('width', (((Editor.useLocalStorage) ? 640 : 400) + dx) + 'px');
+	iframe.setAttribute('width', (((Editor.useLocalStorage) ? 640 : 380) + dx) + 'px');
 	iframe.setAttribute('height', (((Editor.useLocalStorage) ? 480 : 220) + dx) + 'px');
 	iframe.setAttribute('src', EDIT_FORM);
 
