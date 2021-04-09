@@ -73,8 +73,6 @@ class schematic
 				let port_name = remove_whitespace(remove_commas(words[words.length - 1]));
 				signals[direction].push(port_name);
 				signal_size[direction].push(port_size);
-				console.log(signals);
-				console.log(signal_size);
 		}
 		//save the decoded shape to localstorage
 		var storedShapes = JSON.parse(localStorage.getItem('storedShapes'));
