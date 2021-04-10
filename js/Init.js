@@ -19,7 +19,6 @@ window.CSS_PATH = window.CSS_PATH || 'styles';
 window.VERILOG_PATH = window.VERILOG_PATH || 'verilog';
 window.OPEN_FORM = window.OPEN_FORM || 'open.html';
 window.IMPORT_FORM = window.IMPORT_FORM || 'import.html';
-window.EDIT_FORM = window.EDIT_FORM || 'edit.html';
 window.mxBasePath = window.mxBasePath || 'mxgraph';
 window.mxLanguage = window.mxLanguage || urlParams['lang'];
 window.mxLanguages = window.mxLanguages || ['de'];
