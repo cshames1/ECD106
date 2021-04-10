@@ -45,26 +45,130 @@ var ImportDialog = function()
 	this.container = iframe;
 };
 
-var EditComponentDialog = function()
+var EditComponentDialog = function(editorUi)
 {
-	var iframe = document.createElement('iframe');
-	iframe.style.backgroundColor = 'transparent';
-	iframe.allowTransparency = 'true';
-	iframe.style.borderStyle = 'none';
-	iframe.style.borderWidth = '0px';
-	iframe.style.overflow = 'hidden';
-	iframe.frameBorder = '0';
+	var deleted_ids = new Array();
+	var new_names = new Array();
+	var storedShapes = JSON.parse(localStorage.getItem('storedShapes'));
 
+	function handleSave(){
+		var newShapes = new Array();
+		for (var i=0; i<storedShapes.length; i++) {
+			if ( !deleted_ids.includes(i) ) {
+				var newShape = storedShapes[i];
+				if (new_names[i]!=null)
+					newShape.componentName = new_names[i];
+				newShapes.push(newShape);
+			}
+		}
+		window.parent.openFile.setData(newShapes, null);
+	}
+	function changedName(e){
+		var id = e.currentTarget.id;
+		id = parseInt(id.replace('textbox', ''));
+		var new_name = e.currentTarget.value;
+		if ( schematic.nameIsUsed(new_name, id) || schematic.isNativeComponent(new_name) ){
+			alert('"'+ new_name +'" already exists. Please change the name.');
+			save_btn.setAttribute('disabled','disabled');
+		}
+		else if( schematic.getIDerror(new_name)!="" ) {
+			alert('"'+ new_name +'" is invalid. Please change the name.');
+			save_btn.setAttribute('disabled','disabled');
+		}
+		else {
+			new_names[id] = new_name;
+			save_btn.removeAttribute('disabled');
+		}
+	}
+	function deleteComponent(e){
+		var id = e.currentTarget.id;
+		id = parseInt(id.replace('delete_btn', ''));
+		e.currentTarget.parentNode.innerHTML = "";
+		deleted_ids.push(id);
+	}
+	function openSchematic(e){
+		var id = e.currentTarget.id;
+		id = id.replace('schematic_btn', '');
+		window.parent.openFile.setData(null, storedShapes[id].xml);
+	}
+	function hideWindow(){
+		window.parent.openFile.cancel(true);
+	}
+
+	var div = document.createElement('div');
+	div.style.backgroundColor = 'transparent';
+	div.allowTransparency = 'true';
+	div.style.borderStyle = 'none';
+	div.style.borderWidth = '0px';
+	div.style.overflow = 'hidden';
+	div.frameBorder = '0';
 
 	var dx = (mxClient.IS_VML && (document.documentMode == null || document.documentMode < 8)) ? 20 : 0;
 
-	iframe.setAttribute('width', (((Editor.useLocalStorage) ? 640 : 380) + dx) + 'px');
-	iframe.setAttribute('height', (((Editor.useLocalStorage) ? 480 : 220) + dx) + 'px');
-	iframe.setAttribute('src', EDIT_FORM);
+	div.setAttribute('width', (((Editor.useLocalStorage) ? 640 : 380) + dx) + 'px');
+	div.setAttribute('height', (((Editor.useLocalStorage) ? 480 : 220) + dx) + 'px');
+	var h3 = document.createElement('h3');
+	mxUtils.write(h3, 'Imported Component Library');
+	div.appendChild(h3);
 
-	this.container = iframe;
+	var table = document.createElement('table');
+	for (var i=0; i<storedShapes.length; i++) {
+		var row = document.createElement('tr');
+		row.setAttribute('id', 'fileRow'+i);
+
+		var cell1 = document.createElement('td');
+		mxUtils.write(cell1, (i+1)+'.');
+		row.appendChild(cell1);
+		
+		var renaming_box = document.createElement('input');
+		renaming_box.setAttribute('id', 'textbox'+i);
+		renaming_box.setAttribute('colspan', 2);
+		renaming_box.style.width = '150px';
+		renaming_box.type = 'text';
+		renaming_box.name = '';
+		renaming_box.value = storedShapes[i].componentName;
+		renaming_box.onchange = changedName;
+		row.appendChild(renaming_box);
+		
+		var delete_btn = document.createElement('input');
+		delete_btn.setAttribute('id', 'delete_btn'+i);
+		delete_btn.type = 'button';
+		delete_btn.value= 'Delete';
+		delete_btn.onclick = deleteComponent;
+		row.appendChild(delete_btn);
+
+		var schematic_btn = document.createElement('input');
+		schematic_btn.setAttribute('id', 'schematic_btn'+i);
+		schematic_btn.type = 'button';
+		schematic_btn.value= 'Schematic';
+		schematic_btn.onclick = openSchematic;
+		if (storedShapes[i].xml==null)
+			schematic_btn.setAttribute('disabled','disabled');
+		row.appendChild(schematic_btn);
+
+		table.appendChild(row);
+	}
+	
+	div.appendChild(table);
+	mxUtils.br(div);
+	
+	var cancel_btn = document.createElement('input');
+	cancel_btn.type = 'button';
+	cancel_btn.value= 'Cancel';
+	cancel_btn.setAttribute('class', 'geBtn');
+	cancel_btn.setAttribute('id', 'cancelButton');
+	cancel_btn.onclick = hideWindow;
+	div.appendChild(cancel_btn);
+
+	var save_btn = document.createElement('input');
+	save_btn.type = 'button';
+	save_btn.value= 'Save';
+	save_btn.setAttribute('class', 'geBtn gePrimaryBtn');
+	save_btn.onclick = handleSave;
+	div.appendChild(save_btn);
+
+	this.container = div;
 };
-
 
 var AboutDialog = function(editorUi)
 {
@@ -110,6 +214,7 @@ var AboutDialog = function(editorUi)
 	});
 	closeBtn.className = 'geBtn gePrimaryBtn';
 	div.appendChild(closeBtn);
+
 
 	this.container = div;
 };
@@ -511,7 +616,6 @@ var directImportDialog = function(editorUi, filename, buttonText, fn, label, val
 	div.style.fontSize = '8pt';
 	html.appendChild(div);
 	html.appendChild(table);
-	console.log(div);
 	this.container = html;
 };
 

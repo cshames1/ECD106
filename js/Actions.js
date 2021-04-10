@@ -94,7 +94,7 @@ Actions.prototype.init = function()
 			}
 		}));
 
-		ui.showDialog(new EditComponentDialog(this).container, 320, 220, true, true, function()
+		ui.showDialog(new EditComponentDialog(ui).container, 350, 220, true, true, function()
 		{
 			window.openFile = null;
 		});

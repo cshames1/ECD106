@@ -38,6 +38,14 @@ class schematic
 			return  "Error:" + newstr + " is a Verilog reserved word and cannot be used as an identifier";
 		return "";
 	};
+	static nameIsUsed( newstr, id ){
+		var storedShapes = JSON.parse(localStorage.getItem('storedShapes'));
+		for (var i=0; i<storedShapes.length; i++) {
+			if(id!=i && newstr==storedShapes[i].componentName )
+				return true;
+		}
+		return false;
+	};
 	static addComponent( verilog,compName,xml ){
 		function remove_whitespace(text) {
 			var res = text.replace(/\s+/, '');
