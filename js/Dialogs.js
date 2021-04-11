@@ -5,7 +5,7 @@
  */
 var OpenDialog = function()
 {
-	function hideWindow(){
+	function hide_window(){
 		window.parent.openFile.cancel(true);
 	}
 	function handle_import(){
@@ -15,7 +15,7 @@ var OpenDialog = function()
 			return;
 		}
 		else if ( !file.name.endsWith('.sch') ) {
-			alert('File is not supported');
+			alert('File is not supported.');
 			return;
 		}
 		var reader = new FileReader();
@@ -53,7 +53,7 @@ var OpenDialog = function()
 	cancel_btn.value= 'Cancel';
 	cancel_btn.setAttribute('class', 'geBtn');
 	cancel_btn.setAttribute('id', 'cancelButton');
-	cancel_btn.onclick = hideWindow;
+	cancel_btn.onclick = hide_window;
 	div.appendChild(cancel_btn);
 
 	var import_btn = document.createElement('input');
@@ -71,7 +71,7 @@ var ImportDialog = function()
 	var saved_ids = new Set();
 	var component_names = new Object();
 
-	function initFileTable(){
+	function init_file_table(){
 		var files = file_input.files;
 		for (var i=0; i<files.length; i++) {
 			if ( files[i].name.endsWith('.v') ) {
@@ -104,7 +104,7 @@ var ImportDialog = function()
 			renaming_box.type = 'text';
 			renaming_box.name = '';
 			renaming_box.value = file.name.replace('.v','');
-			renaming_box.onchange = changedName;
+			renaming_box.onchange = changed_name;
 			row.appendChild(renaming_box);
 			
 			var delete_btn = document.createElement('input');
@@ -117,7 +117,7 @@ var ImportDialog = function()
 			table.appendChild(row);
 		});
 	}
-	function changedName(e){
+	function changed_name(e){
 		var id = e.currentTarget.id;
 		id = parseInt(id.replace('textbox', ''));
 		component_names[id] = e.currentTarget.value;
@@ -148,8 +148,8 @@ var ImportDialog = function()
 			alert(alert_txt);
 	}
 	function handle_save(){
-		if (file_input.files.length==0){
-			hideWindow();
+		if ( saved_ids.size==0 ){
+			hide_window();
 			return 0;
 		}
 		var iterator = saved_ids.values();
@@ -162,7 +162,7 @@ var ImportDialog = function()
 			var module_started = false;
 			var new_txt = "";
 			lines.forEach(function(line){
-				if ( line.startsWith('module'))
+				if ( line.startsWith('module') )
 					module_started = true;
 				if ( module_started )
 					new_txt += (line+'\n');
@@ -197,7 +197,7 @@ var ImportDialog = function()
 		//this works because sets will not include duplicates and arrays will
 		return (name_array.length!=name_set.size);
 	}
-	function hideWindow(){
+	function hide_window(){
 		window.parent.openFile.cancel(true);
 	}
 	function deleteComponent(e){
@@ -234,7 +234,7 @@ var ImportDialog = function()
 	file_input.type = 'file';
 	file_input.name = 'upfile';
 	file_input.setAttribute('multiple','');
-	file_input.onchange = initFileTable;
+	file_input.onchange = init_file_table;
 	div.appendChild(file_input);
 
 	var header = document.createElement('h5');
@@ -255,7 +255,7 @@ var ImportDialog = function()
 	cancel_btn.value= 'Cancel';
 	cancel_btn.setAttribute('class', 'geBtn');
 	cancel_btn.setAttribute('id', 'cancelButton');
-	cancel_btn.onclick = hideWindow;
+	cancel_btn.onclick = hide_window;
 	div.appendChild(cancel_btn);
 
 	var import_btn = document.createElement('input');
@@ -311,7 +311,7 @@ var EditComponentDialog = function(editorUi)
 		id = id.replace('schematic_btn', '');
 		window.parent.openFile.setData(null, storedShapes[id].xml);
 	}
-	function hideWindow(){
+	function hide_window(){
 		window.parent.openFile.cancel(true);
 	}
 	function set_save_btn_status(){
@@ -404,7 +404,7 @@ var EditComponentDialog = function(editorUi)
 	cancel_btn.value= 'Cancel';
 	cancel_btn.setAttribute('class', 'geBtn');
 	cancel_btn.setAttribute('id', 'cancelButton');
-	cancel_btn.onclick = hideWindow;
+	cancel_btn.onclick = hide_window;
 	div.appendChild(cancel_btn);
 
 	var save_btn = document.createElement('input');
@@ -415,7 +415,6 @@ var EditComponentDialog = function(editorUi)
 	div.appendChild(save_btn);
 
 	this.container = div;
-	console.log(this.container);
 };
 
 var AboutDialog = function(editorUi)
