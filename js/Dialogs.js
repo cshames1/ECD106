@@ -264,6 +264,7 @@ var EditComponentDialog = function(editorUi)
 		e.currentTarget.parentNode.remove();
 		deleted_ids.push(id);
 		set_save_btn_status();
+		reset_row_labels();
 	}
 	function openSchematic(e){
 		var id = e.currentTarget.id;
@@ -285,7 +286,15 @@ var EditComponentDialog = function(editorUi)
 		}
 		save_btn.removeAttribute('disabled');
 	}
-	
+	function reset_row_labels(){
+		var label_num = 1;
+		for (var i=0; i<storedShapes.length; i++) {
+			if (deleted_ids.includes(i))
+				continue;
+			var label = document.getElementById('label'+i);
+			label.innerHTML = (label_num++)+'.';
+		}
+	}
 	var div = document.createElement('div');
 	div.style.backgroundColor = 'transparent';
 	div.allowTransparency = 'true';
@@ -296,8 +305,9 @@ var EditComponentDialog = function(editorUi)
 
 	var dx = (mxClient.IS_VML && (document.documentMode == null || document.documentMode < 8)) ? 20 : 0;
 
-	div.setAttribute('width', '640px');
-	div.setAttribute('height', '480px');
+	div.setAttribute('width', (((Editor.useLocalStorage) ? 640 : 320) + dx) + 'px');
+	div.setAttribute('height', (((Editor.useLocalStorage) ? 500 : 220) + dx) + 'px');
+
 	var h3 = document.createElement('h3');
 	mxUtils.write(h3, 'Imported Component Library');
 	div.appendChild(h3);
@@ -307,9 +317,10 @@ var EditComponentDialog = function(editorUi)
 		var row = document.createElement('tr');
 		row.setAttribute('id', 'fileRow'+i);
 
-		var cell1 = document.createElement('td');
-		mxUtils.write(cell1, (i+1)+'.');
-		row.appendChild(cell1);
+		var label = document.createElement('td');
+		label.setAttribute('id','label'+i);
+		mxUtils.write(label, (i+1)+'.');
+		row.appendChild(label);
 		
 		var renaming_box = document.createElement('input');
 		renaming_box.setAttribute('id', 'textbox'+i);
@@ -341,7 +352,7 @@ var EditComponentDialog = function(editorUi)
 	}
 	
 	var table_div = document.createElement('div');
-	table_div.style.height = '120px';
+	table_div.style.height = '160px';
 	table_div.style.overflow = 'auto';
 	table_div.appendChild(table);
 	div.appendChild(table_div);
@@ -363,6 +374,7 @@ var EditComponentDialog = function(editorUi)
 	div.appendChild(save_btn);
 
 	this.container = div;
+	console.log(this.container);
 };
 
 var AboutDialog = function(editorUi)
