@@ -27,22 +27,205 @@ var OpenDialog = function()
 
 var ImportDialog = function()
 {
-	var iframe = document.createElement('iframe');
-	iframe.style.backgroundColor = 'transparent';
-	iframe.allowTransparency = 'true';
-	iframe.style.borderStyle = 'none';
-	iframe.style.borderWidth = '0px';
-	iframe.style.overflow = 'hidden';
-	iframe.frameBorder = '0';
+	var saved_ids = new Set();
+	var component_names = new Object();
 
+	function initFileTable(){
+		var files = file_input.files;
+		for (var i=0; i<files.length; i++) {
+			if ( files[i].name.endsWith('.v') ) {
+				saved_ids.add(i);
+				component_names[i] = files[i].name.replace('.v','');
+			}
+		}
+		buildFileTable();
+		set_save_btn_status();
+		display_alerts();
+	}
+	function buildFileTable(){
+		table.innerHTML = "";
+		var label_num = 1;
+
+		saved_ids.forEach(function(i){
+			var file = file_input.files[i];
+	
+			var row = document.createElement('tr');
+			row.setAttribute('id', 'fileRow'+i);
+	
+			var label = document.createElement('td');
+			label.setAttribute('id','label'+i);
+			mxUtils.write(label, (label_num++)+'.');
+			row.appendChild(label);
+			
+			var renaming_box = document.createElement('input');
+			renaming_box.setAttribute('id', 'textbox'+i);
+			renaming_box.setAttribute('colspan', 2);
+			renaming_box.style.width = '170px';
+			renaming_box.type = 'text';
+			renaming_box.name = '';
+			renaming_box.value = file.name.replace('.v','');
+			renaming_box.onchange = changedName;
+			row.appendChild(renaming_box);
+			
+			var delete_btn = document.createElement('input');
+			delete_btn.setAttribute('id', 'delete_btn'+i);
+			delete_btn.type = 'button';
+			delete_btn.value= 'Delete';
+			delete_btn.onclick = deleteComponent;
+			row.appendChild(delete_btn);
+	
+			table.appendChild(row);
+		});
+	}
+	function changedName(e){
+		var id = e.currentTarget.id;
+		id = parseInt(id.replace('textbox', ''));
+		component_names[id] = e.currentTarget.value;
+		set_save_btn_status();
+	}
+	function set_save_btn_status(){
+		var enable = true;
+		saved_ids.forEach(function(i){
+			var name = document.getElementById('textbox'+i).value.replace('.v','');
+			if ( schematic.nameIsUsed(name, i) || schematic.isNativeComponent(name) || !schematic.isValidID(name) || duplicate_names_used() ) {
+				save_btn.setAttribute('disabled','disabled');
+				enable = false;
+			}
+		});
+		if (enable)
+			save_btn.removeAttribute('disabled');
+	}
+	function display_alerts(){
+		var alert_txt = "";
+		saved_ids.forEach(function(i){
+			var name = document.getElementById('textbox'+i).value.replace('.v','');
+			if ( schematic.nameIsUsed(name, i) || schematic.isNativeComponent(name) )
+				alert_txt += name + ' is already used. Please choose another name.\n'
+			else if ( !schematic.isValidID(name) )
+				alert_txt += name + ' is not a valid Verilog ID. Please choose another name.\n'
+		});
+		if ( alert_txt!="" )
+			alert(alert_txt);
+	}
+	function handle_save(){
+		if (file_input.files.length==0){
+			hideWindow();
+			return 0;
+		}
+		var iterator = saved_ids.values();
+		var components = new Array();
+		var id = iterator.next().value;
+		var reader = new FileReader();
+		reader.onload = function(e){
+			var file_txt = e.target.result;
+			var lines = file_txt.split('\n');
+			var module_started = false;
+			var new_txt = "";
+			lines.forEach(function(line){
+				if ( line.startsWith('module'))
+					module_started = true;
+				if ( module_started )
+					new_txt += (line+'\n');
+			});
+			components.push({
+				"name":component_names[id],
+				"verilog":new_txt
+			});
+			id = iterator.next().value;
+			if ( id!=null )
+				reader.readAsText(file_input.files[id]);
+			else
+				window.parent.openFile.setData(components, null);
+		}
+		reader.readAsText(file_input.files[id]);
+	}
+	function reset_row_labels(){
+		var label_num = 1;
+		saved_ids.forEach(function(i){
+			var label = document.getElementById('label'+i);
+			label.innerHTML = (label_num++)+'.';
+		});
+	}
+	function duplicate_names_used(){
+		var name_set = new Set();
+		var name_array = new Array();
+		saved_ids.forEach(function(i){
+			var name = document.getElementById('textbox'+i).value.replace('.v','');
+			name_set.add(name);
+			name_array.push(name);
+		});
+		//this works because sets will not include duplicates and arrays will
+		return (name_array.length!=name_set.size);
+	}
+	function hideWindow(){
+		window.parent.openFile.cancel(true);
+	}
+	function deleteComponent(e){
+		var id = e.currentTarget.id;
+		id = parseInt(id.replace('delete_btn', ''));
+		saved_ids.delete(id);
+		e.currentTarget.parentNode.remove();
+		set_save_btn_status();
+		reset_row_labels();
+	}
+
+	var div = document.createElement('div');
+	div.style.backgroundColor = 'transparent';
+	div.allowTransparency = 'true';
+	div.style.borderStyle = 'none';
+	div.style.borderWidth = '0px';
+	div.style.overflow = 'hidden';
+	div.frameBorder = '0';
 
 	var dx = (mxClient.IS_VML && (document.documentMode == null || document.documentMode < 8)) ? 20 : 0;
 
-	iframe.setAttribute('width', (((Editor.useLocalStorage) ? 640 : 320) + dx) + 'px');
-	iframe.setAttribute('height', (((Editor.useLocalStorage) ? 480 : 220) + dx) + 'px');
-	iframe.setAttribute('src', IMPORT_FORM);
+	div.setAttribute('width', (((Editor.useLocalStorage) ? 640 : 320) + dx) + 'px');
+	div.setAttribute('height', (((Editor.useLocalStorage) ? 500 : 220) + dx) + 'px');
 
-	this.container = iframe;
+	var form = document.createElement('form');
+	form.method = 'POST';
+	form.enctype = 'multipart/form-data';
+	form.action = "";
+	form.name = 'openForm';
+	form.setAttribute('accept-charset','UTF-8');
+	div.appendChild(form);
+
+	var file_input = document.createElement('input');
+	file_input.type = 'file';
+	file_input.name = 'upfile';
+	file_input.setAttribute('multiple','');
+	file_input.onchange = initFileTable;
+	div.appendChild(file_input);
+
+	var header = document.createElement('h5');
+	header.style.margin = '5px';
+	header.innerHTML = mxResources.get('importSupported');
+	div.appendChild(header);
+
+	var table_div = document.createElement('div');
+	table_div.style.height = '160px';
+	table_div.style.overflow = 'auto';
+	var table = document.createElement('table');
+	table_div.appendChild(table);
+	div.appendChild(table_div);
+	mxUtils.br(div);
+
+	var cancel_btn = document.createElement('input');
+	cancel_btn.type = 'button';
+	cancel_btn.value= 'Cancel';
+	cancel_btn.setAttribute('class', 'geBtn');
+	cancel_btn.setAttribute('id', 'cancelButton');
+	cancel_btn.onclick = hideWindow;
+	div.appendChild(cancel_btn);
+
+	var save_btn = document.createElement('input');
+	save_btn.type = 'button';
+	save_btn.value= 'Save';
+	save_btn.setAttribute('class', 'geBtn gePrimaryBtn');
+	save_btn.onclick = handle_save;
+	div.appendChild(save_btn);
+
+	this.container = div;
 };
 
 var EditComponentDialog = function(editorUi)
@@ -67,24 +250,20 @@ var EditComponentDialog = function(editorUi)
 		var id = e.currentTarget.id;
 		id = parseInt(id.replace('textbox', ''));
 		var new_name = e.currentTarget.value;
-		if ( schematic.nameIsUsed(new_name, id) || schematic.isNativeComponent(new_name) ){
+		if ( ( schematic.nameIsUsed(new_name, id) || schematic.isNativeComponent(new_name) ) )
 			alert('"'+ new_name +'" already exists. Please change the name.');
-			save_btn.setAttribute('disabled','disabled');
-		}
-		else if( schematic.getIDerror(new_name)!="" ) {
+		else if(  ( schematic.getIDerror(new_name)!="" ) ) 
 			alert('"'+ new_name +'" is invalid. Please change the name.');
-			save_btn.setAttribute('disabled','disabled');
-		}
-		else {
+		else 
 			new_names[id] = new_name;
-			save_btn.removeAttribute('disabled');
-		}
+		set_save_btn_status();
 	}
 	function deleteComponent(e){
 		var id = e.currentTarget.id;
 		id = parseInt(id.replace('delete_btn', ''));
-		e.currentTarget.parentNode.innerHTML = "";
+		e.currentTarget.parentNode.remove();
 		deleted_ids.push(id);
+		set_save_btn_status();
 	}
 	function openSchematic(e){
 		var id = e.currentTarget.id;
@@ -94,7 +273,19 @@ var EditComponentDialog = function(editorUi)
 	function hideWindow(){
 		window.parent.openFile.cancel(true);
 	}
-
+	function set_save_btn_status(){
+		for (var i=0; i<storedShapes.length; i++) {
+			if ( !deleted_ids.includes(i) ){
+				var name = document.getElementById('textbox'+i).value;
+				if ( schematic.nameIsUsed(name, i) || schematic.isNativeComponent(name) || !schematic.isValidID(name) ){
+					save_btn.setAttribute('disabled','disabled');
+					return;
+				}
+			}
+		}
+		save_btn.removeAttribute('disabled');
+	}
+	
 	var div = document.createElement('div');
 	div.style.backgroundColor = 'transparent';
 	div.allowTransparency = 'true';
@@ -105,8 +296,8 @@ var EditComponentDialog = function(editorUi)
 
 	var dx = (mxClient.IS_VML && (document.documentMode == null || document.documentMode < 8)) ? 20 : 0;
 
-	div.setAttribute('width', (((Editor.useLocalStorage) ? 640 : 380) + dx) + 'px');
-	div.setAttribute('height', (((Editor.useLocalStorage) ? 480 : 220) + dx) + 'px');
+	div.setAttribute('width', '640px');
+	div.setAttribute('height', '480px');
 	var h3 = document.createElement('h3');
 	mxUtils.write(h3, 'Imported Component Library');
 	div.appendChild(h3);
@@ -149,7 +340,11 @@ var EditComponentDialog = function(editorUi)
 		table.appendChild(row);
 	}
 	
-	div.appendChild(table);
+	var table_div = document.createElement('div');
+	table_div.style.height = '120px';
+	table_div.style.overflow = 'auto';
+	table_div.appendChild(table);
+	div.appendChild(table_div);
 	mxUtils.br(div);
 	
 	var cancel_btn = document.createElement('input');

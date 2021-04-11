@@ -181,7 +181,7 @@ Actions.prototype.init = function()
 				mxUtils.alert(mxResources.get('invalidOrMissingFile') + ': ' + e.message);
 			}
 		}));
-		ui.showDialog(new ImportDialog(this).container, 320, 220, true, true, function()
+		ui.showDialog(new ImportDialog(this).container, 320, 250, true, true, function()
 		{
 			window.openFile = null;
 		});
