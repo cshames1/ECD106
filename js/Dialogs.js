@@ -80,7 +80,7 @@ var ImportDialog = function()
 			}
 		}
 		build_file_table();
-		set_save_btn_status();
+		set_import_btn_status();
 		display_alerts();
 	}
 	function build_file_table(){
@@ -121,9 +121,9 @@ var ImportDialog = function()
 		var id = e.currentTarget.id;
 		id = parseInt(id.replace('textbox', ''));
 		component_names[id] = e.currentTarget.value;
-		set_save_btn_status();
+		set_import_btn_status();
 	}
-	function set_save_btn_status(){
+	function set_import_btn_status(){
 		var enable = true;
 		saved_ids.forEach(function(i){
 			var name = document.getElementById('textbox'+i).value.replace('.v','');
@@ -205,7 +205,7 @@ var ImportDialog = function()
 		id = parseInt(id.replace('delete_btn', ''));
 		saved_ids.delete(id);
 		e.currentTarget.parentNode.remove();
-		set_save_btn_status();
+		set_import_btn_status();
 		reset_row_labels();
 	}
 
