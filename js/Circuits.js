@@ -421,16 +421,8 @@ schematic.prototype.runDRC = function()
 		Messages.addWarning("Schematic has unconnected inputs",null);
 	return Messages;
 };
-/* prototype method: function getImportedComponentsForExport
- *		Returns verilog code stored in cache memory associated with module
- * module: module whose Verilog code will be returned
- */
+
 schematic.prototype.getImportedComponentVerilog=function( module ){
-	/* helper function: getModuleVerilog
-	 * 		Returns verilog code stored in cache memory with imported component
-	 *		name module
-	 * moduleName: the name of component being retreived
-	 */
 	function getModuleVerilog( moduleName ) {
 		var storedShapes = JSON.parse(localStorage.getItem('storedShapes'));
 		var currentModule;
@@ -447,9 +439,7 @@ schematic.prototype.getImportedComponentVerilog=function( module ){
 	}
 	return newVerilog;
 }
-/* prototype method: function getImportedComponentsForExport
- *		Returns set of all imported components used in the schematic
- */
+
 schematic.prototype.getImportedComponentsForExport=function(){
 	var graph=this.graph;
 	nodes=graph.getChildVertices(graph.getDefaultParent());
@@ -462,10 +452,7 @@ schematic.prototype.getImportedComponentsForExport=function(){
 	});
 	return components;
 }
-/* prototype method: function getNativeComponentsForExport
- *		Returns set of all native components used in the schematic that
- *      need .v files to be exported
- */
+
 schematic.prototype.getNativeComponentsForExport=function(){
 	var graph=this.graph;
 	nodes=this.graph.getChildVertices(graph.getDefaultParent());
@@ -482,11 +469,7 @@ schematic.prototype.getNativeComponentsForExport=function(){
 	});
 	return components;
 }
-/* prototype method: function deleteClearedComponents
- *		After the user clears imported components, this function will delete
- *		any such components left on the graph
- *		Returns nothing
- */
+
 schematic.prototype.deleteClearedComponents = function(){
 	var graph=this.graph;
 	nodes =  graph.getChildVertices(graph.getDefaultParent());
@@ -511,10 +494,7 @@ schematic.prototype.deleteClearedComponents = function(){
 	});
 	graph.removeCells(cells);
 }
-/* prototype method: function createVerilog
- *		Returns synthesizeable Verilog code generated from graph
- *		Maps netlist and sets bit width of all wires
- */
+
 schematic.prototype.createVerilog=function()
 {
 	var netList="";
@@ -539,30 +519,12 @@ schematic.prototype.createVerilog=function()
 					fanIn2: "fanIn2", fanIn4: "fanIn4", fanIn8: "fanIn8", fanIn16: "fanIn16", fanIn32: "fanIn32",
 					fanOut2: "fanOut2", fanOut4: "fanOut4", fanOut8: "fanOut8", fanOut16: "fanOut16", fanOut32: "fanOut32" 
 				};
-	/* helper function: function gateName
-	 *		Returns the node's unique ID number prefixed by prefix
-	 * node: the node whose value will be checked. Must be an inputport
-	 * prefix: prefix to use if inputport has not been asssigned a name by user
-	 */
 	function gateName( node, prefix){ 
 		return prefix+node.id;
 	}
-	/* helper function: portName
-	 * 		Checks if user has assigned inputport a name. If so, this name is returned.
-	 *		Otherwise, call gateName
-	 * node: the node whose value will be checked. Must be an inputport
-	 * prefix: prefix to use if inputport has not been asssigned a name by user
-	 */
 	function portName( node, prefix ){ 
 		return node.value ? node.value : gateName(node,prefix);
 	}
-	/* helper function: netName
-	 * 		Creates a name for a wire. Verilog requires that wire names
-	 *		start with a letter, so name is prefixed with "X" and followed
-	 *		by the link's unique ID number. If source module has multiple outputs,
-	 *		then the link ID is followed by the source port ID number
-	 * link: the link whose ID number will be used
-	 */
 	function netName( link ){
 		var port_id = getSrcPortID( link );
 		if( port_id == "" )
@@ -570,12 +532,6 @@ schematic.prototype.createVerilog=function()
 		else
 			return 'X'+link.source.id + '_'+ port_id;
 	}
-	/* helper function: getNameOrAlias
-	 * 		Returns alias associated with link. This alias may be an 
-	 *		inputport name, a bus indexed with bracket notation if the 
-	 *		source module is a fanOut, unassigned, or a single bit wire
-	 * link: the node whose alias will be returned
-	 */
 	function getNameOrAlias( link ){
 		var alias = "";
 		var try_inputport_name = netAliases[netName(link)] ;
@@ -598,56 +554,25 @@ schematic.prototype.createVerilog=function()
 			alias += netName(link);
 		return alias;
 	}
-	/* helper function: getModule
-	 * 		Returns the module name associated with node
-	 * node: the node whose module name will be returned
-	 */
 	function getModule( node ){
 		return graph.getCellStyle( node )["shape"];
 	}
-	/* helper function: getSrcPortID
-	 * 		Each outputport of a module is assigned an ID number starting at 0 
-	 *		for the top port and increasing by 1. Returns the ID of the port
-	 *		link is sourced from
-	 * link: the edge whose source port ID will be returned
-	 */
 	function getSrcPortID ( link ) {
 		var port_object = /sourcePort=out([^_]*)/.exec(link.style);
 		if ( port_object ) 
 			return port_object[1];
 	}
-	/* helper function: getTrgtPortID
-	 * 		Each inputport of a module is assigned an ID number starting at 0 
-	 *		for the top port and increasing by 1. Returns the ID of the port
-	 *		link targets
-	 * link: the edge whose target port ID will be returned
-	 */
 	function getTrgtPortID ( link ) {
 		var port_object =  /targetPort=in([^_]*)/.exec(link.style);
 		if ( port_object ) 
 			return port_object[1];
 	}
-	/* helper function: srcNodeIs
-	 * 		Returns true of the source module of link is moduleName
-	 * link: the edge whose target module will be checked
-	 * moduleName: name of module to check for
-	 */
 	function srcNodeIs( link, moduleName ){
 		return getModule( link.source ).includes( moduleName );
 	}
-	/* helper function: trgtNodeIs
-	 * 		Returns true of the target module of link is moduleName
-	 * link: the edge whose target module will be checked
-	 * moduleName: name of module to check for
-	 */
 	function trgtNodeIs( link, moduleName ){
 		return getModule( link.target ).includes( moduleName );
 	}
-	/* helper function: searchStoredShapesFor
-	 * 		Searches through each component stored in cache memory and returns the 
-	 *		one whose name matches moduleName
-	 * moduleName: name of moduled to retrieve
-	 */
 	function searchStoredShapesFor( moduleName ){
 		var storedShapes = JSON.parse(localStorage.getItem('storedShapes'));
 		var i = storedShapes.length;
@@ -656,29 +581,12 @@ schematic.prototype.createVerilog=function()
 				return storedShapes[i];
 		}
 	}
-	/* helper function: getModulePortSizes
-	 * 		Returns object having two attributes;  the first is an array of inputport bit widths,
-	 *		the second is an array of outputport bit widths. This object is stored in cache memory
-	 *		with the imported component named moduleName
-	 * moduleName: name of moduled to retrieve
-	 */
 	function getModulePortSizes ( moduleName ) {
 		return searchStoredShapesFor( moduleName ).signal_size;
 	}
-	/* helper function: getModulePorts
-	 * 		Returns object having two attributes;  the first is an array of inputport named,
-	 *		the second is an array of outputport names. This object is stored in cache memory
-	 *		with imported components
-	 * moduleName: name of moduled to retrieve
-	 */
 	function getModulePorts ( moduleName ){
 		return searchStoredShapesFor( moduleName ).signals;
 	}
-	/* helper function: sortNodes
-	 * 		Sorts nodes so any module which can determine bit width is placed first, others after them
-	 *  	Returns set of sorted nodes
-	 * unsorted_nodes: set of nodes to be sorted
-	 */
 	function sortNodes ( unsorted_nodes ) {
 		var sorted_nodes = new Set();
 		if ( unsorted_nodes) unsorted_nodes.forEach(function(node){
@@ -693,13 +601,6 @@ schematic.prototype.createVerilog=function()
 		});
 		return sorted_nodes;
 	}
-	/* helper function: setCellStyleAttribute
-	 * 		If cell does not have attribute, it will be created and initialized to value
-	 *      Othewise, its value will be replaced with value
-	 * cell: cell to be modified
-	 * attribute: attribute to be modified or initialized
-	 * value: value to be assigned to style attribue
-	 */
 	function setCellStyleAttribute( cell, attribute, value ){
 		var new_style ="";
 		var style = cell["style"];
@@ -716,12 +617,6 @@ schematic.prototype.createVerilog=function()
 			new_style += style+attribute+"="+value+";";
 		cell["style"] = new_style;
 	}
-	/* helper function: setLinkSetSize
-	 * 		Creates attribute size for edges and initializes it to size
-	 * 		Modifies edges cell style to scale its strokeWidth in proportion to bit width
-	 * link_set: a set of edges in the graph
-	 * size: bit width
-	 */
 	function setLinkSetSize(link_set, size){
 		if ( link_set ) link_set.forEach(function(link){
 			link.size = size;

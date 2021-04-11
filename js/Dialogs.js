@@ -17,8 +17,7 @@ var OpenDialog = function()
 		}
 		var reader = new FileReader();
 		reader.onload = function(e){
-			var file_txt = e.target.result;
-			window.parent.openFile.setData(file_txt);
+			window.parent.openFile.setData(e.target.result);
 		}
 		reader.readAsText(file);
 	}
@@ -62,7 +61,6 @@ var OpenDialog = function()
 	div.appendChild(import_btn);
 
 	this.container = div;
-	console.log(this.container);
 };
 
 var ImportDialog = function()
@@ -83,7 +81,6 @@ var ImportDialog = function()
 		display_alerts();
 	}
 	function build_file_table(){
-		table.innerHTML = "";
 		var label_num = 1;
 
 		saved_ids.forEach(function(i){
@@ -128,12 +125,12 @@ var ImportDialog = function()
 		saved_ids.forEach(function(i){
 			var name = document.getElementById('textbox'+i).value.replace('.v','');
 			if ( schematic.nameIsUsed(name, i) || schematic.isNativeComponent(name) || !schematic.isValidID(name) || duplicate_names_used() ) {
-				save_btn.setAttribute('disabled','disabled');
+				import_btn.setAttribute('disabled','disabled');
 				enable = false;
 			}
 		});
 		if (enable)
-			save_btn.removeAttribute('disabled');
+			import_btn.removeAttribute('disabled');
 	}
 	function display_alerts(){
 		var alert_txt = "";
@@ -258,12 +255,12 @@ var ImportDialog = function()
 	cancel_btn.onclick = hideWindow;
 	div.appendChild(cancel_btn);
 
-	var save_btn = document.createElement('input');
-	save_btn.type = 'button';
-	save_btn.value= 'Save';
-	save_btn.setAttribute('class', 'geBtn gePrimaryBtn');
-	save_btn.onclick = handle_save;
-	div.appendChild(save_btn);
+	var import_btn = document.createElement('input');
+	import_btn.type = 'button';
+	import_btn.value= 'Import';
+	import_btn.setAttribute('class', 'geBtn gePrimaryBtn');
+	import_btn.onclick = handle_save;
+	div.appendChild(import_btn);
 
 	this.container = div;
 };
@@ -443,15 +440,12 @@ var AboutDialog = function(editorUi)
 	var ecd = document.createElement('p');
 	mxUtils.write(ecd, 'ECD106');
 	mxUtils.br(div);
-	var advisor = document.createElement('p');
-	mxUtils.write(advisor, 'Advisor: Professor Meghana Jain');
-	div.appendChild(advisor);
 	var names = document.createElement('p');
 	mxUtils.write(names, 'Charlie Shames, Thomas Nicolino, Ben Picone, Joseph Luciano');
 	div.appendChild(names);
 	mxUtils.br(div);
 	var copy=document.createElement('small');
-	mxUtils.write(copy,'(c) 2020-2021 Douglas H. Summerville, Binghamton University.  All rights reserved.');
+	mxUtils.write(copy,'(c) 2020-2021 Meghana Jain, Binghamton University.  All rights reserved.');
 	div.append(copy);
 	mxUtils.br(div);
 	mxUtils.br(div);
