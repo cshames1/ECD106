@@ -10,8 +10,11 @@ var OpenDialog = function()
 	}
 	function handle_import(){
 		var file = file_input.files[0];
-		var file_name = file.name;
-		if ( !file_name.endsWith('.sch') ) {
+		if (file==null){
+			alert('No file selected.');
+			return;
+		}
+		else if ( !file.name.endsWith('.sch') ) {
 			alert('File is not supported');
 			return;
 		}
@@ -240,7 +243,7 @@ var ImportDialog = function()
 	div.appendChild(header);
 
 	var table_div = document.createElement('div');
-	table_div.style.height = '160px';
+	table_div.style.height = '140px';
 	table_div.style.overflow = 'auto';
 	var table = document.createElement('table');
 	table_div.appendChild(table);
@@ -273,7 +276,7 @@ var EditComponentDialog = function(editorUi)
 
 	function handleSave(){
 		var newShapes = new Array();
-		for (var i=0; i<storedShapes.length; i++) {
+		if (storedShapes) for (var i=0; i<storedShapes.length; i++) {
 			if ( !deleted_ids.includes(i) ) {
 				var newShape = storedShapes[i];
 				if (new_names[i]!=null)
@@ -312,7 +315,7 @@ var EditComponentDialog = function(editorUi)
 		window.parent.openFile.cancel(true);
 	}
 	function set_save_btn_status(){
-		for (var i=0; i<storedShapes.length; i++) {
+		if (storedShapes.length) for (var i=0; i<storedShapes.length; i++) {
 			if ( !deleted_ids.includes(i) ){
 				var name = document.getElementById('textbox'+i).value;
 				if ( schematic.nameIsUsed(name, i) || schematic.isNativeComponent(name) || !schematic.isValidID(name) ){
@@ -350,7 +353,8 @@ var EditComponentDialog = function(editorUi)
 	div.appendChild(h3);
 
 	var table = document.createElement('table');
-	for (var i=0; i<storedShapes.length; i++) {
+
+	if (storedShapes) for (var i=0; i<storedShapes.length; i++) {
 		var row = document.createElement('tr');
 		row.setAttribute('id', 'fileRow'+i);
 
