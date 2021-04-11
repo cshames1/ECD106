@@ -1,28 +1,68 @@
 /*
  * Copyright (c) 2018, Douglas H. Summerville, Binghamton University
  * (see license.txt for attributions)
- * Updated by 2020 [WCP28] Jacob Richman, Tomer Itzhaki, Xuan Do; Advisor: Meghana Jain
  * Updated by 2021 [ECD106] Charlie Shames, Thomas Nicolino, Ben Picone, Joseph Luciano; Advisor: Meghana Jain
- * 
  */
 var OpenDialog = function()
 {
-	var iframe = document.createElement('iframe');
-	iframe.style.backgroundColor = 'transparent';
-	iframe.allowTransparency = 'true';
-	iframe.style.borderStyle = 'none';
-	iframe.style.borderWidth = '0px';
-	iframe.style.overflow = 'hidden';
-	iframe.frameBorder = '0';
-
+	function hideWindow(){
+		window.parent.openFile.cancel(true);
+	}
+	function handle_import(){
+		var file = file_input.files[0];
+		var file_name = file.name;
+		if ( !file_name.endsWith('.sch') ) {
+			alert('File is not supported');
+			return;
+		}
+		var reader = new FileReader();
+		reader.onload = function(e){
+			var file_txt = e.target.result;
+			window.parent.openFile.setData(file_txt);
+		}
+		reader.readAsText(file);
+	}
+	var div = document.createElement('div');
+	div.style.backgroundColor = 'transparent';
+	div.allowTransparency = 'true';
+	div.style.borderStyle = 'none';
+	div.style.borderWidth = '0px';
+	div.style.overflow = 'hidden';
+	div.frameBorder = '0';
 
 	var dx = (mxClient.IS_VML && (document.documentMode == null || document.documentMode < 8)) ? 20 : 0;
 
-	iframe.setAttribute('width', (((Editor.useLocalStorage) ? 640 : 320) + dx) + 'px');
-	iframe.setAttribute('height', (((Editor.useLocalStorage) ? 480 : 220) + dx) + 'px');
-	iframe.setAttribute('src', OPEN_FORM);
+	div.setAttribute('width', (((Editor.useLocalStorage) ? 640 : 320) + dx) + 'px');
+	div.setAttribute('height', (((Editor.useLocalStorage) ? 80 : 80) + dx) + 'px');
 
-	this.container = iframe;
+	var file_input = document.createElement('input');
+	file_input.type = 'file';
+	file_input.name = 'upfile';
+	div.appendChild(file_input);
+
+	var header = document.createElement('h5');
+	header.style.margin = '5px';
+	header.innerHTML = mxResources.get('openSupported');
+	div.appendChild(header);
+	mxUtils.br(div);
+
+	var cancel_btn = document.createElement('input');
+	cancel_btn.type = 'button';
+	cancel_btn.value= 'Cancel';
+	cancel_btn.setAttribute('class', 'geBtn');
+	cancel_btn.setAttribute('id', 'cancelButton');
+	cancel_btn.onclick = hideWindow;
+	div.appendChild(cancel_btn);
+
+	var import_btn = document.createElement('input');
+	import_btn.type = 'button';
+	import_btn.value= 'Save';
+	import_btn.setAttribute('class', 'geBtn gePrimaryBtn');
+	import_btn.onclick = handle_import;
+	div.appendChild(import_btn);
+
+	this.container = div;
+	console.log(this.container);
 };
 
 var ImportDialog = function()
@@ -38,11 +78,11 @@ var ImportDialog = function()
 				component_names[i] = files[i].name.replace('.v','');
 			}
 		}
-		buildFileTable();
+		build_file_table();
 		set_save_btn_status();
 		display_alerts();
 	}
-	function buildFileTable(){
+	function build_file_table(){
 		table.innerHTML = "";
 		var label_num = 1;
 

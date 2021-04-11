@@ -43,7 +43,7 @@ Actions.prototype.init = function()
 			ui.hideDialog();
 		}));
 		
-		window.openFile.setConsumer(mxUtils.bind(this, function(xml, filename)
+		window.openFile.setConsumer(mxUtils.bind(this, function(xml)
 		{
 			try
 			{
@@ -57,7 +57,7 @@ Actions.prototype.init = function()
 		}));
 
 
-		ui.showDialog(new OpenDialog(this).container, 320, 220, true, true, function()
+		ui.showDialog(new OpenDialog(this).container, 320, 100, true, true, function()
 		{
 			window.openFile = null;
 		});
