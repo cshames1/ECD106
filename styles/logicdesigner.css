@@ -723,3 +723,7 @@ html td.mxWindowTitle {
  	color:rgb(112, 112, 112);
  	padding:4px;
 }
+.delete_btn {
+	background: rgba(255, 0, 0, 0.65)
+	
+}

@@ -84,6 +84,7 @@ var ImportDialog = function()
 		display_alerts();
 	}
 	function build_file_table(){
+		table.innerHTML = "";
 		var label_num = 1;
 
 		saved_ids.forEach(function(i){
@@ -111,6 +112,7 @@ var ImportDialog = function()
 			delete_btn.setAttribute('id', 'delete_btn'+i);
 			delete_btn.type = 'button';
 			delete_btn.value= 'Delete';
+			delete_btn.className = 'delete_btn';
 			delete_btn.onclick = deleteComponent;
 			row.appendChild(delete_btn);
 	
@@ -122,7 +124,7 @@ var ImportDialog = function()
 		id = parseInt(id.replace('textbox', ''));
 		component_names[id] = e.currentTarget.value;
 		set_import_btn_status();
-	}
+	}	
 	function set_import_btn_status(){
 		var enable = true;
 		saved_ids.forEach(function(i){
@@ -161,7 +163,7 @@ var ImportDialog = function()
 			var lines = file_txt.split('\n');
 			var module_started = false;
 			var new_txt = "";
-			lines.forEach(function(line){
+			if (lines) lines.forEach(function(line){
 				if ( line.startsWith('module') )
 					module_started = true;
 				if ( module_started )
@@ -188,14 +190,12 @@ var ImportDialog = function()
 	}
 	function duplicate_names_used(){
 		var name_set = new Set();
-		var name_array = new Array();
 		saved_ids.forEach(function(i){
 			var name = document.getElementById('textbox'+i).value.replace('.v','');
 			name_set.add(name);
-			name_array.push(name);
 		});
-		//this works because sets will not include duplicates and arrays will
-		return (name_array.length!=name_set.size);
+		//this works because name_set will not include duplicate names
+		return name_set.size<saved_ids.size;
 	}
 	function hide_window(){
 		window.parent.openFile.cancel(true);
@@ -372,13 +372,6 @@ var EditComponentDialog = function(editorUi)
 		renaming_box.value = storedShapes[i].componentName;
 		renaming_box.onchange = changedName;
 		row.appendChild(renaming_box);
-		
-		var delete_btn = document.createElement('input');
-		delete_btn.setAttribute('id', 'delete_btn'+i);
-		delete_btn.type = 'button';
-		delete_btn.value= 'Delete';
-		delete_btn.onclick = deleteComponent;
-		row.appendChild(delete_btn);
 
 		var schematic_btn = document.createElement('input');
 		schematic_btn.setAttribute('id', 'schematic_btn'+i);
@@ -388,6 +381,14 @@ var EditComponentDialog = function(editorUi)
 		if (storedShapes[i].xml==null)
 			schematic_btn.setAttribute('disabled','disabled');
 		row.appendChild(schematic_btn);
+
+		var delete_btn = document.createElement('input');
+		delete_btn.setAttribute('id', 'delete_btn'+i);
+		delete_btn.type = 'button';
+		delete_btn.value= 'Delete';
+		delete_btn.className = 'delete_btn';
+		delete_btn.onclick = deleteComponent;
+		row.appendChild(delete_btn);
 
 		table.appendChild(row);
 	}
