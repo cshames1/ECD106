@@ -1484,7 +1484,7 @@ var DRCWindow = function(editorUi, x, y, w, h)
 		{
 			h+= '<span style="color:green"><h2>Circuit Passed DRC!</h2></span>';
 			if( drcOutput.hasWarnings() )
-				h+='<p> Warnings should be corrected or may result in faulure during synthesis.</p>'
+				h+='<p> Warnings should be corrected.</p>'
 		}
 		if( drcOutput.hasWarnings() )
 		{

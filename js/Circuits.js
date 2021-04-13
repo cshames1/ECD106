@@ -396,7 +396,7 @@ schematic.prototype.runDRC = function()
 			var ports_sizes = getModulePortSizes(module);
 			var ports = getModulePorts(module);
 			if ( node.numLinksInto()<ports.input.length )
-				Messages.addWarning(module + " has unconnected inputs",node);
+				Messages.addError(module + " has unconnected inputs",node);
 			for (var i=0; i<ports_sizes.input.length; i++) {
 				var link = node.getLink('in'+i+'_w',false);
 				if ( link && link.size!=ports_sizes.input[i] )
