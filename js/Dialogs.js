@@ -80,8 +80,9 @@ var ImportDialog = function()
 			}
 		}
 		build_file_table();
-		set_import_btn_status();
-		display_alerts();
+		var alerts = get_alerts();
+		if ( alerts!= "" )
+			alert(alerts);
 	}
 	function build_file_table(){
 		table.innerHTML = "";
@@ -123,35 +124,25 @@ var ImportDialog = function()
 		var id = e.currentTarget.id;
 		id = parseInt(id.replace('textbox', ''));
 		component_names[id] = e.currentTarget.value;
-		set_import_btn_status();
 	}	
-	function set_import_btn_status(){
-		var enable = true;
-		saved_ids.forEach(function(i){
-			var name = document.getElementById('textbox'+i).value.replace('.v','');
-			if ( schematic.nameIsUsed(name, i) || schematic.isNativeComponent(name) || !schematic.isValidID(name) || duplicate_names_used() ) {
-				import_btn.setAttribute('disabled','disabled');
-				enable = false;
-			}
-		});
-		if (enable)
-			import_btn.removeAttribute('disabled');
-	}
-	function display_alerts(){
+	function get_alerts(){
 		var alert_txt = "";
 		saved_ids.forEach(function(i){
 			var name = document.getElementById('textbox'+i).value.replace('.v','');
-			if ( schematic.nameIsUsed(name, i) || schematic.isNativeComponent(name) )
+			if ( schematic.nameIsUsed(name, i) || schematic.isNativeComponent(name) || duplicate_names_used() )
 				alert_txt += name + ' is already used. Please choose another name.\n'
 			else if ( !schematic.isValidID(name) )
 				alert_txt += name + ' is not a valid Verilog ID. Please choose another name.\n'
 		});
-		if ( alert_txt!="" )
-			alert(alert_txt);
+		return alert_txt;
 	}
 	function handle_save(){
 		if ( saved_ids.size==0 ){
 			hide_window();
+			return 0;
+		}
+		else if ( get_alerts()!="" ) {
+			alert(get_alerts());
 			return 0;
 		}
 		var iterator = saved_ids.values();
@@ -205,7 +196,6 @@ var ImportDialog = function()
 		id = parseInt(id.replace('delete_btn', ''));
 		saved_ids.delete(id);
 		e.currentTarget.parentNode.remove();
-		set_import_btn_status();
 		reset_row_labels();
 	}
 
@@ -1484,7 +1474,7 @@ var DRCWindow = function(editorUi, x, y, w, h)
 		{
 			h+= '<span style="color:green"><h2>Circuit Passed DRC!</h2></span>';
 			if( drcOutput.hasWarnings() )
-				h+='<p> Warnings should be corrected or may result in faulure during synthesis.</p>'
+				h+='<p> Warnings should be corrected.</p>'
 		}
 		if( drcOutput.hasWarnings() )
 		{
