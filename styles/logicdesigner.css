@@ -727,3 +727,8 @@ html td.mxWindowTitle {
 	background: rgba(255, 0, 0, 0.65)
 	
 }
+h5 {
+	font-family:Helvetica Neue,Helvetica,Arial Unicode MS,Arial;
+	text-align:left;
+	font-size:11px;
+}

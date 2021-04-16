@@ -11,11 +11,11 @@ var OpenDialog = function()
 	function handle_import(){
 		var file = file_input.files[0];
 		if (file==null){
-			alert('No file selected.');
+			alert( mxResources.get('noFile') );
 			return;
 		}
 		else if ( !file.name.endsWith('.sch') ) {
-			alert('File is not supported.');
+			alert( mxResources.get('notSupported') );
 			return;
 		}
 		var reader = new FileReader();
@@ -58,7 +58,7 @@ var OpenDialog = function()
 
 	var import_btn = document.createElement('input');
 	import_btn.type = 'button';
-	import_btn.value= 'Save';
+	import_btn.value= 'Import';
 	import_btn.setAttribute('class', 'geBtn gePrimaryBtn');
 	import_btn.onclick = handle_import;
 	div.appendChild(import_btn);
@@ -264,7 +264,7 @@ var EditComponentDialog = function(editorUi)
 	var new_names = new Array();
 	var storedShapes = JSON.parse(localStorage.getItem('storedShapes'));
 
-	function handleSave(){
+	function handle_save(){
 		var newShapes = new Array();
 		if (storedShapes) for (var i=0; i<storedShapes.length; i++) {
 			if ( !deleted_ids.includes(i) ) {
@@ -276,19 +276,19 @@ var EditComponentDialog = function(editorUi)
 		}
 		window.parent.openFile.setData(newShapes, null);
 	}
-	function changedName(e){
+	function changed_name(e){
 		var id = e.currentTarget.id;
 		id = parseInt(id.replace('textbox', ''));
 		var new_name = e.currentTarget.value;
 		if ( ( schematic.nameIsUsed(new_name, id) || schematic.isNativeComponent(new_name) ) )
 			alert('"'+ new_name +'" already exists. Please change the name.');
-		else if(  ( schematic.getIDerror(new_name)!="" ) ) 
+		else if(   schematic.getIDerror(new_name)!=""  ) 
 			alert('"'+ new_name +'" is invalid. Please change the name.');
 		else 
 			new_names[id] = new_name;
 		set_save_btn_status();
 	}
-	function deleteComponent(e){
+	function delete_component(e){
 		var id = e.currentTarget.id;
 		id = parseInt(id.replace('delete_btn', ''));
 		e.currentTarget.parentNode.remove();
@@ -296,7 +296,7 @@ var EditComponentDialog = function(editorUi)
 		set_save_btn_status();
 		reset_row_labels();
 	}
-	function openSchematic(e){
+	function open_schematic(e){
 		var id = e.currentTarget.id;
 		id = id.replace('schematic_btn', '');
 		window.parent.openFile.setData(null, storedShapes[id].xml);
@@ -339,8 +339,14 @@ var EditComponentDialog = function(editorUi)
 	div.setAttribute('height', (((Editor.useLocalStorage) ? 500 : 220) + dx) + 'px');
 
 	var h3 = document.createElement('h3');
-	mxUtils.write(h3, 'Imported Component Library');
+	mxUtils.write(h3, mxResources.get('importedComponentLibrary') );
+	h3.style.margin = '5px';
 	div.appendChild(h3);
+
+	var h5 = document.createElement('h5');
+	mxUtils.write(h5, mxResources.get('schematicAvailable') );
+	h5.style.margin = '5px';
+	div.appendChild(h5);
 
 	var table = document.createElement('table');
 
@@ -356,18 +362,18 @@ var EditComponentDialog = function(editorUi)
 		var renaming_box = document.createElement('input');
 		renaming_box.setAttribute('id', 'textbox'+i);
 		renaming_box.setAttribute('colspan', 2);
-		renaming_box.style.width = '150px';
+		renaming_box.style.width = '180px';
 		renaming_box.type = 'text';
 		renaming_box.name = '';
 		renaming_box.value = storedShapes[i].componentName;
-		renaming_box.onchange = changedName;
+		renaming_box.onchange = changed_name;
 		row.appendChild(renaming_box);
 
 		var schematic_btn = document.createElement('input');
 		schematic_btn.setAttribute('id', 'schematic_btn'+i);
 		schematic_btn.type = 'button';
 		schematic_btn.value= 'Schematic';
-		schematic_btn.onclick = openSchematic;
+		schematic_btn.onclick = open_schematic;
 		if (storedShapes[i].xml==null)
 			schematic_btn.setAttribute('disabled','disabled');
 		row.appendChild(schematic_btn);
@@ -377,7 +383,7 @@ var EditComponentDialog = function(editorUi)
 		delete_btn.type = 'button';
 		delete_btn.value= 'Delete';
 		delete_btn.className = 'delete_btn';
-		delete_btn.onclick = deleteComponent;
+		delete_btn.onclick = delete_component;
 		row.appendChild(delete_btn);
 
 		table.appendChild(row);
@@ -402,7 +408,7 @@ var EditComponentDialog = function(editorUi)
 	save_btn.type = 'button';
 	save_btn.value= 'Save';
 	save_btn.setAttribute('class', 'geBtn gePrimaryBtn');
-	save_btn.onclick = handleSave;
+	save_btn.onclick = handle_save;
 	div.appendChild(save_btn);
 
 	this.container = div;
@@ -413,7 +419,7 @@ var AboutDialog = function(editorUi)
 	var div = document.createElement('div');
 	div.setAttribute('align', 'center');
 	var h3 = document.createElement('h3');
-	mxUtils.write(h3, mxResources.get('about') + ' Digital Systems Designer');
+	mxUtils.write(h3, mxResources.get('about')+' '+mxResources.get('dsd') );
 	div.appendChild(h3);
 	var img = document.createElement('img');
 	img.style.border = '0px';
@@ -427,19 +433,19 @@ var AboutDialog = function(editorUi)
 	mxUtils.br(div);
 	mxUtils.br(div);
 	var link = document.createElement('a');
-	link.setAttribute('href', 'https://www.binghamton.edu/electrical-computer-engineering/index.html');
+	link.setAttribute('href', mxResources.get('bingECElink') );
 	link.setAttribute('target', '_blank');
-	mxUtils.write(link, 'Binghamton University ECE Department');
+	mxUtils.write(link, mxResources.get('bingECE') );
 	div.appendChild(link);
 	var ecd = document.createElement('p');
 	mxUtils.write(ecd, 'ECD106');
 	mxUtils.br(div);
 	var names = document.createElement('p');
-	mxUtils.write(names, 'Charlie Shames, Thomas Nicolino, Ben Picone, Joseph Luciano');
+	mxUtils.write(names, mxResources.get('ecd106TeamNames') );
 	div.appendChild(names);
 	mxUtils.br(div);
 	var copy=document.createElement('small');
-	mxUtils.write(copy,'(c) 2020-2021 Meghana Jain, Binghamton University.  All rights reserved.');
+	mxUtils.write(copy, mxResources.get('copyright') );
 	div.append(copy);
 	mxUtils.br(div);
 	mxUtils.br(div);
@@ -469,7 +475,7 @@ var FilenameDialog = function(editorUi, filename, buttonText, fn, label, validat
 	td.style.whiteSpace = 'nowrap';
 	td.style.fontSize = '10pt';
 	td.style.width = '120px';
-	mxUtils.write(td, (label || mxResources.get('componentName')) + ':');
+	mxUtils.write(td, (label) + ':');
 
 	row.appendChild(td);
 
@@ -1568,6 +1574,7 @@ var DRCWindow = function(editorUi, x, y, w, h)
 	}
 
 };
+
 var VerilogWindow = function(editorUi, x, y, w, h)
 {
 	var graph = editorUi.editor.graph;

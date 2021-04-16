@@ -3444,7 +3444,7 @@ EditorUi.prototype.renameFile = function()
 			"xml":xml
 		}));
 
-	}), null, mxUtils.bind(this, function(name)
+	}), mxResources.get('rename'), mxUtils.bind(this, function(name)
 	{
 		if (name != null && name.length > 0)
 		{
@@ -3464,7 +3464,7 @@ EditorUi.prototype.directImport = function() {
 	{
 		//name is the new name the user
 		window.parent.openFile.setData(name);
-	}), null, mxUtils.bind(this, function(name)
+	}), mxResources.get('componentName'), mxUtils.bind(this, function(name)
 	{
 		var storedShapes = JSON.parse(localStorage.getItem('storedShapes'));
 		//check if name is valid in verilog
