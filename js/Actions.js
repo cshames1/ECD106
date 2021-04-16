@@ -25,13 +25,6 @@ Actions.prototype.init = function()
 	this.addAction('new...', function() {
 		ui.newFile();
 	});
-	// this.addAction('open...', function()
-	// {
-	// 	window.openNew = true;
-	// 	window.openKey = 'open';
-	//
-	// 	ui.openFile();
-	// });
 	this.addAction('importSchematic...', function()
 	{
 		window.openNew = false;

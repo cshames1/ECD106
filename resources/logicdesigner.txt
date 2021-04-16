@@ -291,6 +291,7 @@ rotate=Rotate
 rotateTooltip=Click and drag to rotate, click to turn shape only by 90 degrees
 rotation=Rotation
 rounded=Rounded
+save=Save
 saveSchematic=Save Schematic
 saveAs=Save as
 saved=Saved
