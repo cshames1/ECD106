@@ -417,8 +417,6 @@ schematic.prototype.runDRC = function()
 	
 	if( numOutputs===0 )
 		Messages.addError("Schematic must have at least one connected output",null);
-	if( numInputs===0 )
-		Messages.addWarning("Schematic has unconnected inputs",null);
 	return Messages;
 };
 
