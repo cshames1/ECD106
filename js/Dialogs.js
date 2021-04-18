@@ -50,7 +50,7 @@ var OpenDialog = function()
 
 	var cancel_btn = document.createElement('input');
 	cancel_btn.type = 'button';
-	cancel_btn.value= 'Cancel';
+	cancel_btn.value = mxResources.get('cancel');
 	cancel_btn.setAttribute('class', 'geBtn');
 	cancel_btn.setAttribute('id', 'cancelButton');
 	cancel_btn.onclick = hide_window;
@@ -58,7 +58,7 @@ var OpenDialog = function()
 
 	var import_btn = document.createElement('input');
 	import_btn.type = 'button';
-	import_btn.value= 'Import';
+	import_btn.value = mxResources.get('import');;
 	import_btn.setAttribute('class', 'geBtn gePrimaryBtn');
 	import_btn.onclick = handle_import;
 	div.appendChild(import_btn);
@@ -112,7 +112,7 @@ var ImportDialog = function()
 			var delete_btn = document.createElement('input');
 			delete_btn.setAttribute('id', 'delete_btn'+i);
 			delete_btn.type = 'button';
-			delete_btn.value= 'Delete';
+			delete_btn.value = mxResources.get('delete');;
 			delete_btn.className = 'delete_btn';
 			delete_btn.onclick = deleteComponent;
 			row.appendChild(delete_btn);
@@ -242,7 +242,7 @@ var ImportDialog = function()
 
 	var cancel_btn = document.createElement('input');
 	cancel_btn.type = 'button';
-	cancel_btn.value= 'Cancel';
+	cancel_btn.value = mxResources.get('cancel');;
 	cancel_btn.setAttribute('class', 'geBtn');
 	cancel_btn.setAttribute('id', 'cancelButton');
 	cancel_btn.onclick = hide_window;
@@ -250,7 +250,7 @@ var ImportDialog = function()
 
 	var import_btn = document.createElement('input');
 	import_btn.type = 'button';
-	import_btn.value= 'Import';
+	import_btn.value = mxResources.get('import');
 	import_btn.setAttribute('class', 'geBtn gePrimaryBtn');
 	import_btn.onclick = handle_save;
 	div.appendChild(import_btn);
@@ -372,7 +372,7 @@ var EditComponentDialog = function(editorUi)
 		var schematic_btn = document.createElement('input');
 		schematic_btn.setAttribute('id', 'schematic_btn'+i);
 		schematic_btn.type = 'button';
-		schematic_btn.value= 'Schematic';
+		schematic_btn.value = mxResources.get('schematic');
 		schematic_btn.onclick = open_schematic;
 		if (storedShapes[i].xml==null)
 			schematic_btn.setAttribute('disabled','disabled');
@@ -381,7 +381,7 @@ var EditComponentDialog = function(editorUi)
 		var delete_btn = document.createElement('input');
 		delete_btn.setAttribute('id', 'delete_btn'+i);
 		delete_btn.type = 'button';
-		delete_btn.value= 'Delete';
+		delete_btn.value = mxResources.get('delete');
 		delete_btn.className = 'delete_btn';
 		delete_btn.onclick = delete_component;
 		row.appendChild(delete_btn);
@@ -398,7 +398,7 @@ var EditComponentDialog = function(editorUi)
 	
 	var cancel_btn = document.createElement('input');
 	cancel_btn.type = 'button';
-	cancel_btn.value= 'Cancel';
+	cancel_btn.value = mxResources.get('cancel');
 	cancel_btn.setAttribute('class', 'geBtn');
 	cancel_btn.setAttribute('id', 'cancelButton');
 	cancel_btn.onclick = hide_window;
@@ -406,7 +406,7 @@ var EditComponentDialog = function(editorUi)
 
 	var save_btn = document.createElement('input');
 	save_btn.type = 'button';
-	save_btn.value= 'Save';
+	save_btn.value = mxResources.get('save');
 	save_btn.setAttribute('class', 'geBtn gePrimaryBtn');
 	save_btn.onclick = handle_save;
 	div.appendChild(save_btn);
