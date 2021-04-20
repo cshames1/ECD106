@@ -79,9 +79,6 @@ class schematic
 		return new_text;
 	};
 	static addComponent( verilog,compName,xml ){
-		if ( verilog=="")
-			return;
-
 		function get_port_size (line){
 			if (line.includes('[')) {
 				var port_size = line.split('[')[1];
@@ -90,17 +87,19 @@ class schematic
 			}
 			return 1;
 		}
-		
+		if ( verilog=="")
+			return;
+
+		var signals = {input:[], output:[]};
+		var signal_size = {input:[], output:[]};
+
 		var verilog_no_comments = schematic.removeVerilogComments( verilog );
-		
 		var port_instantiation = "";
 		var index = verilog_no_comments.indexOf('(')+1;
 		while (verilog_no_comments[index]!=')') {
 			port_instantiation += verilog_no_comments[index++];
 		}
-
-		var signals = {input:[], output:[]};
-		var signal_size = {input:[], output:[]};
+		
 		var last_port_type;
 		var last_port_size;
 		var tokens = port_instantiation.split(',');
@@ -135,7 +134,7 @@ class schematic
 			});
 		}
 		localStorage.setItem('storedShapes', JSON.stringify(storedShapes));
-		//location.reload();
+		location.reload();
 	};
 }
 
@@ -469,7 +468,8 @@ schematic.prototype.getImportedComponentVerilog=function( module ){
 		var tokens = verilog_no_comments.split(' '); 
 		var i=0;
 		while ( !tokens[i++].toLowerCase().includes('module') );
-		var name = tokens[i];
+		while ( tokens[i++]=='' );
+		var name = tokens[i-1];
 		if (name.includes('('))
 			name = name.substring(0, name.indexOf('(') )
 		return name;
