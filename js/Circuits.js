@@ -43,11 +43,41 @@ class schematic
 	};
 	static nameIsUsed( newstr, id ){
 		var storedShapes = JSON.parse(localStorage.getItem('storedShapes'));
-		for (var i=0; i<storedShapes.length; i++) {
+		if (storedShapes) for (var i=0; i<storedShapes.length; i++) {
 			if(id!=i && newstr==storedShapes[i].componentName )
 				return true;
 		}
 		return false;
+	};
+	static removeVerilogComments( verilog ){
+		var new_text = "";
+		const state_type = {
+			NORMAL_CODE:'normal_code',
+			COMMENT_TYPE1:'comment_type1',
+			COMMENT_TYPE2:'comment_type2'
+		}
+		let state = state_type.NORMAL_CODE;
+		for (var i=0; i<verilog.length; i++) {
+			switch (state){
+				case state_type.NORMAL_CODE:
+					if ( (verilog[i]+verilog[i+1])=='//' ) 
+						state = state_type.COMMENT_TYPE1;
+					else if ( (verilog[i]+verilog[i+1])=='/*' ) 
+						state = state_type.COMMENT_TYPE2;
+					else
+						new_text += verilog[i];
+					break;
+				case state_type.COMMENT_TYPE1:
+					if ( verilog[i]=='\n' )
+						state = state_type.NORMAL_CODE;
+					break;
+				case state_type.COMMENT_TYPE2:
+					if ( (verilog[i-1]+verilog[i])=='*/' ) 
+						state = state_type.NORMAL_CODE;
+					break;
+			}
+		}
+		return new_text;
 	};
 	static addComponent( verilog,compName,xml ){
 		function remove_whitespace(text) {
@@ -68,6 +98,12 @@ class schematic
 		//for each line after the first line, find the direction and name of each input/output
 		var signals = {input:[], output:[]};
 		var signal_size = {input:[], output:[]};
+
+
+		var verilog_no_comments = schematic.removeVerilogComments(verilog.toLowerCase() );
+		
+		console.log(verilog_no_comments);
+
 		for(var i = 1; lines[i].indexOf(';') < 0; i++){
 	
 			let words = lines[i].split(" ");
@@ -100,7 +136,7 @@ class schematic
 		}
 		localStorage.setItem('storedShapes', JSON.stringify(storedShapes));
 		//reload the page
-		location.reload();
+		//location.reload();
 	};
 }
 
