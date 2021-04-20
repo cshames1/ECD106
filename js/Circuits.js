@@ -79,20 +79,9 @@ class schematic
 		return new_text;
 	};
 	static addComponent( verilog,compName,xml ){
-		var verilog_no_comments = schematic.removeVerilogComments( verilog ).toLowerCase();
-		
-		var port_instantiation = "";
-		var index = verilog_no_comments.indexOf('(')+1;
-		while (verilog_no_comments[index]!=')') {
-			port_instantiation += verilog_no_comments[index++];
-		}
-		port_instantiation = port_instantiation.trim();
-		var tokens = port_instantiation.split(',');
+		if ( verilog=="")
+			return;
 
-		var signals = {input:[], output:[]};
-		var signal_size = {input:[], output:[]};
-		var last_port_type;
-		var last_port_size;
 		function get_port_size (line){
 			if (line.includes('[')) {
 				var port_size = line.split('[')[1];
@@ -101,9 +90,22 @@ class schematic
 			}
 			return 1;
 		}
-		tokens.forEach(function(token){
-			var line  = "";
-			line += token.trim();
+		
+		var verilog_no_comments = schematic.removeVerilogComments( verilog );
+		
+		var port_instantiation = "";
+		var index = verilog_no_comments.indexOf('(')+1;
+		while (verilog_no_comments[index]!=')') {
+			port_instantiation += verilog_no_comments[index++];
+		}
+
+		var signals = {input:[], output:[]};
+		var signal_size = {input:[], output:[]};
+		var last_port_type;
+		var last_port_size;
+		var tokens = port_instantiation.split(',');
+		if (tokens) tokens.forEach(function(token){
+			var line = token.toLowerCase();
 			if ( line.includes('input') ){
 				last_port_type = 'input';
 				last_port_size = get_port_size( line );
@@ -112,18 +114,17 @@ class schematic
 				last_port_type = 'output';
 				last_port_size = get_port_size( line );
 			}
-			var words = line.split(' ');
+			var words = token.split(' ');
 			var port_name = words[words.length-1];
 			
-			signals[last_port_type].push(port_name);
+			signals[last_port_type].push(port_name.trim());
 			signal_size[last_port_type].push(last_port_size);
 		});
 		
-		//save the decoded shape to localstorage
 		var storedShapes = JSON.parse(localStorage.getItem('storedShapes'));
-		if(storedShapes == null)
-			storedShapes = []
-		if ( signals['input'].length!=0 && signals['input'].length!=0) {
+		if( storedShapes==null )
+			storedShapes = new Array();
+		if ( signals['input'].length>0 && signals['input'].length>0) {
 			storedShapes.push({
 				"componentName":compName.replace(".v", ""),
 				"signals":signals,
@@ -133,7 +134,6 @@ class schematic
 			});
 		}
 		localStorage.setItem('storedShapes', JSON.stringify(storedShapes));
-		//reload the page
 		location.reload();
 	};
 }

@@ -129,7 +129,7 @@ var ImportDialog = function()
 		var alert_txt = "";
 		saved_ids.forEach(function(i){
 			var name = document.getElementById('textbox'+i).value.replace('.v','');
-			if ( schematic.nameIsUsed(name, i) || schematic.isNativeComponent(name) || duplicate_names_used() )
+			if ( schematic.nameIsUsed(name, -1) || schematic.isNativeComponent(name) || duplicate_names_used() )
 				alert_txt += name + ' is already used. Please choose another name.\n'
 			else if ( !schematic.isValidID(name) )
 				alert_txt += name + ' is not a valid Verilog ID. Please choose another name.\n'
