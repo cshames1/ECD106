@@ -105,16 +105,17 @@ class schematic
 		var last_port_size;
 		var tokens = port_instantiation.split(',');
 		if (tokens) tokens.forEach(function(token){
-			var line = token.toLowerCase();
-			if ( line.includes('input') ){
+			var formatted_token1 = token.toLowerCase();
+			if ( formatted_token1.includes('input') ){
 				last_port_type = 'input';
-				last_port_size = get_port_size( line );
+				last_port_size = get_port_size( formatted_token1 );
 			}
-			else if ( line.includes('output') ) {
+			else if ( formatted_token1.includes('output') ) {
 				last_port_type = 'output';
-				last_port_size = get_port_size( line );
+				last_port_size = get_port_size( formatted_token1 );
 			}
-			var words = token.split(' ');
+			var formatted_token2 = token.trim();
+			var words = formatted_token2.split(' ');
 			var port_name = words[words.length-1];
 			
 			signals[last_port_type].push(port_name.trim());
@@ -134,7 +135,7 @@ class schematic
 			});
 		}
 		localStorage.setItem('storedShapes', JSON.stringify(storedShapes));
-		location.reload();
+		//location.reload();
 	};
 }
 
