@@ -150,19 +150,9 @@ var ImportDialog = function()
 		var id = iterator.next().value;
 		var reader = new FileReader();
 		reader.onload = function(e){
-			var file_txt = e.target.result;
-			var lines = file_txt.split('\n');
-			var module_started = false;
-			var new_txt = "";
-			if (lines) lines.forEach(function(line){
-				if ( line.startsWith('module') )
-					module_started = true;
-				if ( module_started )
-					new_txt += (line+'\n');
-			});
 			components.push({
 				"name":component_names[id],
-				"verilog":new_txt
+				"verilog":e.target.result
 			});
 			id = iterator.next().value;
 			if ( id!=null )

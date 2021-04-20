@@ -124,7 +124,7 @@ class schematic
 		var storedShapes = JSON.parse(localStorage.getItem('storedShapes'));
 		if( storedShapes==null )
 			storedShapes = new Array();
-		if ( signals['input'].length>0 && signals['input'].length>0) {
+		if ( signals['input'].length>0 && signals['output'].length>0) {
 			storedShapes.push({
 				"componentName":compName.replace(".v", ""),
 				"signals":signals,
@@ -463,13 +463,21 @@ schematic.prototype.getImportedComponentVerilog=function( module ){
 		});
 		return currentModule.verilogCode;
 	}
-	var importedVerilog = getModuleVerilog( module );
-	var lines = importedVerilog.split(/\n/g);
-	var newVerilog="module "+module+" (\n";
-	for (var i=1; i<lines.length; i++) {
-		newVerilog += lines[i] + '\n';
+	function get_module_name( verilog ) {
+		var verilog_no_comments = schematic.removeVerilogComments(verilog);
+		var tokens = verilog_no_comments.split(' '); 
+		var i=0;
+		while ( !tokens[i++].toLowerCase().includes('module') );
+		var name = tokens[i];
+		if (name.includes('('))
+			name = name.substring(0, name.indexOf('(') )
+		return name;
 	}
-	return newVerilog;
+	var imported_verilog = getModuleVerilog( module );	
+	var old_name =  get_module_name( imported_verilog );
+
+	var new_code = imported_verilog.replace(old_name, module);
+	return new_code;
 }
 
 schematic.prototype.getImportedComponentsForExport=function(){
