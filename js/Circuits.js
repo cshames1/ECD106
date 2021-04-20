@@ -1,6 +1,5 @@
 /**
  * Copyright (c) 2018, Douglas H. Summerville, Binghamton University
- * Updated by 2020 [WCP28] Jacob Richman, Tomer Itzhaki, Xuan Do; Advisor: Meghana Jain
  * Updated by 2021 [ECD106] Charlie Shames, Thomas Nicolino, Ben Picone, Joseph Luciano; Advisor: Meghana Jain
  */
 
@@ -80,47 +79,46 @@ class schematic
 		return new_text;
 	};
 	static addComponent( verilog,compName,xml ){
-		function remove_whitespace(text) {
-			var res = text.replace(/\s+/, '');
-			return res;
-		};
-		function remove_parenthesis (text) {
-			var res = text.replace(/[(\r\n]+/, '');
-			return res;
-		};
-		function remove_commas (text) {
-			var res = text.replace(/,/, '');
-			return res;
-		};
-		//split verilog into array of lines separated by newline characters
-		var lines = verilog.split(/\n/g);
+		var verilog_no_comments = schematic.removeVerilogComments( verilog ).toLowerCase();
+		
+		var port_instantiation = "";
+		var index = verilog_no_comments.indexOf('(')+1;
+		while (verilog_no_comments[index]!=')') {
+			port_instantiation += verilog_no_comments[index++];
+		}
+		port_instantiation = port_instantiation.trim();
+		var tokens = port_instantiation.split(',');
 
-		//for each line after the first line, find the direction and name of each input/output
 		var signals = {input:[], output:[]};
 		var signal_size = {input:[], output:[]};
-
-
-		var verilog_no_comments = schematic.removeVerilogComments(verilog.toLowerCase() );
-		
-		console.log(verilog_no_comments);
-
-		for(var i = 1; lines[i].indexOf(';') < 0; i++){
-	
-			let words = lines[i].split(" ");
-			let port_size;
-			if (lines[i].includes('[')) {
-				port_size = lines[i].split('[')[1];
-				port_size = port_size.split(':')[0];
-				port_size++;
+		var last_port_type;
+		var last_port_size;
+		function get_port_size (line){
+			if (line.includes('[')) {
+				var port_size = line.split('[')[1];
+				port_size = parseInt(port_size.split(':')[0]);
+				return port_size+1;
 			}
-			else	
-				port_size=1;
-	
-				let direction = remove_whitespace(words[0]);
-				let port_name = remove_whitespace(remove_commas(words[words.length - 1]));
-				signals[direction].push(port_name);
-				signal_size[direction].push(port_size);
+			return 1;
 		}
+		tokens.forEach(function(token){
+			var line  = "";
+			line += token.trim();
+			if ( line.includes('input') ){
+				last_port_type = 'input';
+				last_port_size = get_port_size( line );
+			}
+			else if ( line.includes('output') ) {
+				last_port_type = 'output';
+				last_port_size = get_port_size( line );
+			}
+			var words = line.split(' ');
+			var port_name = words[words.length-1];
+			
+			signals[last_port_type].push(port_name);
+			signal_size[last_port_type].push(last_port_size);
+		});
+		
 		//save the decoded shape to localstorage
 		var storedShapes = JSON.parse(localStorage.getItem('storedShapes'));
 		if(storedShapes == null)
@@ -136,7 +134,7 @@ class schematic
 		}
 		localStorage.setItem('storedShapes', JSON.stringify(storedShapes));
 		//reload the page
-		//location.reload();
+		location.reload();
 	};
 }
 
