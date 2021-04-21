@@ -69,11 +69,11 @@ class schematic
 		var d = new Date();
 		var vfiles = schematic.getVFiles(verilog);
 		var label_num = 1;
-		var header = '// Exported from Digital Systems Designer\n// on '+d+'\n';
+		var header = '// -- Meghana Jain, Binghamton University\n// -- Digital Logic Design / Sophomore Design\n//\n// -- Exported from Digital Systems Designer\n// -- on '+d+'\n';
 		if ( vfiles.size>0 ) {
-			header += '// Verilog files required for synthesis:\n';
+			header += '//\n// -- Verilog files required for synthesis:\n';
 			vfiles.forEach(function(file_name){
-				header += '//  '+(label_num++)+'. '+file_name+'.v\n';
+				header += '// --  '+(label_num++)+'. '+file_name+'.v\n';
 			});
 		}
 		return header+'\n\n'+verilog;
