@@ -129,7 +129,7 @@ var ImportDialog = function()
 		var alert_txt = "";
 		saved_ids.forEach(function(i){
 			var name = document.getElementById('textbox'+i).value.replace('.v','');
-			if ( schematic.nameIsUsed(name, -1) || schematic.isNativeComponent(name) || duplicate_names_used() )
+			if ( schematic.isImportedComponent(name, -1) || schematic.isNativeComponent(name) || duplicate_names_used() )
 				alert_txt += name + ' is already used. Please choose another name.\n'
 			else if ( !schematic.isValidID(name) )
 				alert_txt += name + ' is not a valid Verilog ID. Please choose another name.\n'
@@ -270,7 +270,7 @@ var EditComponentDialog = function(editorUi)
 		var id = e.currentTarget.id;
 		id = parseInt(id.replace('textbox', ''));
 		var new_name = e.currentTarget.value;
-		if ( ( schematic.nameIsUsed(new_name, id) || schematic.isNativeComponent(new_name) ) )
+		if ( ( schematic.isImportedComponent(new_name, id) || schematic.isNativeComponent(new_name) ) )
 			alert('"'+ new_name +'" already exists. Please change the name.');
 		else if(   schematic.getIDerror(new_name)!=""  ) 
 			alert('"'+ new_name +'" is invalid. Please change the name.');
@@ -298,7 +298,7 @@ var EditComponentDialog = function(editorUi)
 		if (storedShapes.length) for (var i=0; i<storedShapes.length; i++) {
 			if ( !deleted_ids.includes(i) ){
 				var name = document.getElementById('textbox'+i).value;
-				if ( schematic.nameIsUsed(name, i) || schematic.isNativeComponent(name) || !schematic.isValidID(name) ){
+				if ( schematic.isImportedComponent(name, i) || schematic.isNativeComponent(name) || !schematic.isValidID(name) ){
 					save_btn.setAttribute('disabled','disabled');
 					return;
 				}
@@ -1595,31 +1595,33 @@ var VerilogWindow = function(editorUi, x, y, w, h)
 	drcBtn.className = 'geBtn';
 	var exportBtn = mxUtils.button("Export", function()
 	{
-		var blob = new Blob([textarea.value], { type: "text/plain"});
+		var blob = new Blob([schematic.addVFileHeader(textarea.value)], { type: "text/plain"});
 		exportveriloganchor.download = "top_level.v";
 		exportveriloganchor.href = window.URL.createObjectURL(blob);
 		exportveriloganchor.click();
 
-		var imported_components = editorUi.circuit.getImportedComponentsForExport();
-		if (imported_components) imported_components.forEach(function(module){
-			var moduleVerilog = editorUi.circuit.getImportedComponentVerilog(module);
-			blob = new Blob([moduleVerilog], { type: "text/plain"});
-			exportveriloganchor.download = module+".v";
-			exportveriloganchor.href = window.URL.createObjectURL(blob);
-			exportveriloganchor.click();
-		}); 
-	
-		var native_components = editorUi.circuit.getNativeComponentsForExport(); 
-		if (native_components) native_components.forEach(function(module){
-			fetch( this.window.VERILOG_PATH+'/'+module+'.v')
-			.then(response => response.text())
-			.then(data => {
-				blob = new Blob([data], { type:"text/plain" });
-				exportveriloganchor.download = module+".v";
+		var export_components = schematic.getVFiles(textarea.value);
+		export_components.forEach(function(component){
+			if ( schematic.isImportedComponent(component, -1) ) {
+				var moduleVerilog = schematic.getImportedComponentVerilog( component );
+				blob = new Blob([schematic.addVFileHeader(moduleVerilog)], { type: "text/plain"});
+				exportveriloganchor.download = component+".v";
 				exportveriloganchor.href = window.URL.createObjectURL(blob);
 				exportveriloganchor.click();
-			});
-		}); 
+			}
+			else if ( schematic.isNativeComponent(component) ){
+				fetch( this.window.VERILOG_PATH+'/'+component+'.v')
+				.then(response => response.text())
+				.then(data => {
+					blob = new Blob([data], { type:"text/plain" });
+					exportveriloganchor.download = component+".v";
+					exportveriloganchor.href = window.URL.createObjectURL(blob);
+					exportveriloganchor.click();
+				});
+			}
+			else
+				alert('File not found');
+		});
 	});
 
 	exportBtn.className = 'geBtn';

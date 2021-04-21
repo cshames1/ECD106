@@ -11,8 +11,8 @@ class schematic
 	}
 	static isNativeComponent( component ){
 		var native_components=["and", "nand", "or","nor","xor","xnor","buf", "inverter",
-						"mux2","mux4", "mux8","mux16",
-						"decoder2","decoder3","decoder4", 
+						"mux","mux2","mux4", "mux8","mux16",
+						"decoder","decoder2","decoder3","decoder4", 
 						"dff", "dff_en", "srlatch", "srlatch_en", "dlatch", "dlatch_en", 
 						"fanIn2",  "fanIn4",  "fanIn8",  "fanIn16",  "fanIn32",
 						"fanOut2",  "fanOut4", "fanOut8", "fanOut16", "fanOut32",
@@ -40,7 +40,7 @@ class schematic
 			return  "Error:" + newstr + " is a Verilog reserved word and cannot be used as an identifier";
 		return "";
 	};
-	static nameIsUsed( newstr, id ){
+	static isImportedComponent( newstr, id ){
 		var storedShapes = JSON.parse(localStorage.getItem('storedShapes'));
 		if (storedShapes) for (var i=0; i<storedShapes.length; i++) {
 			if(id!=i && newstr==storedShapes[i].componentName )
@@ -48,15 +48,48 @@ class schematic
 		}
 		return false;
 	};
+	static getVFiles(verilog){
+		var verilog_no_comments = schematic.removeVerilogComments(verilog);
+		var vfiles = new Set();
+		var modules = verilog_no_comments.split(';');
+		for (var i=1; i<modules.length; i++) {
+			modules[i] = modules[i].trim();
+			var first_token = modules[i].split(' ')[0];
+			if ( !schematic.isVerilogReserved(first_token) ) {
+				vfiles.add(first_token);
+				if (schematic.isImportedComponent(first_token) ) {
+					var export_components = schematic.getVFiles( schematic.getImportedComponentVerilog(first_token) );
+					export_components.forEach(function(component){vfiles.add(component);});
+				}
+			}
+		}
+		return vfiles;
+	};
+	static addVFileHeader(verilog){
+		var d = new Date();
+		var vfiles = schematic.getVFiles(verilog);
+		var label_num = 1;
+		var header = '// Exported from Digital Systems Designer\n// on '+d+'\n';
+		if ( vfiles.size>0 ) {
+			header += '// Verilog files required for synthesis:\n';
+			vfiles.forEach(function(file_name){
+				header += '//  '+(label_num++)+'. '+file_name+'.v\n';
+			});
+		}
+		return header+'\n\n'+verilog;
+	}
 	static removeVerilogComments( verilog ){
 		var new_text = "";
+		var code_length = 0;
+		if (verilog)
+			code_length += verilog.length;
 		const state_type = {
 			NORMAL_CODE:'normal_code',
 			COMMENT_TYPE1:'comment_type1',//this type: //comment
 			COMMENT_TYPE2:'comment_type2'//this type: /* comment */
 		}
 		let state = state_type.NORMAL_CODE;
-		for (var i=0; i<verilog.length; i++) {
+		for (var i=0; i<code_length; i++) {
 			switch (state){
 				case state_type.NORMAL_CODE:
 					if ( (verilog[i]+verilog[i+1])=='//' ) 
@@ -134,6 +167,32 @@ class schematic
 		}
 		localStorage.setItem('storedShapes', JSON.stringify(storedShapes));
 		location.reload();
+	};
+	static getImportedComponentVerilog( module ){
+		function getModuleVerilog( moduleName ) {
+			var storedShapes = JSON.parse(localStorage.getItem('storedShapes'));
+			var currentModule="";
+			if ( storedShapes ) storedShapes.forEach(function(shape){
+				if (shape.componentName==moduleName) currentModule = shape;
+			});
+			return currentModule.verilogCode;
+		}
+		function get_module_name( verilog ) {
+			var verilog_no_comments = schematic.removeVerilogComments(verilog);
+			var tokens = verilog_no_comments.split(' ');
+			var i=0;
+			while ( !tokens[i++].includes('module') );
+			while ( tokens[i++]=='' );
+			var name = tokens[i-1];
+			if (name.includes('('))
+				name = name.substring(0, name.indexOf('(') )
+			return name;
+		}
+		var imported_verilog = getModuleVerilog( module );	
+		var old_name =  get_module_name( imported_verilog );
+		
+		var new_code = imported_verilog.split(old_name).join(module);
+		return new_code;
 	};
 }
 
@@ -452,63 +511,6 @@ schematic.prototype.runDRC = function()
 		Messages.addError("Schematic must have at least one connected output",null);
 	return Messages;
 };
-
-schematic.prototype.getImportedComponentVerilog=function( module ){
-	function getModuleVerilog( moduleName ) {
-		var storedShapes = JSON.parse(localStorage.getItem('storedShapes'));
-		var currentModule;
-		if ( storedShapes ) storedShapes.forEach(function(shape){
-			if (shape.componentName==moduleName) currentModule = shape;
-		});
-		return currentModule.verilogCode;
-	}
-	function get_module_name( verilog ) {
-		var verilog_no_comments = schematic.removeVerilogComments(verilog);
-		var tokens = verilog_no_comments.split(' '); 
-		var i=0;
-		while ( !tokens[i++].includes('module') );
-		while ( tokens[i++]=='' );
-		var name = tokens[i-1];
-		if (name.includes('('))
-			name = name.substring(0, name.indexOf('(') )
-		return name;
-	}
-	var imported_verilog = getModuleVerilog( module );	
-	var old_name =  get_module_name( imported_verilog );
-
-	var new_code = imported_verilog.split(old_name).join(module);
-	return new_code;
-}
-
-schematic.prototype.getImportedComponentsForExport=function(){
-	var graph=this.graph;
-	nodes=graph.getChildVertices(graph.getDefaultParent());
-	var components = new Set();
-	if( nodes ) nodes.forEach(function(item){
-		var style=graph.getCellStyle(item); 
-		var module = style["shape"];
-		if ( !schematic.isNativeComponent(module) ) 
-			components.add( module );
-	});
-	return components;
-}
-
-schematic.prototype.getNativeComponentsForExport=function(){
-	var graph=this.graph;
-	nodes=this.graph.getChildVertices(graph.getDefaultParent());
-	var components = new Set();
-	var file_names={ mux2:"mux", mux4:"mux", mux8:"mux", mux16:"mux",
-					decoder2:"decoder",decoder3:"decoder",decoder4:"decoder",
-					dlatch:"d_latch",dlatch_en:"d_latch_en",dff:"dff",dff_en:"dff_en",srlatch:"sr_latch",srlatch_en:"sr_latch_en"
-				};
-	if( nodes ) nodes.forEach(function(node){
-		var style=graph.getCellStyle(node); 
-		var module = style["shape"];
-		if (module in file_names)
-			components.add(file_names[module]);
-	});
-	return components;
-}
 
 schematic.prototype.deleteClearedComponents = function(){
 	var graph=this.graph;
