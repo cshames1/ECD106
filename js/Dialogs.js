@@ -1601,6 +1601,7 @@ var VerilogWindow = function(editorUi, x, y, w, h)
 		exportveriloganchor.click();
 
 		var export_components = schematic.getVFiles(textarea.value);
+		var alert_text = "";
 		export_components.forEach(function(component){
 			if ( schematic.isImportedComponent(component, -1) ) {
 				var moduleVerilog = schematic.getImportedComponentVerilog( component );
@@ -1620,8 +1621,10 @@ var VerilogWindow = function(editorUi, x, y, w, h)
 				});
 			}
 			else
-				alert('File not found');
+				alert_text += component+'.v not found\n';
 		});
+		if (alert_text!="")
+			alert(alert_text);
 	});
 
 	exportBtn.className = 'geBtn';
