@@ -80,16 +80,13 @@ class schematic
 	}
 	static removeVerilogComments( verilog ){
 		var new_text = "";
-		var code_length = 0;
-		if (verilog)
-			code_length += verilog.length;
 		const state_type = {
 			NORMAL_CODE:'normal_code',
 			COMMENT_TYPE1:'comment_type1',//this type: //comment
 			COMMENT_TYPE2:'comment_type2'//this type: /* comment */
 		}
 		let state = state_type.NORMAL_CODE;
-		for (var i=0; i<code_length; i++) {
+		for (var i=0; i<verilog.length; i++) {
 			switch (state){
 				case state_type.NORMAL_CODE:
 					if ( (verilog[i]+verilog[i+1])=='//' ) 
