@@ -52,8 +52,8 @@ class schematic
 		var new_text = "";
 		const state_type = {
 			NORMAL_CODE:'normal_code',
-			COMMENT_TYPE1:'comment_type1',
-			COMMENT_TYPE2:'comment_type2'
+			COMMENT_TYPE1:'comment_type1',//this type: //comment
+			COMMENT_TYPE2:'comment_type2'//this type: /* comment */
 		}
 		let state = state_type.NORMAL_CODE;
 		for (var i=0; i<verilog.length; i++) {
@@ -104,17 +104,16 @@ class schematic
 		var last_port_size;
 		var tokens = port_instantiation.split(',');
 		if (tokens) tokens.forEach(function(token){
-			var formatted_token1 = token.toLowerCase();
-			if ( formatted_token1.includes('input') ){
+			if ( token.includes('input') ){
 				last_port_type = 'input';
-				last_port_size = get_port_size( formatted_token1 );
+				last_port_size = get_port_size( token );
 			}
-			else if ( formatted_token1.includes('output') ) {
+			else if ( token.includes('output') ) {
 				last_port_type = 'output';
-				last_port_size = get_port_size( formatted_token1 );
+				last_port_size = get_port_size( token );
 			}
-			var formatted_token2 = token.trim();
-			var words = formatted_token2.split(' ');
+			var trimmed_token = token.trim();
+			var words = trimmed_token.split(' ');
 			var port_name = words[words.length-1];
 			
 			signals[last_port_type].push(port_name.trim());
@@ -467,7 +466,7 @@ schematic.prototype.getImportedComponentVerilog=function( module ){
 		var verilog_no_comments = schematic.removeVerilogComments(verilog);
 		var tokens = verilog_no_comments.split(' '); 
 		var i=0;
-		while ( !tokens[i++].toLowerCase().includes('module') );
+		while ( !tokens[i++].includes('module') );
 		while ( tokens[i++]=='' );
 		var name = tokens[i-1];
 		if (name.includes('('))
@@ -477,7 +476,7 @@ schematic.prototype.getImportedComponentVerilog=function( module ){
 	var imported_verilog = getModuleVerilog( module );	
 	var old_name =  get_module_name( imported_verilog );
 
-	var new_code = imported_verilog.replace(old_name, module);
+	var new_code = imported_verilog.split(old_name).join(module);
 	return new_code;
 }
 
