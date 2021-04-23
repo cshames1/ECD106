@@ -1567,6 +1567,12 @@ var DRCWindow = function(editorUi, x, y, w, h)
 
 var VerilogWindow = function(editorUi, x, y, w, h)
 {
+	function downloadVFile(file_name, file_contents){
+		blob = new Blob([schematic.addVFileHeader(file_contents)], { type: "text/plain"});
+		exportveriloganchor.download = file_name+".v";
+		exportveriloganchor.href = window.URL.createObjectURL(blob);
+		exportveriloganchor.click();
+	}
 	var graph = editorUi.editor.graph;
 
 	var div = document.createElement('div');
@@ -1595,29 +1601,19 @@ var VerilogWindow = function(editorUi, x, y, w, h)
 	drcBtn.className = 'geBtn';
 	var exportBtn = mxUtils.button("Export", function()
 	{
-		var blob = new Blob([schematic.addVFileHeader(textarea.value)], { type: "text/plain"});
-		exportveriloganchor.download = "top_level.v";
-		exportveriloganchor.href = window.URL.createObjectURL(blob);
-		exportveriloganchor.click();
+		downloadVFile('top_level',textarea.value);
 
-		var export_components = schematic.getVFiles(textarea.value);
+		var export_components = schematic.getVFilesFor(textarea.value);
 		var alert_text = "";
 		export_components.forEach(function(component){
 			if ( schematic.isImportedComponent(component, -1) ) {
-				var moduleVerilog = schematic.getImportedComponentVerilog( component );
-				blob = new Blob([schematic.addVFileHeader(moduleVerilog)], { type: "text/plain"});
-				exportveriloganchor.download = component+".v";
-				exportveriloganchor.href = window.URL.createObjectURL(blob);
-				exportveriloganchor.click();
+				downloadVFile( component, schematic.getImportedComponentVerilog(component) );
 			}
-			else if ( schematic.isNativeComponent(component) ){
+			else if ( schematic.DSDhasVFile(component) ){
 				fetch( this.window.VERILOG_PATH+'/'+component+'.v')
 				.then(response => response.text())
 				.then(data => {
-					blob = new Blob([data], { type:"text/plain" });
-					exportveriloganchor.download = component+".v";
-					exportveriloganchor.href = window.URL.createObjectURL(blob);
-					exportveriloganchor.click();
+					downloadVFile( component, data );
 				});
 			}
 			else

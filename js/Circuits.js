@@ -21,6 +21,10 @@ class schematic
 						"constant0", "constant1" ];
 		return native_components.includes( component );
 	}; 
+	static DSDhasVFile( component ){
+		var vfiles = ['d_latch_en','d_latch','decoder','dff_en','dff','sr_latch_en','sr_latch','mux'];
+		return vfiles.includes(component);
+	};
 	static isVerilogReserved( str ){
 		var verilogReserved=new Set( ["always", "ifnone", "rpmos", "and", "initial", "rtran", "assign", "inout", "rtranif0", "begin", "input", "rtranif1", "buf", "integer", "scalared", "bufif0", "join", "small", "bufif1", "large", "specify", "case", "macromodule", "specparam", "casex", "medium", "strong0", "casez", "module", "strong1", "cmos", "nand", "supply0", "deassign", "negedge", "supply1", "default", "nmos", "table", "defparam", "nor", "task", "disable", "not", "time", "edge", "notif0", "tran", "else", "notif1", "tranif0", "end", "or", "tranif1", "endcase", "output", "tri", "endmodule", "parameter", "tri0", "endfunction", "pmos", "tri1", "endprimitive", "posedge", "triand", "endspecify", "primitive", "trior", "endtable", "pull0", "trireg", "endtask", "pull1", "vectored", "event", "pullup", "wait", "for", "pulldown", "wand", "force", "rcmos", "weak0", "forever", "real", "weak1", "fork", "realtime", "while", "function", "reg", "wire", "highz0", "release", "wor", "highz1", "repeat", "xnor", "if", "rnmos", "xor"]);
 		return verilogReserved.has(str);
@@ -48,26 +52,26 @@ class schematic
 		}
 		return false;
 	};
-	static getVFiles(verilog){
+	static getVFilesFor( verilog ){
 		var verilog_no_comments = schematic.removeVerilogComments(verilog);
 		var vfiles = new Set();
-		var modules = verilog_no_comments.split(';');
-		for (var i=1; i<modules.length; i++) {
-			modules[i] = modules[i].trim();
-			var first_token = modules[i].split(' ')[0];
-			if ( !schematic.isVerilogReserved(first_token) ) {
-				vfiles.add(first_token);
-				if (schematic.isImportedComponent(first_token) ) {
-					var export_components = schematic.getVFiles( schematic.getImportedComponentVerilog(first_token) );
+		var component_instantiations = verilog_no_comments.split(';');
+		for (var i=1; i<component_instantiations.length; i++) {
+			component_instantiations[i] = component_instantiations[i].trim();
+			var component = component_instantiations[i].split(' ')[0];
+			if ( !schematic.isVerilogReserved(component) ) {
+				vfiles.add(component);
+				if (schematic.isImportedComponent(component) ) {
+					var export_components = schematic.getVFilesFor( schematic.getImportedComponentVerilog(component) );
 					export_components.forEach(function(component){vfiles.add(component);});
 				}
 			}
 		}
 		return vfiles;
 	};
-	static addVFileHeader(verilog){
+	static addVFileHeader( verilog ){
 		var d = new Date();
-		var vfiles = schematic.getVFiles(verilog);
+		var vfiles = schematic.getVFilesFor(verilog);
 		var label_num = 1;
 		var header = '// -- Meghana Jain, Binghamton University\n// -- Digital Logic Design / Sophomore Design\n//\n// -- Exported from Digital Systems Designer\n// -- on '+d+'\n';
 		if ( vfiles.size>0 ) {
@@ -76,7 +80,7 @@ class schematic
 				header += '// --  '+(label_num++)+'. '+file_name+'.v\n';
 			});
 		}
-		return header+'\n\n'+verilog;
+		return header+'\n\n'+schematic.removeVerilogComments(verilog);
 	}
 	static removeVerilogComments( verilog ){
 		var new_text = "";
