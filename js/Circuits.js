@@ -10,7 +10,7 @@ class schematic
 		this.maxPortnameLength=20;
 	}
 	static isNativeComponent( component ){
-		var native_components=["and", "nand", "or","nor","xor","xnor","buf", "inverter",
+		var nativeComponents=["and", "nand", "or","nor","xor","xnor","buf", "inverter",
 						"mux","mux2","mux4", "mux8","mux16",
 						"decoder","decoder2","decoder3","decoder4", 
 						"dff", "dff_en", "srlatch", "srlatch_en", "dlatch", "dlatch_en", 
@@ -19,7 +19,7 @@ class schematic
 						"inputport1", "inputport2", "inputport4", "inputport8", "inputport16", "inputport32",
 						"outputport1", "outputport2", "outputport4", "outputport8", "outputport16", "outputport32",
 						"constant0", "constant1" ];
-		return native_components.includes( component );
+		return nativeComponents.includes( component );
 	}; 
 	static DSDhasVFile( component ){
 		var vfiles = ['d_latch_en','d_latch','decoder','dff_en','dff','sr_latch_en','sr_latch','mux'];
@@ -69,19 +69,6 @@ class schematic
 		}
 		return vfiles;
 	};
-	static addVFileHeader( verilog ){
-		var d = new Date();
-		var vfiles = schematic.getVFilesFor(verilog);
-		var label_num = 1;
-		var header = '// -- Meghana Jain, Binghamton University\n// -- Digital Logic Design / Sophomore Design\n//\n// -- Exported from Digital Systems Designer\n// -- on '+d+'\n';
-		if ( vfiles.size>0 ) {
-			header += '//\n// -- Verilog files required for synthesis:\n';
-			vfiles.forEach(function(file_name){
-				header += '// --  '+(label_num++)+'. '+file_name+'.v\n';
-			});
-		}
-		return header+'\n\n'+schematic.removeVerilogComments(verilog);
-	}
 	static removeVerilogComments( verilog ){
 		var new_text = "";
 		const state_type = {

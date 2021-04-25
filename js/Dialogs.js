@@ -5,10 +5,10 @@
  */
 var OpenDialog = function()
 {
-	function hide_window(){
+	function hideWindow(){
 		window.parent.openFile.cancel(true);
 	}
-	function handle_import(){
+	function handleImport(){
 		var file = file_input.files[0];
 		if (file==null){
 			alert( mxResources.get('noFile') );
@@ -53,14 +53,14 @@ var OpenDialog = function()
 	cancel_btn.value = mxResources.get('cancel');
 	cancel_btn.setAttribute('class', 'geBtn');
 	cancel_btn.setAttribute('id', 'cancelButton');
-	cancel_btn.onclick = hide_window;
+	cancel_btn.onclick = hideWindow;
 	div.appendChild(cancel_btn);
 
 	var import_btn = document.createElement('input');
 	import_btn.type = 'button';
 	import_btn.value = mxResources.get('import');;
 	import_btn.setAttribute('class', 'geBtn gePrimaryBtn');
-	import_btn.onclick = handle_import;
+	import_btn.onclick = handleImport;
 	div.appendChild(import_btn);
 
 	this.container = div;
@@ -71,7 +71,7 @@ var ImportDialog = function()
 	var saved_ids = new Set();
 	var component_names = new Object();
 
-	function init_file_table(){
+	function initFileTable(){
 		var files = file_input.files;
 		for (var i=0; i<files.length; i++) {
 			if ( files[i].name.endsWith('.v') ) {
@@ -79,12 +79,12 @@ var ImportDialog = function()
 				component_names[i] = files[i].name.replace('.v','');
 			}
 		}
-		build_file_table();
+		buildFileTable();
 		var alerts = get_alerts();
 		if ( alerts!= "" )
 			alert(alerts);
 	}
-	function build_file_table(){
+	function buildFileTable(){
 		table.innerHTML = "";
 		var label_num = 1;
 
@@ -106,7 +106,7 @@ var ImportDialog = function()
 			renaming_box.type = 'text';
 			renaming_box.name = '';
 			renaming_box.value = file.name.replace('.v','');
-			renaming_box.onchange = changed_name;
+			renaming_box.onchange = changedName;
 			row.appendChild(renaming_box);
 			
 			var delete_btn = document.createElement('input');
@@ -120,7 +120,7 @@ var ImportDialog = function()
 			table.appendChild(row);
 		});
 	}
-	function changed_name(e){
+	function changedName(e){
 		var id = e.currentTarget.id;
 		id = parseInt(id.replace('textbox', ''));
 		component_names[id] = e.currentTarget.value;
@@ -129,16 +129,16 @@ var ImportDialog = function()
 		var alert_txt = "";
 		saved_ids.forEach(function(i){
 			var name = document.getElementById('textbox'+i).value.replace('.v','');
-			if ( schematic.isImportedComponent(name, -1) || schematic.isNativeComponent(name) || duplicate_names_used() )
+			if ( schematic.isImportedComponent(name, -1) || schematic.isNativeComponent(name) || duplicateNamesUsed() )
 				alert_txt += name + ' is already used. Please choose another name.\n'
 			else if ( !schematic.isValidID(name) )
 				alert_txt += name + ' is not a valid Verilog ID. Please choose another name.\n'
 		});
 		return alert_txt;
 	}
-	function handle_save(){
+	function handleSave(){
 		if ( saved_ids.size==0 ){
-			hide_window();
+			hideWindow();
 			return 0;
 		}
 		else if ( get_alerts()!="" ) {
@@ -162,14 +162,14 @@ var ImportDialog = function()
 		}
 		reader.readAsText(file_input.files[id]);
 	}
-	function reset_row_labels(){
+	function resetRowLabels(){
 		var label_num = 1;
 		saved_ids.forEach(function(i){
 			var label = document.getElementById('label'+i);
 			label.innerHTML = (label_num++)+'.';
 		});
 	}
-	function duplicate_names_used(){
+	function duplicateNamesUsed(){
 		var name_set = new Set();
 		saved_ids.forEach(function(i){
 			var name = document.getElementById('textbox'+i).value.replace('.v','');
@@ -178,7 +178,7 @@ var ImportDialog = function()
 		//this works because name_set will not include duplicate names
 		return name_set.size<saved_ids.size;
 	}
-	function hide_window(){
+	function hideWindow(){
 		window.parent.openFile.cancel(true);
 	}
 	function deleteComponent(e){
@@ -186,7 +186,7 @@ var ImportDialog = function()
 		id = parseInt(id.replace('delete_btn', ''));
 		saved_ids.delete(id);
 		e.currentTarget.parentNode.remove();
-		reset_row_labels();
+		resetRowLabels();
 	}
 
 	var div = document.createElement('div');
@@ -214,7 +214,7 @@ var ImportDialog = function()
 	file_input.type = 'file';
 	file_input.name = 'upfile';
 	file_input.setAttribute('multiple','');
-	file_input.onchange = init_file_table;
+	file_input.onchange = initFileTable;
 	div.appendChild(file_input);
 
 	var header = document.createElement('h5');
@@ -235,14 +235,14 @@ var ImportDialog = function()
 	cancel_btn.value = mxResources.get('cancel');;
 	cancel_btn.setAttribute('class', 'geBtn');
 	cancel_btn.setAttribute('id', 'cancelButton');
-	cancel_btn.onclick = hide_window;
+	cancel_btn.onclick = hideWindow;
 	div.appendChild(cancel_btn);
 
 	var import_btn = document.createElement('input');
 	import_btn.type = 'button';
 	import_btn.value = mxResources.get('import');
 	import_btn.setAttribute('class', 'geBtn gePrimaryBtn');
-	import_btn.onclick = handle_save;
+	import_btn.onclick = handleSave;
 	div.appendChild(import_btn);
 
 	this.container = div;
@@ -254,7 +254,7 @@ var EditComponentDialog = function(editorUi)
 	var new_names = new Array();
 	var storedShapes = JSON.parse(localStorage.getItem('storedShapes'));
 
-	function handle_save(){
+	function handleSave(){
 		var newShapes = new Array();
 		if (storedShapes) for (var i=0; i<storedShapes.length; i++) {
 			if ( !deleted_ids.includes(i) ) {
@@ -266,7 +266,7 @@ var EditComponentDialog = function(editorUi)
 		}
 		window.parent.openFile.setData(newShapes, null);
 	}
-	function changed_name(e){
+	function changedName(e){
 		var id = e.currentTarget.id;
 		id = parseInt(id.replace('textbox', ''));
 		var new_name = e.currentTarget.value;
@@ -278,20 +278,20 @@ var EditComponentDialog = function(editorUi)
 			new_names[id] = new_name;
 		set_save_btn_status();
 	}
-	function delete_component(e){
+	function deleteComponent(e){
 		var id = e.currentTarget.id;
 		id = parseInt(id.replace('delete_btn', ''));
 		e.currentTarget.parentNode.remove();
 		deleted_ids.push(id);
 		set_save_btn_status();
-		reset_row_labels();
+		resetRowLabels();
 	}
-	function open_schematic(e){
+	function openSchematic(e){
 		var id = e.currentTarget.id;
 		id = id.replace('schematic_btn', '');
 		window.parent.openFile.setData(null, storedShapes[id].xml);
 	}
-	function hide_window(){
+	function hideWindow(){
 		window.parent.openFile.cancel(true);
 	}
 	function set_save_btn_status(){
@@ -306,7 +306,7 @@ var EditComponentDialog = function(editorUi)
 		}
 		save_btn.removeAttribute('disabled');
 	}
-	function reset_row_labels(){
+	function resetRowLabels(){
 		var label_num = 1;
 		for (var i=0; i<storedShapes.length; i++) {
 			if (deleted_ids.includes(i))
@@ -356,14 +356,14 @@ var EditComponentDialog = function(editorUi)
 		renaming_box.type = 'text';
 		renaming_box.name = '';
 		renaming_box.value = storedShapes[i].componentName;
-		renaming_box.onchange = changed_name;
+		renaming_box.onchange = changedName;
 		row.appendChild(renaming_box);
 
 		var schematic_btn = document.createElement('input');
 		schematic_btn.setAttribute('id', 'schematic_btn'+i);
 		schematic_btn.type = 'button';
 		schematic_btn.value = mxResources.get('schematic');
-		schematic_btn.onclick = open_schematic;
+		schematic_btn.onclick = openSchematic;
 		if (storedShapes[i].xml==null)
 			schematic_btn.setAttribute('disabled','disabled');
 		row.appendChild(schematic_btn);
@@ -373,7 +373,7 @@ var EditComponentDialog = function(editorUi)
 		delete_btn.type = 'button';
 		delete_btn.value = mxResources.get('delete');
 		delete_btn.className = 'delete_btn';
-		delete_btn.onclick = delete_component;
+		delete_btn.onclick = deleteComponent;
 		row.appendChild(delete_btn);
 
 		table.appendChild(row);
@@ -391,14 +391,14 @@ var EditComponentDialog = function(editorUi)
 	cancel_btn.value = mxResources.get('cancel');
 	cancel_btn.setAttribute('class', 'geBtn');
 	cancel_btn.setAttribute('id', 'cancelButton');
-	cancel_btn.onclick = hide_window;
+	cancel_btn.onclick = hideWindow;
 	div.appendChild(cancel_btn);
 
 	var save_btn = document.createElement('input');
 	save_btn.type = 'button';
 	save_btn.value = mxResources.get('save');
 	save_btn.setAttribute('class', 'geBtn gePrimaryBtn');
-	save_btn.onclick = handle_save;
+	save_btn.onclick = handleSave;
 	div.appendChild(save_btn);
 
 	this.container = div;
@@ -1568,7 +1568,7 @@ var DRCWindow = function(editorUi, x, y, w, h)
 var VerilogWindow = function(editorUi, x, y, w, h)
 {
 	function downloadVFile(file_name, file_contents){
-		blob = new Blob([schematic.addVFileHeader(file_contents)], { type: "text/plain"});
+		blob = new Blob([file_contents], { type: "text/plain"});
 		exportveriloganchor.download = file_name+".v";
 		exportveriloganchor.href = window.URL.createObjectURL(blob);
 		exportveriloganchor.click();
