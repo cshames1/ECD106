@@ -8,6 +8,7 @@ class schematic
 	constructor(graph) {
 		this.graph = graph;
 		this.maxPortnameLength=20;
+		this.verilog="";
 	}
 	static isNativeComponent( component ){
 		var nativeComponents=["and", "nand", "or","nor","xor","xnor","buf", "inverter",
@@ -56,7 +57,7 @@ class schematic
 		var verilog_no_comments = schematic.removeVerilogComments(verilog);
 		var vfiles = new Set();
 		var component_instantiations = verilog_no_comments.split(';');
-		for (var i=1; i<component_instantiations.length; i++) {
+		for (var i=0; i<component_instantiations.length; i++) {
 			component_instantiations[i] = component_instantiations[i].trim();
 			var component = component_instantiations[i].split(' ')[0];
 			if ( !schematic.isVerilogReserved(component) ) {
@@ -525,7 +526,13 @@ schematic.prototype.deleteClearedComponents = function(){
 	graph.removeCells(cells);
 }
 
-schematic.prototype.createVerilog=function()
+schematic.prototype.getVerilog=function()
+{
+	this.updateSchematic();
+	return this.verilog;
+}
+
+schematic.prototype.updateSchematic=function()
 {
 	var netList="";
 	var inputList="";
@@ -656,537 +663,546 @@ schematic.prototype.createVerilog=function()
 			setCellStyleAttribute(link, 'strokeWidth', Math.log2(size)+1);
 		});
 	}
-	//nodes must be sorted so any module which can determine a wire's bit width is processed before modules that can't
-	nodes = sortNodes( graph.getChildVertices(graph.getDefaultParent()) );
-	//Iterate through the nodes a first time to define net aliases
-	if( nodes ) nodes.forEach(function(node){
-		var module = getModule(node);
-		switch( module )
-		{
-			case "inputport1": 
-			case "inputport2": 
-			case "inputport4": 
-			case "inputport8": 
-			case "inputport16": 
-			case "inputport32": 
-				var links=node.linksOutOf();
-				//if user named port, use that name as net alias
-				if( node.value && links.length )
-					netAliases[netName(links[0])] = node.value;
-				//otherwise, generate name
-				else if( links.length )
-					netAliases[netName(links[0])] = portName(node,"I");
-				break;
-			case "constant0": 
-				//any wire coming from a constant0 will be named 1b'0
-				var links=node.linksOutOf();
-				if( node.value && links.length )
-					links.forEach( function( link ){
-					netAliases[netName(link)] = '1\'b0';});
-				break;
-			case "constant1": 
-				//any wire coming from a constant1 will be named 1b'1
-				var links=node.linksOutOf();
-				if( node.value && links.length )
-					links.forEach( function( link ){
-					netAliases[netName(link)] = '1\'b1';});
-				break;
-		}
-	});
-	//Iterate through the nodes a second time to map the netlist, including bit widths of all wires
-	if( nodes ) nodes.forEach(function(node){
-		var decoder_size=1;
-		var fanin_size=0;
-		var inputport_size=0;
-		var module = getModule( node );
-		switch( module )
-		{
-		case "inputport32": inputport_size++;
-		case "inputport16": inputport_size++;
-		case "inputport8":  inputport_size++;
-		case "inputport4":  inputport_size++;
-		case "inputport2":  inputport_size++;
-		case "inputport1":
-			var linksout=node.linksOutOf();
-			setLinkSetSize(linksout, (1<<inputport_size));
-			break;
-		case "outputport32":
-		case "outputport16":
-		case "outputport8":
-		case "outputport4":
-		case "outputport2":
-		case "outputport1":
-			break;
-		case "constant0":
-		case "constant1":
-			var linksout=node.linksOutOf();
-			setLinkSetSize(linksout, 1);
-			break;
-		case "and":
-		case "nand":
-		case "or":
-		case "nor":
-		case "xor":
-		case "xnor":
-		case "buffer":
-		case "inverter":
-		case "dlatch":
-		case "dlatch_en":
-		case "srlatch":
-		case "srlatch_en":
-		case "dff":
-		case "dff_en":
-			var linksout=node.linksOutOf();
-			if( linksout.length == 1 && trgtNodeIs(linksout[0], "outputport") )
-				netAliases[netName(linksout[0])] = portName(linksout[0].target,"O");
-			else
-				wireSet[(1<<0)].add(gateName(node,"X") );
-			setLinkSetSize(linksout, 1);
-			break;
-		case "mux16": 
-		case "mux8":  
-		case "mux4":  
-		case "mux2":  
-			var linksout=node.linksOutOf();
-			if( linksout.length == 1 && trgtNodeIs(linksout[0], "outputport") ) 
-				netAliases[netName(linksout[0])] = portName(linksout[0].target,"O");
-			else
-				wireSet[1].add(gateName(node,"X") );
-			setLinkSetSize(linksout, 1);
-			break;
-		case "decoder4": decoder_size++;
-		case "decoder3": decoder_size++;
-		case "decoder2": decoder_size++;
-			for( var i=0; i<(1<<decoder_size); i=i+1 )
+	function defineNetAliases(){
+		//Iterate through the nodes a first time to define net aliases
+		if( nodes ) nodes.forEach(function(node){
+			var module = getModule(node);
+			switch( module )
 			{
-				var linksout=node.getLinks( 'out'+ i +'_d', true);
-				if( linksout.length == 1 && trgtNodeIs(linksout[0], "outputport") ) 
-					netAliases[netName(linksout[0])] = portName(linksout[0].target,"O");
-				else if( linksout.length )
-					wireSet[(1<<0)].add(netName(linksout[0],"X"));
+				case "inputport1": 
+				case "inputport2": 
+				case "inputport4": 
+				case "inputport8": 
+				case "inputport16": 
+				case "inputport32": 
+					var links=node.linksOutOf();
+					//if user named port, use that name as net alias
+					if( node.value && links.length )
+						netAliases[netName(links[0])] = node.value;
+					//otherwise, generate name
+					else if( links.length )
+						netAliases[netName(links[0])] = portName(node,"I");
+					break;
+				case "constant0": 
+					//any wire coming from a constant0 will be named 1b'0
+					var links=node.linksOutOf();
+					if( node.value && links.length )
+						links.forEach( function( link ){
+						netAliases[netName(link)] = '1\'b0';});
+					break;
+				case "constant1": 
+					//any wire coming from a constant1 will be named 1b'1
+					var links=node.linksOutOf();
+					if( node.value && links.length )
+						links.forEach( function( link ){
+						netAliases[netName(link)] = '1\'b1';});
+					break;
+			}
+		});
+	}
+	function mapNetlist(){
+		if( nodes ) nodes.forEach(function(node){
+			var decoder_size=1;
+			var fanin_size=0;
+			var inputport_size=0;
+			var module = getModule( node );
+			switch( module )
+			{
+			case "inputport32": inputport_size++;
+			case "inputport16": inputport_size++;
+			case "inputport8":  inputport_size++;
+			case "inputport4":  inputport_size++;
+			case "inputport2":  inputport_size++;
+			case "inputport1":
+				var linksout=node.linksOutOf();
+				setLinkSetSize(linksout, (1<<inputport_size));
+				break;
+			case "outputport32":
+			case "outputport16":
+			case "outputport8":
+			case "outputport4":
+			case "outputport2":
+			case "outputport1":
+				break;
+			case "constant0":
+			case "constant1":
+				var linksout=node.linksOutOf();
 				setLinkSetSize(linksout, 1);
-			}
-			break;
-		case "fanOut32":
-		case "fanOut16":
-		case "fanOut8": 
-		case "fanOut4": 
-		case "fanOut2": 
-			var linksout=node.linksOutOf();
-			setLinkSetSize(linksout, 1);
-			break;
-		case "fanIn32": fanin_size++;
-		case "fanIn16": fanin_size++;
-		case "fanIn8":  fanin_size++;
-		case "fanIn4":  fanin_size++;
-		case "fanIn2":  fanin_size++;
-			var linksout=node.linksOutOf();
-			if( linksout.length == 1 && trgtNodeIs(linksout[0], "outputport") ) 
-				netAliases[netName(linksout[0])] = portName(linksout[0].target,"O");
-			setLinkSetSize(linksout, (1<<fanin_size));
-			break;
-		default:
-			var portSizes = getModulePortSizes(module);
-			var linksout=node.linksOutOf();
-			var outputs = new Set();
-			linksout.forEach(function(link){
-				outputs.add( getSrcPortID(link) );
-			});
-			outputs.forEach(function(id){
-				var linksout=node.getLinks( 'out' + id + '_', true);
+				break;
+			case "and":
+			case "nand":
+			case "or":
+			case "nor":
+			case "xor":
+			case "xnor":
+			case "buffer":
+			case "inverter":
+			case "dlatch":
+			case "dlatch_en":
+			case "srlatch":
+			case "srlatch_en":
+			case "dff":
+			case "dff_en":
+				var linksout=node.linksOutOf();
+				if( linksout.length == 1 && trgtNodeIs(linksout[0], "outputport") )
+					netAliases[netName(linksout[0])] = portName(linksout[0].target,"O");
+				else
+					wireSet[(1<<0)].add(gateName(node,"X") );
+				setLinkSetSize(linksout, 1);
+				break;
+			case "mux16": 
+			case "mux8":  
+			case "mux4":  
+			case "mux2":  
+				var linksout=node.linksOutOf();
 				if( linksout.length == 1 && trgtNodeIs(linksout[0], "outputport") ) 
 					netAliases[netName(linksout[0])] = portName(linksout[0].target,"O");
-				if( linksout.length ) 
-					wireSet[portSizes.output[id]].add(netName(linksout[0],"X"));
-				setLinkSetSize(linksout, portSizes.output[id]);					
-			});
-			break;
-		}
-	});
-	//Iterate through nodes a third time to create the Verilog code for export
-	if( nodes )
-	nodes.forEach(function(node){
-		var mux_size=0;
-		var fanin_size = 0;
-		var inputport_size=0;
-		var outputport_size=0;
-		var decoder_size=1;
-		var module = getModule(node);
-		switch( module )
-		{
-		case "constant0":
-		case "constant1":
-			break;
-		case "inputport32": inputport_size++;
-		case "inputport16": inputport_size++;
-		case "inputport8":  inputport_size++;
-		case "inputport4":  inputport_size++;
-		case "inputport2":  inputport_size++;
-		case "inputport1":
-			if ( !inputList.includes(portName(node,'I')) ) {
-				if (inputport_size==0) 
-					inputList+="\n\tinput " + portName(node,'I') +',';
 				else
-					inputList+="\n\tinput [" + ((1<<inputport_size)-1) + ':0] ' + portName(node,'I') +',';
-			}
-			break;
-		case "outputport32": outputport_size++;
-		case "outputport16": outputport_size++;
-		case "outputport8":  outputport_size++;
-		case "outputport4":  outputport_size++;
-		case "outputport2":  outputport_size++;
-		case "outputport1":
-			if (outputport_size==0)
-				outputList+="\n\toutput " + portName(node,'O') + ',';
-			else
-				outputList+="\n\toutput [" + ((1<<outputport_size)-1) + ':0] ' + portName(node,'O') +',';
-			var link=node.linksInto();
-			if( link.length == 0 ){
-				outputAssignList += "\nassign "+portName(node,"O")+" = " + (1<<outputport_size)+"\'b";
-				for (var i=0; i<(1<<outputport_size); i++) {
-					outputAssignList += "x" ;
+					wireSet[1].add(gateName(node,"X") );
+				setLinkSetSize(linksout, 1);
+				break;
+			case "decoder4": decoder_size++;
+			case "decoder3": decoder_size++;
+			case "decoder2": decoder_size++;
+				for( var i=0; i<(1<<decoder_size); i=i+1 )
+				{
+					var linksout=node.getLinks( 'out'+ i +'_d', true);
+					if( linksout.length == 1 && trgtNodeIs(linksout[0], "outputport") ) 
+						netAliases[netName(linksout[0])] = portName(linksout[0].target,"O");
+					else if( linksout.length )
+						wireSet[(1<<0)].add(netName(linksout[0],"X"));
+					setLinkSetSize(linksout, 1);
 				}
-				outputAssignList += ";";
+				break;
+			case "fanOut32":
+			case "fanOut16":
+			case "fanOut8": 
+			case "fanOut4": 
+			case "fanOut2": 
+				var linksout=node.linksOutOf();
+				setLinkSetSize(linksout, 1);
+				break;
+			case "fanIn32": fanin_size++;
+			case "fanIn16": fanin_size++;
+			case "fanIn8":  fanin_size++;
+			case "fanIn4":  fanin_size++;
+			case "fanIn2":  fanin_size++;
+				var linksout=node.linksOutOf();
+				if( linksout.length == 1 && trgtNodeIs(linksout[0], "outputport") ) 
+					netAliases[netName(linksout[0])] = portName(linksout[0].target,"O");
+				setLinkSetSize(linksout, (1<<fanin_size));
+				break;
+			default:
+				var portSizes = getModulePortSizes(module);
+				var linksout=node.linksOutOf();
+				var outputs = new Set();
+				linksout.forEach(function(link){
+					outputs.add( getSrcPortID(link) );
+				});
+				outputs.forEach(function(id){
+					var linksout=node.getLinks( 'out' + id + '_', true);
+					if( linksout.length == 1 && trgtNodeIs(linksout[0], "outputport") ) 
+						netAliases[netName(linksout[0])] = portName(linksout[0].target,"O");
+					if( linksout.length ) 
+						wireSet[portSizes.output[id]].add(netName(linksout[0],"X"));
+					setLinkSetSize(linksout, portSizes.output[id]);					
+				});
+				break;
 			}
-			else if( getNameOrAlias( link[0]) != portName(node,"O")) 
+		});
+	}
+	function createVerilog(){
+		if( nodes )
+		nodes.forEach(function(node){
+			var mux_size=0;
+			var fanin_size = 0;
+			var inputport_size=0;
+			var outputport_size=0;
+			var decoder_size=1;
+			var module = getModule(node);
+			switch( module )
 			{
-				outputAssignList += "\nassign " + portName(node,"O") + " = " ;
-				outputAssignList += getNameOrAlias( link[0])  + ";";
-			}
-			break;
-		case "and":
-		case "or":
-		case "xor":
-		case "nand":
-		case "nor":
-		case "xnor":
-		case "inverter":
-		case "buffer":
-			netList += "\n\n" + gateNames[module] + ' ' + gateName(node,"U") + " ("; 
-			var links=node.linksOutOf();
-			if( links.length )
-				netList += getNameOrAlias( links[0]);
-			else
-				netList += gateName(node,"X");
-			netList+=', ';
-			var links=node.linksInto();
-			if( links.length )
-				links.forEach( function(link){ netList += getNameOrAlias( link) + ', ';});
-			else
-				netList += '1\'bx,';
-			//delete last comma
-			netList=netList.replace(/, *$/gi, '');
-			netList=netList+");";
-			break; 
-		case "mux16": mux_size++;
-		case "mux8":  mux_size++;
-		case "mux4":  mux_size++;
-		case "mux2":  mux_size++;
-			netList += "\n\n" + gateNames[module] +' '+gateName(node,"U")+' ('; 
-			netList=netList.replace(/, *$/gi, '');
-			netList += '\n\t.data_out( ';
-			var links=node.linksOutOf();
-			if( links.length )
-				netList += getNameOrAlias( links[0]);
-			else
-				netList += gateName(node,"X");
-			netList=netList.replace(/, *$/gi, '');
-			netList += ' ),\n\t.select_in( {';
-			//iterate through each select input
-			for( var i=mux_size-1; i>=0; i=i-1 )
-			{
-				var lnk=node.getLink( 'in_sel'+i,false);
-				if( lnk ) 
-					netList+=getNameOrAlias( lnk)+', ';
-				else 
-					netList+='1\'bx,';
-			}	
-			netList=netList.replace(/, *$/gi, '');
-			netList=netList+"} ),\n\t.data_in( {";
-			for( var i=(1<<mux_size)-1; i>=0; i-- )
-			{
-				var linki = node.getLink( 'in_'+i+'_',false);
-				if( linki ) 
-					netList += getNameOrAlias( linki) + ', ';
+			case "constant0":
+			case "constant1":
+				break;
+			case "inputport32": inputport_size++;
+			case "inputport16": inputport_size++;
+			case "inputport8":  inputport_size++;
+			case "inputport4":  inputport_size++;
+			case "inputport2":  inputport_size++;
+			case "inputport1":
+				if ( !inputList.includes(portName(node,'I')) ) {
+					if (inputport_size==0) 
+						inputList+="\n\tinput " + portName(node,'I') +',';
+					else
+						inputList+="\n\tinput [" + ((1<<inputport_size)-1) + ':0] ' + portName(node,'I') +',';
+				}
+				break;
+			case "outputport32": outputport_size++;
+			case "outputport16": outputport_size++;
+			case "outputport8":  outputport_size++;
+			case "outputport4":  outputport_size++;
+			case "outputport2":  outputport_size++;
+			case "outputport1":
+				if (outputport_size==0)
+					outputList+="\n\toutput " + portName(node,'O') + ',';
 				else
-					netList += "1\'bx, "
-			}	
-			netList=netList.replace(/, *$/gi, '');
-			netList += "} )\n);";
-			break; 
-		case "dlatch":
-			netList += "\n\n" + gateNames[module] + ' ' + gateName(node,"U") + " ("; 
-			netList += '\n\t.data_out( ';
-			var links=node.linksOutOf();
-			if( links.length )
-				netList += getNameOrAlias(links[0]);
-			else
-				netList += gateName(node,"X");
-			netList += ' ),\n\t.in_D( ';
-			{
-				var lnk=node.getLink( 'in_D',false);
-				if( lnk ) netList+=getNameOrAlias(lnk);
-				else netList+='1\'bx';
-			}
-			netList=netList+" ),\n\t.in_G( ";
-			{
-				var lnk=node.getLink( 'in_G',false);
-				if( lnk ) netList+=getNameOrAlias(lnk);
-				else netList+='1\'bx';
-			}
-			netList=netList+" )\n);";
-			break;
-		case "srlatch":
-			netList += "\n\n" + gateNames[module] + ' ' + gateName(node,"U") + " ("; 
-			netList += '\n\t.data_out( ';
-			var links=node.linksOutOf();
-			if( links.length )
-				netList += getNameOrAlias(links[0]);
-			else
-				netList += gateName(node,"X");
-			netList += ' ),\n\t.in_S( ';
-			{
-				var lnk=node.getLink( 'in_S',false);
-				if( lnk ) netList+=getNameOrAlias(lnk);
-				else netList+='1\'bx';
-			}
-			netList=netList+" ),\n\t.in_R( ";
-			{
-				var lnk=node.getLink( 'in_R',false);
-				if( lnk ) netList+=getNameOrAlias(lnk);
-				else netList+='1\'bx';
-			}
-			netList=netList+" )\n);";
-			break;
-		case "srlatch_en":
-			netList += "\n\n" + gateNames[module] + ' ' + gateName(node,"U") + " ("; 
-			netList += '\n\t.data_out( ';
-			var links=node.linksOutOf();
-			if( links.length )
-				netList += getNameOrAlias(links[0]);
-			else
-				netList += gateName(node,"X");
-			netList += ' ),\n\t.in_S( ';
-			{
-				var lnk=node.getLink( 'in_S',false);
-				if( lnk ) netList+=getNameOrAlias(lnk);
-				else netList+='1\'bx';
-			}
-			netList=netList+" ),\n\t.in_R( ";
-			{
-				var lnk=node.getLink( 'in_R',false);
-				if( lnk ) netList+=getNameOrAlias(lnk);
-				else netList+='1\'bx';
-			}
-			netList=netList+" ),\n\t.in_EN( ";
-			{
-				var lnk=node.getLink( 'in_en',false);
-				if( lnk ) netList+=getNameOrAlias(lnk);
-				else netList+='1\'bx';
-			}
-			netList=netList+" )\n);";
-			break;
-		case "dlatch_en":
-			netList += "\n\n" + gateNames[module] + ' ' + gateName(node,"U") + " ("; 
-			netList += '\n\t.data_out( ';
-			var links=node.linksOutOf();
-			if( links.length )
-				netList += getNameOrAlias(links[0]);
-			else
-				netList += gateName(node,"X");
-			netList += ' ),\n\t.in_D( ';
-			{
-				var lnk=node.getLink( 'in_D',false);
-				if( lnk ) netList+=getNameOrAlias(lnk);
-				else netList+='1\'bx';
-			}
-			netList=netList+" ),\n\t.in_G( ";
-			{
-				var lnk=node.getLink( 'in_G',false);
-				if( lnk ) netList+=getNameOrAlias(lnk);
-				else netList+='1\'bx';
-			}
-			netList=netList+" ),\n\t.in_EN( ";
-			{
-				var lnk=node.getLink( 'in_en',false);
-				if( lnk ) netList+=getNameOrAlias(lnk);
-				else netList+='1\'bx';
-			}
-			netList=netList+" )\n);";
-			break;
-		case "dff":
-			netList += "\n\n" + gateNames[module] + ' ' + gateName(node,"U") + " ("; 
-			netList += '\n\t.data_out( ';
-			var links=node.linksOutOf();
-			if( links.length )
-				netList += getNameOrAlias(links[0]);
-			else
-				netList += gateName(node,"X");
-			netList += ' ),\n\t.in_D( ';
-			{
-				var lnk=node.getLink( 'in_D',false);
-				if( lnk ) netList+=getNameOrAlias(lnk);
-				else netList+='1\'bx';
-			}
-			netList=netList+" ),\n\t.in_CLK( ";
-			{
-				var lnk=node.getLink( 'in_clk',false);
-				if( lnk ) netList+=getNameOrAlias(lnk);
-				else netList+='1\'bx';
-			}
-			netList=netList+" )\n);";
-			break;
-		case "dff_en":
-			netList += "\n\n" + gateNames[module] + ' ' + gateName(node,"U") + " ("; 
-			netList += '\n\t.data_out( ';
-			var links=node.linksOutOf();
-			if( links.length )
-				netList += getNameOrAlias(links[0]);
-			else
-				netList += gateName(node,"X");
-			netList += ' ),\n\t.in_D( ';
-			{
-				var lnk=node.getLink( 'in_D',false);
-				if( lnk ) netList+=getNameOrAlias(lnk);
-				else netList+='1\'bx';
-			}
-			netList=netList+" ),\n\t.in_CLK( ";
-			{
-				var lnk=node.getLink( 'in_clk',false);
-				if( lnk ) netList+=getNameOrAlias(lnk);
-				else netList+='1\'bx';
-			}
-			netList=netList+" ),\n\t.in_EN( ";
-			{
-				var lnk=node.getLink( 'in_en',false);
-				if( lnk ) netList+=getNameOrAlias(lnk);
-				else netList+='1\'bx';
-			}
-			netList=netList+" )\n);";
-			break;
-		case "decoder4": decoder_size++;
-		case "decoder3": decoder_size++;
-		case "decoder2": decoder_size++;
-			netList += "\n\n" + gateNames[module] + ' ' + gateName(node,"U") + " ("; 
-			netList += '\n\t.data_out( {';
-			for( var i=(1<<decoder_size)-1; i>=0; i=i-1 )
-			{
-				var lnk=node.getLink( 'out'+i+'_d',true);
-				if( lnk ) 
-					netList+=getNameOrAlias( lnk);
+					outputList+="\n\toutput [" + ((1<<outputport_size)-1) + ':0] ' + portName(node,'O') +',';
+				var link=node.linksInto();
+				if( link.length == 0 ){
+					outputAssignList += "\nassign "+portName(node,"O")+" = " + (1<<outputport_size)+"\'b";
+					for (var i=0; i<(1<<outputport_size); i++) {
+						outputAssignList += "x" ;
+					}
+					outputAssignList += ";";
+				}
+				else if( getNameOrAlias( link[0]) != portName(node,"O")) 
+				{
+					outputAssignList += "\nassign " + portName(node,"O") + " = " ;
+					outputAssignList += getNameOrAlias( link[0])  + ";";
+				}
+				break;
+			case "and":
+			case "or":
+			case "xor":
+			case "nand":
+			case "nor":
+			case "xnor":
+			case "inverter":
+			case "buffer":
+				netList += "\n\n" + gateNames[module] + ' ' + gateName(node,"U") + " ("; 
+				var links=node.linksOutOf();
+				if( links.length )
+					netList += getNameOrAlias( links[0]);
+				else
+					netList += gateName(node,"X");
+				netList+=', ';
+				var links=node.linksInto();
+				if( links.length )
+					links.forEach( function(link){ netList += getNameOrAlias( link) + ', ';});
+				else
+					netList += '1\'bx,';
+				//delete last comma
+				netList=netList.replace(/, *$/gi, '');
+				netList=netList+");";
+				break; 
+			case "mux16": mux_size++;
+			case "mux8":  mux_size++;
+			case "mux4":  mux_size++;
+			case "mux2":  mux_size++;
+				netList += "\n\n" + gateNames[module] +' '+gateName(node,"U")+' ('; 
+				netList=netList.replace(/, *$/gi, '');
+				netList += '\n\t.data_out( ';
+				var links=node.linksOutOf();
+				if( links.length )
+					netList += getNameOrAlias( links[0]);
+				else
+					netList += gateName(node,"X");
+				netList=netList.replace(/, *$/gi, '');
+				netList += ' ),\n\t.select_in( {';
+				//iterate through each select input
+				for( var i=mux_size-1; i>=0; i=i-1 )
+				{
+					var lnk=node.getLink( 'in_sel'+i,false);
+					if( lnk ) 
+						netList+=getNameOrAlias( lnk)+', ';
+					else 
+						netList+='1\'bx,';
+				}	
+				netList=netList.replace(/, *$/gi, '');
+				netList=netList+"} ),\n\t.data_in( {";
+				for( var i=(1<<mux_size)-1; i>=0; i-- )
+				{
+					var linki = node.getLink( 'in_'+i+'_',false);
+					if( linki ) 
+						netList += getNameOrAlias( linki) + ', ';
+					else
+						netList += "1\'bx, "
+				}	
+				netList=netList.replace(/, *$/gi, '');
+				netList += "} )\n);";
+				break; 
+			case "dlatch":
+				netList += "\n\n" + gateNames[module] + ' ' + gateName(node,"U") + " ("; 
+				netList += '\n\t.data_out( ';
+				var links=node.linksOutOf();
+				if( links.length )
+					netList += getNameOrAlias(links[0]);
+				else
+					netList += gateName(node,"X");
+				netList += ' ),\n\t.in_D( ';
+				{
+					var lnk=node.getLink( 'in_D',false);
+					if( lnk ) netList+=getNameOrAlias(lnk);
+					else netList+='1\'bx';
+				}
+				netList=netList+" ),\n\t.in_G( ";
+				{
+					var lnk=node.getLink( 'in_G',false);
+					if( lnk ) netList+=getNameOrAlias(lnk);
+					else netList+='1\'bx';
+				}
+				netList=netList+" )\n);";
+				break;
+			case "srlatch":
+				netList += "\n\n" + gateNames[module] + ' ' + gateName(node,"U") + " ("; 
+				netList += '\n\t.data_out( ';
+				var links=node.linksOutOf();
+				if( links.length )
+					netList += getNameOrAlias(links[0]);
+				else
+					netList += gateName(node,"X");
+				netList += ' ),\n\t.in_S( ';
+				{
+					var lnk=node.getLink( 'in_S',false);
+					if( lnk ) netList+=getNameOrAlias(lnk);
+					else netList+='1\'bx';
+				}
+				netList=netList+" ),\n\t.in_R( ";
+				{
+					var lnk=node.getLink( 'in_R',false);
+					if( lnk ) netList+=getNameOrAlias(lnk);
+					else netList+='1\'bx';
+				}
+				netList=netList+" )\n);";
+				break;
+			case "srlatch_en":
+				netList += "\n\n" + gateNames[module] + ' ' + gateName(node,"U") + " ("; 
+				netList += '\n\t.data_out( ';
+				var links=node.linksOutOf();
+				if( links.length )
+					netList += getNameOrAlias(links[0]);
+				else
+					netList += gateName(node,"X");
+				netList += ' ),\n\t.in_S( ';
+				{
+					var lnk=node.getLink( 'in_S',false);
+					if( lnk ) netList+=getNameOrAlias(lnk);
+					else netList+='1\'bx';
+				}
+				netList=netList+" ),\n\t.in_R( ";
+				{
+					var lnk=node.getLink( 'in_R',false);
+					if( lnk ) netList+=getNameOrAlias(lnk);
+					else netList+='1\'bx';
+				}
+				netList=netList+" ),\n\t.in_EN( ";
+				{
+					var lnk=node.getLink( 'in_en',false);
+					if( lnk ) netList+=getNameOrAlias(lnk);
+					else netList+='1\'bx';
+				}
+				netList=netList+" )\n);";
+				break;
+			case "dlatch_en":
+				netList += "\n\n" + gateNames[module] + ' ' + gateName(node,"U") + " ("; 
+				netList += '\n\t.data_out( ';
+				var links=node.linksOutOf();
+				if( links.length )
+					netList += getNameOrAlias(links[0]);
+				else
+					netList += gateName(node,"X");
+				netList += ' ),\n\t.in_D( ';
+				{
+					var lnk=node.getLink( 'in_D',false);
+					if( lnk ) netList+=getNameOrAlias(lnk);
+					else netList+='1\'bx';
+				}
+				netList=netList+" ),\n\t.in_G( ";
+				{
+					var lnk=node.getLink( 'in_G',false);
+					if( lnk ) netList+=getNameOrAlias(lnk);
+					else netList+='1\'bx';
+				}
+				netList=netList+" ),\n\t.in_EN( ";
+				{
+					var lnk=node.getLink( 'in_en',false);
+					if( lnk ) netList+=getNameOrAlias(lnk);
+					else netList+='1\'bx';
+				}
+				netList=netList+" )\n);";
+				break;
+			case "dff":
+				netList += "\n\n" + gateNames[module] + ' ' + gateName(node,"U") + " ("; 
+				netList += '\n\t.data_out( ';
+				var links=node.linksOutOf();
+				if( links.length )
+					netList += getNameOrAlias(links[0]);
+				else
+					netList += gateName(node,"X");
+				netList += ' ),\n\t.in_D( ';
+				{
+					var lnk=node.getLink( 'in_D',false);
+					if( lnk ) netList+=getNameOrAlias(lnk);
+					else netList+='1\'bx';
+				}
+				netList=netList+" ),\n\t.in_CLK( ";
+				{
+					var lnk=node.getLink( 'in_clk',false);
+					if( lnk ) netList+=getNameOrAlias(lnk);
+					else netList+='1\'bx';
+				}
+				netList=netList+" )\n);";
+				break;
+			case "dff_en":
+				netList += "\n\n" + gateNames[module] + ' ' + gateName(node,"U") + " ("; 
+				netList += '\n\t.data_out( ';
+				var links=node.linksOutOf();
+				if( links.length )
+					netList += getNameOrAlias(links[0]);
+				else
+					netList += gateName(node,"X");
+				netList += ' ),\n\t.in_D( ';
+				{
+					var lnk=node.getLink( 'in_D',false);
+					if( lnk ) netList+=getNameOrAlias(lnk);
+					else netList+='1\'bx';
+				}
+				netList=netList+" ),\n\t.in_CLK( ";
+				{
+					var lnk=node.getLink( 'in_clk',false);
+					if( lnk ) netList+=getNameOrAlias(lnk);
+					else netList+='1\'bx';
+				}
+				netList=netList+" ),\n\t.in_EN( ";
+				{
+					var lnk=node.getLink( 'in_en',false);
+					if( lnk ) netList+=getNameOrAlias(lnk);
+					else netList+='1\'bx';
+				}
+				netList=netList+" )\n);";
+				break;
+			case "decoder4": decoder_size++;
+			case "decoder3": decoder_size++;
+			case "decoder2": decoder_size++;
+				netList += "\n\n" + gateNames[module] + ' ' + gateName(node,"U") + " ("; 
+				netList += '\n\t.data_out( {';
+				for( var i=(1<<decoder_size)-1; i>=0; i=i-1 )
+				{
+					var lnk=node.getLink( 'out'+i+'_d',true);
+					if( lnk ) 
+						netList+=getNameOrAlias( lnk);
+					else 
+						netList+='1\'bx';
+					netList+=', ';
+				}
+				//delete last comma
+				netList=netList.replace(/, *$/gi, '');
+				netList = netList+ '} ),\n\t.address_in( {';
+				for( var i=decoder_size-1; i>=0; i=i-1 )
+				{
+					var lnk=node.getLink( 'in'+i,false);
+					if( lnk ) 
+						netList+=getNameOrAlias( lnk);
+					else 
+						netList+='1\'bx';
+					netList+=', ';
+				}
+				netList=netList.replace(/, *$/gi, '');
+				netList=netList+"} ),\n\t.en_in(";
+				var linken=node.getLink( 'in_en',false);
+				if( linken ) 
+					netList+=getNameOrAlias( linken );
 				else 
 					netList+='1\'bx';
-				netList+=', ';
+				netList+=")\n);";
+				break; 
+			case "fanOut32": 
+			case "fanOut16": 
+			case "fanOut8": 
+			case "fanOut4": 
+			case "fanOut2": 
+				break; 
+			case "fanIn32": fanin_size++;
+			case "fanIn16": fanin_size++;
+			case "fanIn8":  fanin_size++;
+			case "fanIn4":  fanin_size++;
+			case "fanIn2":  fanin_size++;
+				var assignment = "";
+				var links=node.linksOutOf();
+				if(links.length == 1 && trgtNodeIs(links[0], "outputport") ) 
+					assignment += "\nassign "+getNameOrAlias( links[0]) +' = { ';
+				else
+					assignment += "\nwire ["+((1<<fanin_size)-1)+":0] "+gateName(node,"X")+" = { ";
+				for( var i=(1<<fanin_size)-1; i>=0; i=i-1 )
+				{
+					var lnk=node.getLink( 'in'+i,false);
+					if( lnk ) 
+						assignment+=getNameOrAlias( lnk);
+					else 
+						assignment+='1\'bx';
+					assignment+=', ';
+				}
+				assignment=assignment.replace(/, *$/gi, '');
+				assignment=assignment+" };\n";
+				if(links.length == 1 && trgtNodeIs(links[0], "outputport") ) 
+					outputAssignList += assignment;
+				else
+					wireAssignList += assignment;
+				break; 
+			default: 
+				var ports = getModulePorts(module);
+				netList += "\n\n" + module + ' ' + gateName(node,"C") + " (";
+				var links=node.linksInto();
+				if( links.length ) links.forEach( function(link){ 
+					var id = getTrgtPortID(link);
+					netList += ("\n\t." + ports.input[id] + "(" + getNameOrAlias( link) + '),');
+				});
+				var links=node.linksOutOf();
+				if( links.length ) links.forEach( function(link){ 
+					var id = getSrcPortID(link);
+					var portInstantiation = "\n\t." + ports.output[id] + "(" + getNameOrAlias( link) + '),' ;
+					if (!netList.includes(portInstantiation)) 
+						netList += portInstantiation;
+				});
+				netList=netList.replace(/, *$/gi, '');
+				netList=netList+"\n);";
+				break;
 			}
-			//delete last comma
-			netList=netList.replace(/, *$/gi, '');
-			netList = netList+ '} ),\n\t.address_in( {';
-			for( var i=decoder_size-1; i>=0; i=i-1 )
-			{
-				var lnk=node.getLink( 'in'+i,false);
-				if( lnk ) 
-					netList+=getNameOrAlias( lnk);
-				else 
-					netList+='1\'bx';
-				netList+=', ';
-			}
-			netList=netList.replace(/, *$/gi, '');
-			netList=netList+"} ),\n\t.en_in(";
-			var linken=node.getLink( 'in_en',false);
-			if( linken ) 
-				netList+=getNameOrAlias( linken );
-			else 
-				netList+='1\'bx';
-			netList+=")\n);";
-			break; 
-		case "fanOut32": 
-		case "fanOut16": 
-		case "fanOut8": 
-		case "fanOut4": 
-		case "fanOut2": 
-			break; 
-		case "fanIn32": fanin_size++;
-		case "fanIn16": fanin_size++;
-		case "fanIn8":  fanin_size++;
-		case "fanIn4":  fanin_size++;
-		case "fanIn2":  fanin_size++;
-			var assignment = "";
-			var links=node.linksOutOf();
-			if(links.length == 1 && trgtNodeIs(links[0], "outputport") ) 
-				assignment += "\nassign "+getNameOrAlias( links[0]) +' = { ';
-			else
-				assignment += "\nwire ["+((1<<fanin_size)-1)+":0] "+gateName(node,"X")+" = { ";
-			for( var i=(1<<fanin_size)-1; i>=0; i=i-1 )
-			{
-				var lnk=node.getLink( 'in'+i,false);
-				if( lnk ) 
-					assignment+=getNameOrAlias( lnk);
-				else 
-					assignment+='1\'bx';
-				assignment+=', ';
-			}
-			assignment=assignment.replace(/, *$/gi, '');
-			assignment=assignment+" };\n";
-			if(links.length == 1 && trgtNodeIs(links[0], "outputport") ) 
-				outputAssignList += assignment;
-			else
-				wireAssignList += assignment;
-			break; 
-		default: 
-			var ports = getModulePorts(module);
-			netList += "\n\n" + module + ' ' + gateName(node,"C") + " (";
-			var links=node.linksInto();
-			if( links.length ) links.forEach( function(link){ 
-				var id = getTrgtPortID(link);
-				netList += ("\n\t." + ports.input[id] + "(" + getNameOrAlias( link) + '),');
-			});
-			var links=node.linksOutOf();
-			if( links.length ) links.forEach( function(link){ 
-				var id = getSrcPortID(link);
-				var portInstantiation = "\n\t." + ports.output[id] + "(" + getNameOrAlias( link) + '),' ;
-				if (!netList.includes(portInstantiation)) 
-					netList += portInstantiation;
-			});
-			netList=netList.replace(/, *$/gi, '');
-			netList=netList+"\n);";
-			break;
-		}
-	});
-	//begin top level module instantiation with all of its port instantiations
-	verilogCode="module top_level (";
-	if( inputList != '' || outputList != '')
-	{
-		verilogCode += inputList;
-		verilogCode += outputList;
-		verilogCode=verilogCode.replace(/, *$/gi, '');
-	}
-	verilogCode+="\n);\n\n";
-	//Print bus declarations
-	for (var i=5; i>=1; i--) {
-		wireSet[(1<<i)].forEach( function(wire){ wireList[(1<<i)] += wire + ", "; } );
-		if( wireList[(1<<i)] != "" )
+		});
+		//begin top level module instantiation with all of its port instantiations
+		verilogCode="module top_level (";
+		if( inputList != '' || outputList != '')
 		{
-			wireList[(1<<i)]=wireList[(1<<i)].replace(/, *$/gi, '');
-			verilogCode+="\nwire [" + ((1<<i)-1) + ":0] "+wireList[(1<<i)]+";";
+			verilogCode += inputList;
+			verilogCode += outputList;
+			verilogCode=verilogCode.replace(/, *$/gi, '');
 		}
+		verilogCode+="\n);\n\n";
+		//Print bus declarations
+		for (var i=5; i>=1; i--) {
+			wireSet[(1<<i)].forEach( function(wire){ wireList[(1<<i)] += wire + ", "; } );
+			if( wireList[(1<<i)] != "" )
+			{
+				wireList[(1<<i)]=wireList[(1<<i)].replace(/, *$/gi, '');
+				verilogCode+="\nwire [" + ((1<<i)-1) + ":0] "+wireList[(1<<i)]+";";
+			}
+		}
+		//Print 1-bit Wire declarations
+		wireSet[(1<<0)].forEach( function(wire){ wireList[(1<<0)] += wire + ", "; } );
+		if( wireList[(1<<0)] != "" )
+		{
+			wireList[(1<<0)]=wireList[(1<<0)].replace(/, *$/gi, '');
+			verilogCode+="\nwire "+wireList[(1<<0)]+";\n";
+		}
+		if( wireAssignList != "" )
+			verilogCode+=wireAssignList;
+		if( outputAssignList != "" )
+			verilogCode+=outputAssignList;
+		if( netList != '' )
+			verilogCode+=netList;
+		verilogCode+="\n\nendmodule\n";
 	}
-	//Print 1-bit Wire declarations
-	wireSet[(1<<0)].forEach( function(wire){ wireList[(1<<0)] += wire + ", "; } );
-	if( wireList[(1<<0)] != "" )
-	{
-		wireList[(1<<0)]=wireList[(1<<0)].replace(/, *$/gi, '');
-		verilogCode+="\nwire "+wireList[(1<<0)]+";\n";
-	}
-	if( wireAssignList != "" )
-		verilogCode+=wireAssignList;
-	if( outputAssignList != "" )
-		verilogCode+=outputAssignList;
-	if( netList != '' )
-		verilogCode+=netList;
-	verilogCode+="\n\nendmodule\n";
+	//nodes must be sorted so any module which can determine a wire's bit width is processed before modules that can't
+	var nodes = sortNodes( graph.getChildVertices(graph.getDefaultParent()) );
+	
+	mapNetlist();
+	defineNetAliases();
+	createVerilog();
+	
 	//refresh the graph because wires' bit widths may have changed
 	graph.refresh();
-	return verilogCode;
+	this.verilog = verilogCode;
 };
 
 schematic.prototype.overlay_led_on = new mxCellOverlay(new mxImage('images/led_on.png',20,40), 'Output is high',mxConstants.ALIGN_RIGHT,mxConstants.ALIGN_MIDDLE);
