@@ -69,53 +69,53 @@ var OpenDialog = function()
 var ImportDialog = function()
 {
 	var saved_ids = new Set();
-	var component_names = new Object();
+	var componentNames = new Object();
 
 	function initFileTable(){
-		var files = file_input.files;
+		var files = fileInput.files;
 		for (var i=0; i<files.length; i++) {
 			if ( files[i].name.endsWith('.v') ) {
 				saved_ids.add(i);
-				component_names[i] = files[i].name.replace('.v','');
+				componentNames[i] = files[i].name.replace('.v','');
 			}
 		}
 		buildFileTable();
-		var alerts = get_alerts();
+		var alerts = getAlerts();
 		if ( alerts!= "" )
 			alert(alerts);
 	}
 	function buildFileTable(){
 		table.innerHTML = "";
-		var label_num = 1;
+		var labelNum = 1;
 
 		saved_ids.forEach(function(i){
-			var file = file_input.files[i];
+			var file = fileInput.files[i];
 	
 			var row = document.createElement('tr');
 			row.setAttribute('id', 'fileRow'+i);
 	
 			var label = document.createElement('td');
 			label.setAttribute('id','label'+i);
-			mxUtils.write(label, (label_num++)+'.');
+			mxUtils.write(label, (labelNum++)+'.');
 			row.appendChild(label);
 			
-			var renaming_box = document.createElement('input');
-			renaming_box.setAttribute('id', 'textbox'+i);
-			renaming_box.setAttribute('colspan', 2);
-			renaming_box.style.width = '170px';
-			renaming_box.type = 'text';
-			renaming_box.name = '';
-			renaming_box.value = file.name.replace('.v','');
-			renaming_box.onchange = changedName;
-			row.appendChild(renaming_box);
+			var renamingBox = document.createElement('input');
+			renamingBox.setAttribute('id', 'textbox'+i);
+			renamingBox.setAttribute('colspan', 2);
+			renamingBox.style.width = '170px';
+			renamingBox.type = 'text';
+			renamingBox.name = '';
+			renamingBox.value = file.name.replace('.v','');
+			renamingBox.onchange = changedName;
+			row.appendChild(renamingBox);
 			
-			var delete_btn = document.createElement('input');
-			delete_btn.setAttribute('id', 'delete_btn'+i);
-			delete_btn.type = 'button';
-			delete_btn.value = mxResources.get('delete');;
-			delete_btn.className = 'delete_btn';
-			delete_btn.onclick = deleteComponent;
-			row.appendChild(delete_btn);
+			var deleteBtn = document.createElement('input');
+			deleteBtn.setAttribute('id', 'delete_btn'+i);
+			deleteBtn.type = 'button';
+			deleteBtn.value = mxResources.get('delete');;
+			deleteBtn.className = 'delete_btn';
+			deleteBtn.onclick = deleteComponent;
+			row.appendChild(deleteBtn);
 	
 			table.appendChild(row);
 		});
@@ -123,26 +123,26 @@ var ImportDialog = function()
 	function changedName(e){
 		var id = e.currentTarget.id;
 		id = parseInt(id.replace('textbox', ''));
-		component_names[id] = e.currentTarget.value;
+		componentNames[id] = e.currentTarget.value;
 	}	
-	function get_alerts(){
-		var alert_txt = "";
+	function getAlerts(){
+		var alertTxt = "";
 		saved_ids.forEach(function(i){
 			var name = document.getElementById('textbox'+i).value.replace('.v','');
 			if ( schematic.isImportedComponent(name, -1) || schematic.isNativeComponent(name) || duplicateNamesUsed() )
-				alert_txt += name + ' is already used. Please choose another name.\n'
+				alertTxt += name + ' is already used. Please choose another name.\n'
 			else if ( !schematic.isValidID(name) )
-				alert_txt += name + ' is not a valid Verilog ID. Please choose another name.\n'
+				alertTxt += name + ' is not a valid Verilog ID. Please choose another name.\n'
 		});
-		return alert_txt;
+		return alertTxt;
 	}
 	function handleSave(){
 		if ( saved_ids.size==0 ){
 			hideWindow();
 			return 0;
 		}
-		else if ( get_alerts()!="" ) {
-			alert(get_alerts());
+		else if ( getAlerts()!="" ) {
+			alert(getAlerts());
 			return 0;
 		}
 		var iterator = saved_ids.values();
@@ -151,32 +151,34 @@ var ImportDialog = function()
 		var reader = new FileReader();
 		reader.onload = function(e){
 			components.push({
-				"name":component_names[id],
+				"name":componentNames[id],
 				"verilog":e.target.result
 			});
 			id = iterator.next().value;
 			if ( id!=null )
-				reader.readAsText(file_input.files[id]);
+				reader.readAsText(fileInput.files[id]);
 			else
 				window.parent.openFile.setData(components, null);
 		}
-		reader.readAsText(file_input.files[id]);
+		reader.readAsText(fileInput.files[id]);
 	}
+
+
 	function resetRowLabels(){
-		var label_num = 1;
+		var lableNum = 1;
 		saved_ids.forEach(function(i){
 			var label = document.getElementById('label'+i);
-			label.innerHTML = (label_num++)+'.';
+			label.innerHTML = (lableNum++)+'.';
 		});
 	}
 	function duplicateNamesUsed(){
-		var name_set = new Set();
+		var nameSet = new Set();
 		saved_ids.forEach(function(i){
 			var name = document.getElementById('textbox'+i).value.replace('.v','');
-			name_set.add(name);
+			nameSet.add(name);
 		});
 		//this works because name_set will not include duplicate names
-		return name_set.size<saved_ids.size;
+		return nameSet.size<saved_ids.size;
 	}
 	function hideWindow(){
 		window.parent.openFile.cancel(true);
@@ -210,57 +212,57 @@ var ImportDialog = function()
 	form.setAttribute('accept-charset','UTF-8');
 	div.appendChild(form);
 
-	var file_input = document.createElement('input');
-	file_input.type = 'file';
-	file_input.name = 'upfile';
-	file_input.setAttribute('multiple','');
-	file_input.onchange = initFileTable;
-	div.appendChild(file_input);
+	var fileInput = document.createElement('input');
+	fileInput.type = 'file';
+	fileInput.name = 'upfile';
+	fileInput.setAttribute('multiple','');
+	fileInput.onchange = initFileTable;
+	div.appendChild(fileInput);
 
 	var header = document.createElement('h5');
 	header.style.margin = '5px';
 	header.innerHTML = mxResources.get('importSupported');
 	div.appendChild(header);
 
-	var table_div = document.createElement('div');
-	table_div.style.height = '140px';
-	table_div.style.overflow = 'auto';
+	var tableDiv = document.createElement('div');
+	tableDiv.style.height = '140px';
+	tableDiv.style.overflow = 'auto';
 	var table = document.createElement('table');
-	table_div.appendChild(table);
-	div.appendChild(table_div);
+	tableDiv.appendChild(table);
+	div.appendChild(tableDiv);
 	mxUtils.br(div);
 
-	var cancel_btn = document.createElement('input');
-	cancel_btn.type = 'button';
-	cancel_btn.value = mxResources.get('cancel');;
-	cancel_btn.setAttribute('class', 'geBtn');
-	cancel_btn.setAttribute('id', 'cancelButton');
-	cancel_btn.onclick = hideWindow;
-	div.appendChild(cancel_btn);
+	var cancelBtn = document.createElement('input');
+	cancelBtn.type = 'button';
+	cancelBtn.value = mxResources.get('cancel');;
+	cancelBtn.setAttribute('class', 'geBtn');
+	cancelBtn.setAttribute('id', 'cancelButton');
+	cancelBtn.onclick = hideWindow;
+	div.appendChild(cancelBtn);
 
-	var import_btn = document.createElement('input');
-	import_btn.type = 'button';
-	import_btn.value = mxResources.get('import');
-	import_btn.setAttribute('class', 'geBtn gePrimaryBtn');
-	import_btn.onclick = handleSave;
-	div.appendChild(import_btn);
+	var importBtn = document.createElement('input');
+	importBtn.type = 'button';
+	importBtn.value = mxResources.get('import');
+	importBtn.setAttribute('class', 'geBtn gePrimaryBtn');
+	importBtn.onclick = handleSave;
+	div.appendChild(importBtn);
 
 	this.container = div;
 };
 
 var EditComponentDialog = function(editorUi)
 {
-	var deleted_ids = new Array();
-	var new_names = new Array();
+	var deletedIds = new Array();
+	var newNames = new Array();
 	var storedShapes = JSON.parse(localStorage.getItem('storedShapes'));
 
 	function handleSave(){
 		var newShapes = new Array();
 		if (storedShapes) for (var i=0; i<storedShapes.length; i++) {
-			if ( !deleted_ids.includes(i) ) {
+			if ( !deletedIds.includes(i) ) {
 				var newShape = storedShapes[i];
-				if (new_names[i]!=null)
-					newShape.componentName = new_names[i];
+				if (newNames[i]!=null)
+					newShape.componentName = newNames[i];
 				newShapes.push(newShape);
 			}
 		}
@@ -269,20 +271,20 @@ var EditComponentDialog = function(editorUi)
 	function changedName(e){
 		var id = e.currentTarget.id;
 		id = parseInt(id.replace('textbox', ''));
-		var new_name = e.currentTarget.value;
-		if ( ( schematic.isImportedComponent(new_name, id) || schematic.isNativeComponent(new_name) ) )
-			alert('"'+ new_name +'" already exists. Please change the name.');
-		else if(   schematic.getIDerror(new_name)!=""  ) 
-			alert('"'+ new_name +'" is invalid. Please change the name.');
+		var newName = e.currentTarget.value;
+		if ( ( schematic.isImportedComponent(newName, id) || schematic.isNativeComponent(newName) ) )
+			alert('"'+ newName +'" already exists. Please change the name.');
+		else if(   schematic.getIDerror(newName)!=""  ) 
+			alert('"'+ newName +'" is invalid. Please change the name.');
 		else 
-			new_names[id] = new_name;
+			newNames[id] = newName;
 		set_save_btn_status();
 	}
 	function deleteComponent(e){
 		var id = e.currentTarget.id;
 		id = parseInt(id.replace('delete_btn', ''));
 		e.currentTarget.parentNode.remove();
-		deleted_ids.push(id);
+		deletedIds.push(id);
 		set_save_btn_status();
 		resetRowLabels();
 	}
@@ -296,23 +298,23 @@ var EditComponentDialog = function(editorUi)
 	}
 	function set_save_btn_status(){
 		if (storedShapes.length) for (var i=0; i<storedShapes.length; i++) {
-			if ( !deleted_ids.includes(i) ){
+			if ( !deletedIds.includes(i) ){
 				var name = document.getElementById('textbox'+i).value;
 				if ( schematic.isImportedComponent(name, i) || schematic.isNativeComponent(name) || !schematic.isValidID(name) ){
-					save_btn.setAttribute('disabled','disabled');
+					saveBtn.setAttribute('disabled','disabled');
 					return;
 				}
 			}
 		}
-		save_btn.removeAttribute('disabled');
+		saveBtn.removeAttribute('disabled');
 	}
 	function resetRowLabels(){
-		var label_num = 1;
+		var labelNum = 1;
 		for (var i=0; i<storedShapes.length; i++) {
-			if (deleted_ids.includes(i))
+			if (deletedIds.includes(i))
 				continue;
 			var label = document.getElementById('label'+i);
-			label.innerHTML = (label_num++)+'.';
+			label.innerHTML = (labelNum++)+'.';
 		}
 	}
 	var div = document.createElement('div');
@@ -349,57 +351,57 @@ var EditComponentDialog = function(editorUi)
 		mxUtils.write(label, (i+1)+'.');
 		row.appendChild(label);
 		
-		var renaming_box = document.createElement('input');
-		renaming_box.setAttribute('id', 'textbox'+i);
-		renaming_box.setAttribute('colspan', 2);
-		renaming_box.style.width = '180px';
-		renaming_box.type = 'text';
-		renaming_box.name = '';
-		renaming_box.value = storedShapes[i].componentName;
-		renaming_box.onchange = changedName;
-		row.appendChild(renaming_box);
+		var renamingBox = document.createElement('input');
+		renamingBox.setAttribute('id', 'textbox'+i);
+		renamingBox.setAttribute('colspan', 2);
+		renamingBox.style.width = '180px';
+		renamingBox.type = 'text';
+		renamingBox.name = '';
+		renamingBox.value = storedShapes[i].componentName;
+		renamingBox.onchange = changedName;
+		row.appendChild(renamingBox);
 
-		var schematic_btn = document.createElement('input');
-		schematic_btn.setAttribute('id', 'schematic_btn'+i);
-		schematic_btn.type = 'button';
-		schematic_btn.value = mxResources.get('schematic');
-		schematic_btn.onclick = openSchematic;
+		var schematicBtn = document.createElement('input');
+		schematicBtn.setAttribute('id', 'schematic_btn'+i);
+		schematicBtn.type = 'button';
+		schematicBtn.value = mxResources.get('schematic');
+		schematicBtn.onclick = openSchematic;
 		if (storedShapes[i].xml==null)
-			schematic_btn.setAttribute('disabled','disabled');
-		row.appendChild(schematic_btn);
+			schematicBtn.setAttribute('disabled','disabled');
+		row.appendChild(schematicBtn);
 
-		var delete_btn = document.createElement('input');
-		delete_btn.setAttribute('id', 'delete_btn'+i);
-		delete_btn.type = 'button';
-		delete_btn.value = mxResources.get('delete');
-		delete_btn.className = 'delete_btn';
-		delete_btn.onclick = deleteComponent;
-		row.appendChild(delete_btn);
+		var deleteBtn = document.createElement('input');
+		deleteBtn.setAttribute('id', 'delete_btn'+i);
+		deleteBtn.type = 'button';
+		deleteBtn.value = mxResources.get('delete');
+		deleteBtn.className = 'delete_btn';
+		deleteBtn.onclick = deleteComponent;
+		row.appendChild(deleteBtn);
 
 		table.appendChild(row);
 	}
 	
-	var table_div = document.createElement('div');
-	table_div.style.height = '160px';
-	table_div.style.overflow = 'auto';
-	table_div.appendChild(table);
-	div.appendChild(table_div);
+	var tableDiv = document.createElement('div');
+	tableDiv.style.height = '160px';
+	tableDiv.style.overflow = 'auto';
+	tableDiv.appendChild(table);
+	div.appendChild(tableDiv);
 	mxUtils.br(div);
 	
-	var cancel_btn = document.createElement('input');
-	cancel_btn.type = 'button';
-	cancel_btn.value = mxResources.get('cancel');
-	cancel_btn.setAttribute('class', 'geBtn');
-	cancel_btn.setAttribute('id', 'cancelButton');
-	cancel_btn.onclick = hideWindow;
-	div.appendChild(cancel_btn);
+	var cancelBtn = document.createElement('input');
+	cancelBtn.type = 'button';
+	cancelBtn.value = mxResources.get('cancel');
+	cancelBtn.setAttribute('class', 'geBtn');
+	cancelBtn.setAttribute('id', 'cancelButton');
+	cancelBtn.onclick = hideWindow;
+	div.appendChild(cancelBtn);
 
-	var save_btn = document.createElement('input');
-	save_btn.type = 'button';
-	save_btn.value = mxResources.get('save');
-	save_btn.setAttribute('class', 'geBtn gePrimaryBtn');
-	save_btn.onclick = handleSave;
-	div.appendChild(save_btn);
+	var saveBtn = document.createElement('input');
+	saveBtn.type = 'button';
+	saveBtn.value = mxResources.get('save');
+	saveBtn.setAttribute('class', 'geBtn gePrimaryBtn');
+	saveBtn.onclick = handleSave;
+	div.appendChild(saveBtn);
 
 	this.container = div;
 };
