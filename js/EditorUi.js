@@ -3493,15 +3493,6 @@ EditorUi.prototype.directImport = function() {
 	dlg.init();
 };
 
-EditorUi.prototype.clearComponents = function()
-{
-	localStorage.removeItem('storedShapes');
-	var graph = this.editor.graph;
-	this.circuit=new schematic(graph);
-	circuit=new schematic(graph);
-	circuit.deleteClearedComponents();
-	location.reload();
-};
 EditorUi.prototype.save = function()
 {
 	if (name != null)

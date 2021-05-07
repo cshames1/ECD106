@@ -3,13 +3,17 @@
  * (see license.txt for attributions)
  * Updated by 2021 [ECD106] Charlie Shames, Thomas Nicolino, Ben Picone, Joseph Luciano; Advisor: Meghana Jain
  */
+
+/* OpenDialog
+	- Defines window opened to import .sch file
+*/
 var OpenDialog = function()
 {
 	function hideWindow(){
 		window.parent.openFile.cancel(true);
 	}
 	function handleImport(){
-		var file = file_input.files[0];
+		var file = fileInput.files[0];
 		if (file==null){
 			alert( mxResources.get('noFile') );
 			return;
@@ -37,10 +41,10 @@ var OpenDialog = function()
 	div.setAttribute('width', (((Editor.useLocalStorage) ? 640 : 320) + dx) + 'px');
 	div.setAttribute('height', (((Editor.useLocalStorage) ? 80 : 80) + dx) + 'px');
 
-	var file_input = document.createElement('input');
-	file_input.type = 'file';
-	file_input.name = 'upfile';
-	div.appendChild(file_input);
+	var fileInput = document.createElement('input');
+	fileInput.type = 'file';
+	fileInput.name = 'upfile';
+	div.appendChild(fileInput);
 
 	var header = document.createElement('h5');
 	header.style.margin = '5px';
@@ -48,34 +52,37 @@ var OpenDialog = function()
 	div.appendChild(header);
 	mxUtils.br(div);
 
-	var cancel_btn = document.createElement('input');
-	cancel_btn.type = 'button';
-	cancel_btn.value = mxResources.get('cancel');
-	cancel_btn.setAttribute('class', 'geBtn');
-	cancel_btn.setAttribute('id', 'cancelButton');
-	cancel_btn.onclick = hideWindow;
-	div.appendChild(cancel_btn);
+	var cancelBtn = document.createElement('input');
+	cancelBtn.type = 'button';
+	cancelBtn.value = mxResources.get('cancel');
+	cancelBtn.setAttribute('class', 'geBtn');
+	cancelBtn.setAttribute('id', 'cancelButton');
+	cancelBtn.onclick = hideWindow;
+	div.appendChild(cancelBtn);
 
-	var import_btn = document.createElement('input');
-	import_btn.type = 'button';
-	import_btn.value = mxResources.get('import');;
-	import_btn.setAttribute('class', 'geBtn gePrimaryBtn');
-	import_btn.onclick = handleImport;
-	div.appendChild(import_btn);
+	var importBtn = document.createElement('input');
+	importBtn.type = 'button';
+	importBtn.value = mxResources.get('import');;
+	importBtn.setAttribute('class', 'geBtn gePrimaryBtn');
+	importBtn.onclick = handleImport;
+	div.appendChild(importBtn);
 
 	this.container = div;
 };
 
+/* ImportDialog
+	- Defines window opened to import .v files
+*/
 var ImportDialog = function()
 {
-	var saved_ids = new Set();
+	var savedIDs = new Set();
 	var componentNames = new Object();
 
 	function initFileTable(){
 		var files = fileInput.files;
 		for (var i=0; i<files.length; i++) {
 			if ( files[i].name.endsWith('.v') ) {
-				saved_ids.add(i);
+				savedIDs.add(i);
 				componentNames[i] = files[i].name.replace('.v','');
 			}
 		}
@@ -88,7 +95,7 @@ var ImportDialog = function()
 		table.innerHTML = "";
 		var labelNum = 1;
 
-		saved_ids.forEach(function(i){
+		savedIDs.forEach(function(i){
 			var file = fileInput.files[i];
 	
 			var row = document.createElement('tr');
@@ -127,7 +134,7 @@ var ImportDialog = function()
 	}	
 	function getAlerts(){
 		var alertTxt = "";
-		saved_ids.forEach(function(i){
+		savedIDs.forEach(function(i){
 			var name = document.getElementById('textbox'+i).value.replace('.v','');
 			if ( schematic.isImportedComponent(name, -1) || schematic.isNativeComponent(name) || duplicateNamesUsed() )
 				alertTxt += name + ' is already used. Please choose another name.\n'
@@ -137,7 +144,7 @@ var ImportDialog = function()
 		return alertTxt;
 	}
 	function handleSave(){
-		if ( saved_ids.size==0 ){
+		if ( savedIDs.size==0 ){
 			hideWindow();
 			return 0;
 		}
@@ -145,7 +152,7 @@ var ImportDialog = function()
 			alert(getAlerts());
 			return 0;
 		}
-		var iterator = saved_ids.values();
+		var iterator = savedIDs.values();
 		var components = new Array();
 		var id = iterator.next().value;
 		var reader = new FileReader();
@@ -166,19 +173,19 @@ var ImportDialog = function()
 
 	function resetRowLabels(){
 		var lableNum = 1;
-		saved_ids.forEach(function(i){
+		savedIDs.forEach(function(i){
 			var label = document.getElementById('label'+i);
 			label.innerHTML = (lableNum++)+'.';
 		});
 	}
 	function duplicateNamesUsed(){
 		var nameSet = new Set();
-		saved_ids.forEach(function(i){
+		savedIDs.forEach(function(i){
 			var name = document.getElementById('textbox'+i).value.replace('.v','');
 			nameSet.add(name);
 		});
-		//this works because name_set will not include duplicate names
-		return nameSet.size<saved_ids.size;
+		//this works because nameSet will not include duplicate names
+		return nameSet.size<savedIDs.size;
 	}
 	function hideWindow(){
 		window.parent.openFile.cancel(true);
@@ -186,7 +193,7 @@ var ImportDialog = function()
 	function deleteComponent(e){
 		var id = e.currentTarget.id;
 		id = parseInt(id.replace('delete_btn', ''));
-		saved_ids.delete(id);
+		savedIDs.delete(id);
 		e.currentTarget.parentNode.remove();
 		resetRowLabels();
 	}
@@ -250,6 +257,9 @@ var ImportDialog = function()
 	this.container = div;
 };
 
+/* EditComponentDialog
+	- Defines window opened to edit imported component library
+*/
 var EditComponentDialog = function(editorUi)
 {
 	var deletedIds = new Array();

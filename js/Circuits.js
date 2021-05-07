@@ -10,6 +10,8 @@ class schematic
 		this.maxPortnameLength=20;
 		this.verilog="";
 	}
+
+	//Returns true if component is built in to DSD
 	static isNativeComponent( component ){
 		var nativeComponents=["and", "nand", "or","nor","xor","xnor","buf", "inverter",
 						"mux","mux2","mux4", "mux8","mux16",
@@ -22,17 +24,25 @@ class schematic
 						"constant0", "constant1" ];
 		return nativeComponents.includes( component );
 	}; 
+
+	//Returns true if DSD has a Verilog file for component
 	static DSDhasVFile( component ){
 		var vfiles = ['d_latch_en','d_latch','decoder','dff_en','dff','sr_latch_en','sr_latch','mux'];
 		return vfiles.includes(component);
 	};
+
+	//Returns true if str is a reserved word in Verilog
 	static isVerilogReserved( str ){
 		var verilogReserved=new Set( ["always", "ifnone", "rpmos", "and", "initial", "rtran", "assign", "inout", "rtranif0", "begin", "input", "rtranif1", "buf", "integer", "scalared", "bufif0", "join", "small", "bufif1", "large", "specify", "case", "macromodule", "specparam", "casex", "medium", "strong0", "casez", "module", "strong1", "cmos", "nand", "supply0", "deassign", "negedge", "supply1", "default", "nmos", "table", "defparam", "nor", "task", "disable", "not", "time", "edge", "notif0", "tran", "else", "notif1", "tranif0", "end", "or", "tranif1", "endcase", "output", "tri", "endmodule", "parameter", "tri0", "endfunction", "pmos", "tri1", "endprimitive", "posedge", "triand", "endspecify", "primitive", "trior", "endtable", "pull0", "trireg", "endtask", "pull1", "vectored", "event", "pullup", "wait", "for", "pulldown", "wand", "force", "rcmos", "weak0", "forever", "real", "weak1", "fork", "realtime", "while", "function", "reg", "wire", "highz0", "release", "wor", "highz1", "repeat", "xnor", "if", "rnmos", "xor"]);
 		return verilogReserved.has(str);
 	};
+
+	//Returns true if newstr is a valid Verilog identifier
 	static isValidID( newstr ){
 		return (this.getIDerror(newstr)=="" );
 	};
+
+	//Returns error message with description of problem if newstr is not a valid Verilog identifier, otherwise blank string
 	static getIDerror( newstr ){
 		function isAlpha(c){
 			return /^[A-Z]$/i.test(c);
@@ -45,6 +55,8 @@ class schematic
 			return  "Error:" + newstr + " is a Verilog reserved word and cannot be used as an identifier";
 		return "";
 	};
+
+	//Returns true if newstr is stored in imported components, unless its index matches ID
 	static isImportedComponent( newstr, id ){
 		var storedShapes = JSON.parse(localStorage.getItem('storedShapes'));
 		if (storedShapes) for (var i=0; i<storedShapes.length; i++) {
@@ -53,6 +65,8 @@ class schematic
 		}
 		return false;
 	};
+
+	//Returns set of all components that will require seperate Verilog files to synthesize
 	static getVFilesFor( verilog ){
 		var verilogNoComments = schematic.removeVerilogComments(verilog);
 		var vfiles = new Set();
@@ -70,7 +84,9 @@ class schematic
 		}
 		return vfiles;
 	};
-	static removeVerilogComments( verilog ){
+
+	//Removes all comments from rawVerilog 
+	static removeVerilogComments( rawVerilog ){
 		var newText = "";
 		const stateType = {
 			NORMAL_CODE:'normal_code',
@@ -78,28 +94,30 @@ class schematic
 			COMMENT_TYPE2:'comment_type2'//this type: /* comment */
 		}
 		let state = stateType.NORMAL_CODE;
-		for (var i=0; i<verilog.length; i++) {
+		for (var i=0; i<rawVerilog.length; i++) {
 			switch (state){
 				case stateType.NORMAL_CODE:
-					if ( (verilog[i]+verilog[i+1])=='//' ) 
+					if ( (rawVerilog[i]+rawVerilog[i+1])=='//' ) 
 						state = stateType.COMMENT_TYPE1;
-					else if ( (verilog[i]+verilog[i+1])=='/*' ) 
+					else if ( (rawVerilog[i]+rawVerilog[i+1])=='/*' ) 
 						state = stateType.COMMENT_TYPE2;
 					else
-						newText += verilog[i];
+						newText += rawVerilog[i];
 					break;
 				case stateType.COMMENT_TYPE1:
-					if ( verilog[i]=='\n' )
+					if ( rawVerilog[i]=='\n' )
 						state = stateType.NORMAL_CODE;
 					break;
 				case stateType.COMMENT_TYPE2:
-					if ( (verilog[i-1]+verilog[i])=='*/' ) 
+					if ( (rawVerilog[i-1]+rawVerilog[i])=='*/' ) 
 						state = stateType.NORMAL_CODE;
 					break;
 			}
 		}
 		return newText;
 	};
+
+	//Adds a new component to the imported component library
 	static addComponent( verilog,compName,xml ){
 		function getPortSize (line){
 			if (line.includes('[')) {
@@ -158,6 +176,8 @@ class schematic
 		localStorage.setItem('storedShapes', JSON.stringify(storedShapes));
 		location.reload();
 	};
+
+	//Returns Verilog code stored as attribute of module
 	static getImportedComponentVerilog( module ){
 		function getModuleVerilog( moduleName ) {
 			var storedShapes = JSON.parse(localStorage.getItem('storedShapes'));
@@ -184,18 +204,23 @@ class schematic
 		var new_code = importedVerilog.split(oldName).join(module);
 		return new_code;
 	};
+
+	//Returns error messsage describing problem if newstr is not a valid identifier according to DSD's requirements
+	static checkPortName(newstr){
+		var checkIdError = schematic.getIDerror(newstr);
+		if ( checkIdError )
+			return checkIdError;
+		if( /^[UX].*$/.test(newstr) )
+			return "Error ("+newstr+"): Port names cannot start with uppercase U or X";
+		return "";
+	};
+	
 }
 
-schematic.prototype.checkPortName= function(newstr)
-{
-	var checkIdError = schematic.getIDerror(newstr);
-	if ( checkIdError )
-		return checkIdError;
-	if( /^[UX].*$/.test(newstr) )
-		return "Error ("+newstr+"): Port names cannot start with uppercase U or X";
-	return "";
-};
-
+/* function: runDRC
+	- Runs all Design Rule Checks on the schematic
+	- Returns DRCMessages object with information about its warnings and errors
+*/
 schematic.prototype.runDRC = function()
 {
 	var graph=this.graph;
@@ -272,7 +297,7 @@ schematic.prototype.runDRC = function()
 				Messages.addWarning(module+" is unnamed: a default name will be provided",node);
 			else
 			{
-				portnameError=this.checkPortName(node.value);
+				portnameError=schematic.checkPortName(node.value);
 				if( portnameError != "")
 					Messages.addError(portnameError,node);
 			}
@@ -292,7 +317,7 @@ schematic.prototype.runDRC = function()
 				Messages.addWarning(module+" is unnamed: a default name will be provided",node);
 			else
 			{
-				portnameError=this.checkPortName(node.value);
+				portnameError=schematic.checkPortName(node.value);
 				if( portnameError != "")
 					Messages.addError(portnameError,node);
 			}
@@ -499,9 +524,16 @@ schematic.prototype.runDRC = function()
 	
 	if( numOutputs===0 )
 		Messages.addError("Schematic must have at least one connected output",null);
+	if( numInputs===0 )
+		Messages.addWarning("Schematic must have at least one connected input",null);
 	return Messages;
 };
 
+/* function: deleteClearedComponents
+	- When editing the component library, users may remove components that have already been placed in the workspace
+	- Removes all such components from the workspace when the user's edits are saved
+	- Returns nothing
+*/
 schematic.prototype.deleteClearedComponents = function(){
 	var graph=this.graph;
 	nodes =  graph.getChildVertices(graph.getDefaultParent());
@@ -527,12 +559,22 @@ schematic.prototype.deleteClearedComponents = function(){
 	graph.removeCells(cells);
 }
 
+/* function: getVerilog
+	- Updates schematic
+	- Returns the verilog code stored in the schematic's verilog attribute
+*/
 schematic.prototype.getVerilog=function()
 {
 	this.updateSchematic();
 	return this.verilog;
 }
 
+/* function: updateSchematic
+	- Creates or updates Verilog code and stores it in the schematic's verilog attribute
+	- Defines bit width of all wires in schematic
+	- Refreshes schematic in workspace	
+	- Returns nothing
+*/
 schematic.prototype.updateSchematic=function()
 {
 	var netList="";
@@ -664,6 +706,8 @@ schematic.prototype.updateSchematic=function()
 			setCellStyleAttribute(link, 'strokeWidth', Math.log2(size)+1);
 		});
 	}
+
+	//Iterates through all components and renames nets accordingly if any constants or user defined identifiers are used
 	function defineNetAliases(){
 		//Iterate through the nodes a first time to define net aliases
 		if( nodes ) nodes.forEach(function(node){
@@ -701,6 +745,8 @@ schematic.prototype.updateSchematic=function()
 			}
 		});
 	}
+
+	//Defines bitwidth and aliases of all wires
 	function mapNetlist(){
 		if( nodes ) nodes.forEach(function(node){
 			var decoderSize=1;
@@ -812,6 +858,8 @@ schematic.prototype.updateSchematic=function()
 			}
 		});
 	}
+
+	//Creates Verilog code from the schematic
 	function createVerilog(){
 		if( nodes )
 		nodes.forEach(function(node){
@@ -1203,6 +1251,8 @@ schematic.prototype.updateSchematic=function()
 	
 	//refresh the graph because wires' bit widths may have changed
 	graph.refresh();
+	
+	//storees verilog code in the schematic's verilog attribute
 	this.verilog = verilogCode;
 };
 
