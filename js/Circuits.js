@@ -155,9 +155,9 @@ class schematic
 			}
 			var trimmedToken = token.trim();
 			var words = trimmedToken.split(' ');
-			var port_name = words[words.length-1];
+			var portName = words[words.length-1];
 			
-			signals[lastPortType].push(port_name.trim());
+			signals[lastPortType].push(portName.trim());
 			signalSize[lastPortType].push(lastPortSize);
 		});
 		
@@ -187,7 +187,7 @@ class schematic
 			});
 			return currentModule.verilogCode;
 		}
-		function get_module_name( verilog ) {
+		function getModuleName( verilog ) {
 			var verilogNoCommnents = schematic.removeVerilogComments(verilog);
 			var tokens = verilogNoCommnents.split(' ');
 			var i=0;
@@ -199,10 +199,10 @@ class schematic
 			return name;
 		}
 		var importedVerilog = getModuleVerilog( module );	
-		var oldName =  get_module_name( importedVerilog );
+		var oldName =  getModuleName( importedVerilog );
 		
-		var new_code = importedVerilog.split(oldName).join(module);
-		return new_code;
+		var newCode = importedVerilog.split(oldName).join(module);
+		return newCode;
 	};
 
 	//Returns error messsage describing problem if newstr is not a valid identifier according to DSD's requirements
@@ -226,8 +226,8 @@ schematic.prototype.runDRC = function()
 	var graph=this.graph;
 	var numInputs=0;
 	var numOutputs=0;
-	var input_identifiers=new Set();
-	var output_identifiers=new Set();
+	var inputIDs=new Set();
+	var outputIDs=new Set();
 	function DRCMessages()
 	{
 		this.errors=new Array;
@@ -254,16 +254,16 @@ schematic.prototype.runDRC = function()
 	function getModulePorts ( moduleName ){
 		return searchStoredShapesFor( moduleName ).signals;
 	}
-	function getErrorsForModuleInputPort( port_flag, bitWidth, node ){
-		port_flag = port_flag.toString();
-		var link = node.getLink( "in"+port_flag,false );
+	function getErrorsForModuleInputPort( portFlag, bitWidth, node ){
+		portFlag = portFlag.toString();
+		var link = node.getLink( "in"+portFlag,false );
 		var module = getModule( node );
 		var warning = "";
-		port_flag = port_flag.replace('_', '');
+		portFlag = portFlag.replace('_', '');
 		if( link==null )
-			warning += module+" input "+((port_flag)?"(":"")+port_flag+((port_flag)?")":"")+" must be connected";
+			warning += module+" input "+((portFlag)?"(":"")+portFlag+((portFlag)?")":"")+" must be connected";
 		else if ( bitWidth && link.size!=bitWidth )
-			warning += module+" input "+((port_flag)?"(":"")+port_flag+((port_flag)?")":"")+" has a "+link.size+"\'b wire connected. Only "+bitWidth+"\'b wires may be connected";
+			warning += module+" input "+((portFlag)?"(":"")+portFlag+((portFlag)?")":"")+" has a "+link.size+"\'b wire connected. Only "+bitWidth+"\'b wires may be connected";
 		return warning;
 	}
 	var Messages=new DRCMessages;
@@ -301,10 +301,10 @@ schematic.prototype.runDRC = function()
 				if( portnameError != "")
 					Messages.addError(portnameError,node);
 			}
-			if( output_identifiers.has(node.value))
+			if( outputIDs.has(node.value))
 				Messages.addError("Port name "+node.value+ " is used on output(s) and input(s)",node);
 			if( node.value != "" ) 
-				input_identifiers.add(node.value);
+				inputIDs.add(node.value);
 			break;
 		case "outputport32": outputSize++;
 		case "outputport16": outputSize++;
@@ -321,12 +321,12 @@ schematic.prototype.runDRC = function()
 				if( portnameError != "")
 					Messages.addError(portnameError,node);
 			}
-			if( input_identifiers.has(node.value))
+			if( inputIDs.has(node.value))
 				Messages.addError("Port name "+node.value+ " is used on input(s) and output(s)",node);
-			if( output_identifiers.has(node.value))
+			if( outputIDs.has(node.value))
 				Messages.addError("Port name "+node.value+ " is used on multiple outputs",node);
 			if( node.value != "" ) 
-				output_identifiers.add(node.value);
+				outputIDs.add(node.value);
 			var inError =  getErrorsForModuleInputPort("",(1<<outputSize),node);
 			if (inError)
 				Messages.addError( inError,node );
@@ -369,9 +369,9 @@ schematic.prototype.runDRC = function()
 		case "mux2":  muxSize++;
 			var dataInputConnected = (1<<muxSize);
 			for (var i=0; i<muxSize; i++) {
-				var sel_error = getErrorsForModuleInputPort("_sel"+i,1,node);
-				if (sel_error)
-					Messages.addError(sel_error,node);
+				var selError = getErrorsForModuleInputPort("_sel"+i,1,node);
+				if (selError)
+					Messages.addError(selError,node);
 			}
 			if( dataInputConnected < (1<<muxSize))
 				Messages.addError("All "+module+" data (i) inputs must be connected",node);
@@ -426,12 +426,12 @@ schematic.prototype.runDRC = function()
 			if (enError)
 				Messages.addError( enError,node );
 		case "dlatch":
-			var GError = getErrorsForModuleInputPort("_D",1,node);
-			var G_error =  getErrorsForModuleInputPort("_G",1,node);
-			if (GError)
-				Messages.addError( GError,node );
-			if (G_error)
-				Messages.addError( G_error,node );
+			var dError = getErrorsForModuleInputPort("_D",1,node);
+			var gError =  getErrorsForModuleInputPort("_G",1,node);
+			if (dError)
+				Messages.addError( dError,node );
+			if (gError)
+				Messages.addError( gError,node );
 			if( node.numLinksOutOf() == 0 )
 				Messages.addWarning(module+" has an unconnected output",node);
 			break;
@@ -440,10 +440,10 @@ schematic.prototype.runDRC = function()
 			if (enError)
 				Messages.addError( enError,node );
 		case "dff":
-			var GError = getErrorsForModuleInputPort("_D",1,node);
+			var dError = getErrorsForModuleInputPort("_D",1,node);
 			var clkError =  getErrorsForModuleInputPort("_clk",1,node);
-			if (GError)
-				Messages.addError( GError,node );
+			if (dError)
+				Messages.addError( dError,node );
 			if (clkError)
 				Messages.addError( clkError,node );
 			if( node.numLinksOutOf() == 0 )
@@ -605,22 +605,22 @@ schematic.prototype.updateSchematic=function()
 		return node.value ? node.value : gateName(node,prefix);
 	}
 	function netName( link ){
-		var port_id = getSrcPortID( link );
-		if( port_id == "" )
+		var portID = getSrcPortID( link );
+		if( portID == "" )
 			return 'X'+link.source.id;
 		else
-			return 'X'+link.source.id + '_'+ port_id;
+			return 'X'+link.source.id + '_'+ portID;
 	}
 	function getNameOrAlias( link ){
 		var alias = "";
 		var tryInputPortName = netAliases[netName(link)] ;
 		if ( srcNodeIs(link, "fanOut") ) {
-			var src_node = link.source;
-			var srclnk = src_node.getLink( 'in',false);
+			var srcNode = link.source;
+			var srclnk = srcNode.getLink( 'in',false);
 			if (srclnk) {
-				var try_bus_name = netAliases[netName(srclnk)];
-				if (try_bus_name) 
-					alias += try_bus_name+'['+getSrcPortID(link)+']';
+				var tryBusName = netAliases[netName(srclnk)];
+				if (tryBusName) 
+					alias += tryBusName+'['+getSrcPortID(link)+']';
 				else 
 					alias += netName(srclnk)+"["+getSrcPortID(link)+"]";
 			}
@@ -684,8 +684,8 @@ schematic.prototype.updateSchematic=function()
 		var newStyle ="";
 		var style = cell["style"];
 		if ( style.includes(attribute) ) {
-			style_array = style.split(";");
-			style_array.forEach(function(token){
+			var styleArray = style.split(";");
+			styleArray.forEach(function(token){
 				if ( token.includes(attribute) )
 					newStyle += attribute+"="+value+";";
 				else if (token)
@@ -696,8 +696,8 @@ schematic.prototype.updateSchematic=function()
 			newStyle += style+attribute+"="+value+";";
 		cell["style"] = newStyle;
 	}
-	function setLinkSetSize(link_set, size){
-		if ( link_set ) link_set.forEach(function(link){
+	function setLinkSetSize(linkSet, size){
+		if ( linkSet ) linkSet.forEach(function(link){
 			link.size = size;
 			if ( size>1 )
 				link.value = size;
