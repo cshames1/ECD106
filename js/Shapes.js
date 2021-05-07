@@ -531,8 +531,12 @@
 	{
 		c.moveTo(w, 0);
 		c.lineTo(w, h);
-		c.moveTo(w, h/2);
-		c.lineTo(0, h/2);
+		c.lineTo(w/2-5, h);
+		c.lineTo(w/2-5, h/2+8);
+		c.lineTo(0, h/2+8);
+		c.lineTo(0, h/2-8);
+		c.lineTo(w/2-5, h/2-8);
+		c.lineTo(w/2-5, 0);
 		c.close();
 		c.end();
 	};
@@ -563,10 +567,14 @@
 	
 	var drawFanIn = function(n, c, x, y, w, h)
 	{
-		c.moveTo(0, 0);
-		c.lineTo(0, h);
-		c.moveTo(0, h/2);
-		c.lineTo(w, h/2);
+		c.moveTo(0,0);
+		c.lineTo(0,h);
+		c.lineTo(w/2+5,h);
+		c.lineTo(w/2+5,h/2+8);
+		c.lineTo(w,h/2+8);
+		c.lineTo(w,h/2-8);
+		c.lineTo(w/2+5,h/2-8);
+		c.lineTo(w/2+5,0);
 		c.close();
 		c.end();
 	};

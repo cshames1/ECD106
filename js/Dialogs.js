@@ -3,13 +3,17 @@
  * (see license.txt for attributions)
  * Updated by 2021 [ECD106] Charlie Shames, Thomas Nicolino, Ben Picone, Joseph Luciano; Advisor: Meghana Jain
  */
+
+/* OpenDialog
+	- Defines window opened to import .sch file
+*/
 var OpenDialog = function()
 {
-	function hide_window(){
+	function hideWindow(){
 		window.parent.openFile.cancel(true);
 	}
-	function handle_import(){
-		var file = file_input.files[0];
+	function handleImport(){
+		var file = fileInput.files[0];
 		if (file==null){
 			alert( mxResources.get('noFile') );
 			return;
@@ -37,10 +41,10 @@ var OpenDialog = function()
 	div.setAttribute('width', (((Editor.useLocalStorage) ? 640 : 320) + dx) + 'px');
 	div.setAttribute('height', (((Editor.useLocalStorage) ? 80 : 80) + dx) + 'px');
 
-	var file_input = document.createElement('input');
-	file_input.type = 'file';
-	file_input.name = 'upfile';
-	div.appendChild(file_input);
+	var fileInput = document.createElement('input');
+	fileInput.type = 'file';
+	fileInput.name = 'upfile';
+	div.appendChild(fileInput);
 
 	var header = document.createElement('h5');
 	header.style.margin = '5px';
@@ -48,145 +52,150 @@ var OpenDialog = function()
 	div.appendChild(header);
 	mxUtils.br(div);
 
-	var cancel_btn = document.createElement('input');
-	cancel_btn.type = 'button';
-	cancel_btn.value = mxResources.get('cancel');
-	cancel_btn.setAttribute('class', 'geBtn');
-	cancel_btn.setAttribute('id', 'cancelButton');
-	cancel_btn.onclick = hide_window;
-	div.appendChild(cancel_btn);
+	var cancelBtn = document.createElement('input');
+	cancelBtn.type = 'button';
+	cancelBtn.value = mxResources.get('cancel');
+	cancelBtn.setAttribute('class', 'geBtn');
+	cancelBtn.setAttribute('id', 'cancelButton');
+	cancelBtn.onclick = hideWindow;
+	div.appendChild(cancelBtn);
 
-	var import_btn = document.createElement('input');
-	import_btn.type = 'button';
-	import_btn.value = mxResources.get('import');;
-	import_btn.setAttribute('class', 'geBtn gePrimaryBtn');
-	import_btn.onclick = handle_import;
-	div.appendChild(import_btn);
+	var importBtn = document.createElement('input');
+	importBtn.type = 'button';
+	importBtn.value = mxResources.get('import');;
+	importBtn.setAttribute('class', 'geBtn gePrimaryBtn');
+	importBtn.onclick = handleImport;
+	div.appendChild(importBtn);
 
 	this.container = div;
 };
 
+/* ImportDialog
+	- Defines window opened to import .v files
+*/
 var ImportDialog = function()
 {
-	var saved_ids = new Set();
-	var component_names = new Object();
+	var savedIDs = new Set();
+	var componentNames = new Object();
 
-	function init_file_table(){
-		var files = file_input.files;
+	function initFileTable(){
+		var files = fileInput.files;
 		for (var i=0; i<files.length; i++) {
 			if ( files[i].name.endsWith('.v') ) {
-				saved_ids.add(i);
-				component_names[i] = files[i].name.replace('.v','');
+				savedIDs.add(i);
+				componentNames[i] = files[i].name.replace('.v','');
 			}
 		}
-		build_file_table();
-		var alerts = get_alerts();
+		buildFileTable();
+		var alerts = getAlerts();
 		if ( alerts!= "" )
 			alert(alerts);
 	}
-	function build_file_table(){
+	function buildFileTable(){
 		table.innerHTML = "";
-		var label_num = 1;
+		var labelNum = 1;
 
-		saved_ids.forEach(function(i){
-			var file = file_input.files[i];
+		savedIDs.forEach(function(i){
+			var file = fileInput.files[i];
 	
 			var row = document.createElement('tr');
 			row.setAttribute('id', 'fileRow'+i);
 	
 			var label = document.createElement('td');
 			label.setAttribute('id','label'+i);
-			mxUtils.write(label, (label_num++)+'.');
+			mxUtils.write(label, (labelNum++)+'.');
 			row.appendChild(label);
 			
-			var renaming_box = document.createElement('input');
-			renaming_box.setAttribute('id', 'textbox'+i);
-			renaming_box.setAttribute('colspan', 2);
-			renaming_box.style.width = '170px';
-			renaming_box.type = 'text';
-			renaming_box.name = '';
-			renaming_box.value = file.name.replace('.v','');
-			renaming_box.onchange = changed_name;
-			row.appendChild(renaming_box);
+			var renamingBox = document.createElement('input');
+			renamingBox.setAttribute('id', 'textbox'+i);
+			renamingBox.setAttribute('colspan', 2);
+			renamingBox.style.width = '170px';
+			renamingBox.type = 'text';
+			renamingBox.name = '';
+			renamingBox.value = file.name.replace('.v','');
+			renamingBox.onchange = changedName;
+			row.appendChild(renamingBox);
 			
-			var delete_btn = document.createElement('input');
-			delete_btn.setAttribute('id', 'delete_btn'+i);
-			delete_btn.type = 'button';
-			delete_btn.value = mxResources.get('delete');;
-			delete_btn.className = 'delete_btn';
-			delete_btn.onclick = deleteComponent;
-			row.appendChild(delete_btn);
+			var deleteBtn = document.createElement('input');
+			deleteBtn.setAttribute('id', 'delete_btn'+i);
+			deleteBtn.type = 'button';
+			deleteBtn.value = mxResources.get('delete');;
+			deleteBtn.className = 'delete_btn';
+			deleteBtn.onclick = deleteComponent;
+			row.appendChild(deleteBtn);
 	
 			table.appendChild(row);
 		});
 	}
-	function changed_name(e){
+	function changedName(e){
 		var id = e.currentTarget.id;
 		id = parseInt(id.replace('textbox', ''));
-		component_names[id] = e.currentTarget.value;
+		componentNames[id] = e.currentTarget.value;
 	}	
-	function get_alerts(){
-		var alert_txt = "";
-		saved_ids.forEach(function(i){
+	function getAlerts(){
+		var alertTxt = "";
+		savedIDs.forEach(function(i){
 			var name = document.getElementById('textbox'+i).value.replace('.v','');
-			if ( schematic.nameIsUsed(name, -1) || schematic.isNativeComponent(name) || duplicate_names_used() )
-				alert_txt += name + ' is already used. Please choose another name.\n'
+			if ( schematic.isImportedComponent(name, -1) || schematic.isNativeComponent(name) || duplicateNamesUsed() )
+				alertTxt += name + ' is already used. Please choose another name.\n'
 			else if ( !schematic.isValidID(name) )
-				alert_txt += name + ' is not a valid Verilog ID. Please choose another name.\n'
+				alertTxt += name + ' is not a valid Verilog ID. Please choose another name.\n'
 		});
-		return alert_txt;
+		return alertTxt;
 	}
-	function handle_save(){
-		if ( saved_ids.size==0 ){
-			hide_window();
+	function handleSave(){
+		if ( savedIDs.size==0 ){
+			hideWindow();
 			return 0;
 		}
-		else if ( get_alerts()!="" ) {
-			alert(get_alerts());
+		else if ( getAlerts()!="" ) {
+			alert(getAlerts());
 			return 0;
 		}
-		var iterator = saved_ids.values();
+		var iterator = savedIDs.values();
 		var components = new Array();
 		var id = iterator.next().value;
 		var reader = new FileReader();
 		reader.onload = function(e){
 			components.push({
-				"name":component_names[id],
+				"name":componentNames[id],
 				"verilog":e.target.result
 			});
 			id = iterator.next().value;
 			if ( id!=null )
-				reader.readAsText(file_input.files[id]);
+				reader.readAsText(fileInput.files[id]);
 			else
 				window.parent.openFile.setData(components, null);
 		}
-		reader.readAsText(file_input.files[id]);
+		reader.readAsText(fileInput.files[id]);
 	}
-	function reset_row_labels(){
-		var label_num = 1;
-		saved_ids.forEach(function(i){
+
+
+	function resetRowLabels(){
+		var lableNum = 1;
+		savedIDs.forEach(function(i){
 			var label = document.getElementById('label'+i);
-			label.innerHTML = (label_num++)+'.';
+			label.innerHTML = (lableNum++)+'.';
 		});
 	}
-	function duplicate_names_used(){
-		var name_set = new Set();
-		saved_ids.forEach(function(i){
+	function duplicateNamesUsed(){
+		var nameSet = new Set();
+		savedIDs.forEach(function(i){
 			var name = document.getElementById('textbox'+i).value.replace('.v','');
-			name_set.add(name);
+			nameSet.add(name);
 		});
-		//this works because name_set will not include duplicate names
-		return name_set.size<saved_ids.size;
+		//this works because nameSet will not include duplicate names
+		return nameSet.size<savedIDs.size;
 	}
-	function hide_window(){
+	function hideWindow(){
 		window.parent.openFile.cancel(true);
 	}
 	function deleteComponent(e){
 		var id = e.currentTarget.id;
 		id = parseInt(id.replace('delete_btn', ''));
-		saved_ids.delete(id);
+		savedIDs.delete(id);
 		e.currentTarget.parentNode.remove();
-		reset_row_labels();
+		resetRowLabels();
 	}
 
 	var div = document.createElement('div');
@@ -210,109 +219,112 @@ var ImportDialog = function()
 	form.setAttribute('accept-charset','UTF-8');
 	div.appendChild(form);
 
-	var file_input = document.createElement('input');
-	file_input.type = 'file';
-	file_input.name = 'upfile';
-	file_input.setAttribute('multiple','');
-	file_input.onchange = init_file_table;
-	div.appendChild(file_input);
+	var fileInput = document.createElement('input');
+	fileInput.type = 'file';
+	fileInput.name = 'upfile';
+	fileInput.setAttribute('multiple','');
+	fileInput.onchange = initFileTable;
+	div.appendChild(fileInput);
 
 	var header = document.createElement('h5');
 	header.style.margin = '5px';
 	header.innerHTML = mxResources.get('importSupported');
 	div.appendChild(header);
 
-	var table_div = document.createElement('div');
-	table_div.style.height = '140px';
-	table_div.style.overflow = 'auto';
+	var tableDiv = document.createElement('div');
+	tableDiv.style.height = '140px';
+	tableDiv.style.overflow = 'auto';
 	var table = document.createElement('table');
-	table_div.appendChild(table);
-	div.appendChild(table_div);
+	tableDiv.appendChild(table);
+	div.appendChild(tableDiv);
 	mxUtils.br(div);
 
-	var cancel_btn = document.createElement('input');
-	cancel_btn.type = 'button';
-	cancel_btn.value = mxResources.get('cancel');;
-	cancel_btn.setAttribute('class', 'geBtn');
-	cancel_btn.setAttribute('id', 'cancelButton');
-	cancel_btn.onclick = hide_window;
-	div.appendChild(cancel_btn);
+	var cancelBtn = document.createElement('input');
+	cancelBtn.type = 'button';
+	cancelBtn.value = mxResources.get('cancel');;
+	cancelBtn.setAttribute('class', 'geBtn');
+	cancelBtn.setAttribute('id', 'cancelButton');
+	cancelBtn.onclick = hideWindow;
+	div.appendChild(cancelBtn);
 
-	var import_btn = document.createElement('input');
-	import_btn.type = 'button';
-	import_btn.value = mxResources.get('import');
-	import_btn.setAttribute('class', 'geBtn gePrimaryBtn');
-	import_btn.onclick = handle_save;
-	div.appendChild(import_btn);
+	var importBtn = document.createElement('input');
+	importBtn.type = 'button';
+	importBtn.value = mxResources.get('import');
+	importBtn.setAttribute('class', 'geBtn gePrimaryBtn');
+	importBtn.onclick = handleSave;
+	div.appendChild(importBtn);
 
 	this.container = div;
 };
 
+/* EditComponentDialog
+	- Defines window opened to edit imported component library
+*/
 var EditComponentDialog = function(editorUi)
 {
-	var deleted_ids = new Array();
-	var new_names = new Array();
+	var deletedIds = new Array();
+	var newNames = new Array();
 	var storedShapes = JSON.parse(localStorage.getItem('storedShapes'));
 
-	function handle_save(){
+	function handleSave(){
 		var newShapes = new Array();
 		if (storedShapes) for (var i=0; i<storedShapes.length; i++) {
-			if ( !deleted_ids.includes(i) ) {
+			if ( !deletedIds.includes(i) ) {
 				var newShape = storedShapes[i];
-				if (new_names[i]!=null)
-					newShape.componentName = new_names[i];
+				if (newNames[i]!=null)
+					newShape.componentName = newNames[i];
 				newShapes.push(newShape);
 			}
 		}
 		window.parent.openFile.setData(newShapes, null);
 	}
-	function changed_name(e){
+	function changedName(e){
 		var id = e.currentTarget.id;
 		id = parseInt(id.replace('textbox', ''));
-		var new_name = e.currentTarget.value;
-		if ( ( schematic.nameIsUsed(new_name, id) || schematic.isNativeComponent(new_name) ) )
-			alert('"'+ new_name +'" already exists. Please change the name.');
-		else if(   schematic.getIDerror(new_name)!=""  ) 
-			alert('"'+ new_name +'" is invalid. Please change the name.');
+		var newName = e.currentTarget.value;
+		if ( ( schematic.isImportedComponent(newName, id) || schematic.isNativeComponent(newName) ) )
+			alert('"'+ newName +'" already exists. Please change the name.');
+		else if(   schematic.getIDerror(newName)!=""  ) 
+			alert('"'+ newName +'" is invalid. Please change the name.');
 		else 
-			new_names[id] = new_name;
+			newNames[id] = newName;
 		set_save_btn_status();
 	}
-	function delete_component(e){
+	function deleteComponent(e){
 		var id = e.currentTarget.id;
 		id = parseInt(id.replace('delete_btn', ''));
 		e.currentTarget.parentNode.remove();
-		deleted_ids.push(id);
+		deletedIds.push(id);
 		set_save_btn_status();
-		reset_row_labels();
+		resetRowLabels();
 	}
-	function open_schematic(e){
+	function openSchematic(e){
 		var id = e.currentTarget.id;
 		id = id.replace('schematic_btn', '');
 		window.parent.openFile.setData(null, storedShapes[id].xml);
 	}
-	function hide_window(){
+	function hideWindow(){
 		window.parent.openFile.cancel(true);
 	}
 	function set_save_btn_status(){
 		if (storedShapes.length) for (var i=0; i<storedShapes.length; i++) {
-			if ( !deleted_ids.includes(i) ){
+			if ( !deletedIds.includes(i) ){
 				var name = document.getElementById('textbox'+i).value;
-				if ( schematic.nameIsUsed(name, i) || schematic.isNativeComponent(name) || !schematic.isValidID(name) ){
-					save_btn.setAttribute('disabled','disabled');
+				if ( schematic.isImportedComponent(name, i) || schematic.isNativeComponent(name) || !schematic.isValidID(name) ){
+					saveBtn.setAttribute('disabled','disabled');
 					return;
 				}
 			}
 		}
-		save_btn.removeAttribute('disabled');
+		saveBtn.removeAttribute('disabled');
 	}
-	function reset_row_labels(){
-		var label_num = 1;
+	function resetRowLabels(){
+		var labelNum = 1;
 		for (var i=0; i<storedShapes.length; i++) {
-			if (deleted_ids.includes(i))
+			if (deletedIds.includes(i))
 				continue;
 			var label = document.getElementById('label'+i);
-			label.innerHTML = (label_num++)+'.';
+			label.innerHTML = (labelNum++)+'.';
 		}
 	}
 	var div = document.createElement('div');
@@ -349,57 +361,57 @@ var EditComponentDialog = function(editorUi)
 		mxUtils.write(label, (i+1)+'.');
 		row.appendChild(label);
 		
-		var renaming_box = document.createElement('input');
-		renaming_box.setAttribute('id', 'textbox'+i);
-		renaming_box.setAttribute('colspan', 2);
-		renaming_box.style.width = '180px';
-		renaming_box.type = 'text';
-		renaming_box.name = '';
-		renaming_box.value = storedShapes[i].componentName;
-		renaming_box.onchange = changed_name;
-		row.appendChild(renaming_box);
+		var renamingBox = document.createElement('input');
+		renamingBox.setAttribute('id', 'textbox'+i);
+		renamingBox.setAttribute('colspan', 2);
+		renamingBox.style.width = '180px';
+		renamingBox.type = 'text';
+		renamingBox.name = '';
+		renamingBox.value = storedShapes[i].componentName;
+		renamingBox.onchange = changedName;
+		row.appendChild(renamingBox);
 
-		var schematic_btn = document.createElement('input');
-		schematic_btn.setAttribute('id', 'schematic_btn'+i);
-		schematic_btn.type = 'button';
-		schematic_btn.value = mxResources.get('schematic');
-		schematic_btn.onclick = open_schematic;
+		var schematicBtn = document.createElement('input');
+		schematicBtn.setAttribute('id', 'schematic_btn'+i);
+		schematicBtn.type = 'button';
+		schematicBtn.value = mxResources.get('schematic');
+		schematicBtn.onclick = openSchematic;
 		if (storedShapes[i].xml==null)
-			schematic_btn.setAttribute('disabled','disabled');
-		row.appendChild(schematic_btn);
+			schematicBtn.setAttribute('disabled','disabled');
+		row.appendChild(schematicBtn);
 
-		var delete_btn = document.createElement('input');
-		delete_btn.setAttribute('id', 'delete_btn'+i);
-		delete_btn.type = 'button';
-		delete_btn.value = mxResources.get('delete');
-		delete_btn.className = 'delete_btn';
-		delete_btn.onclick = delete_component;
-		row.appendChild(delete_btn);
+		var deleteBtn = document.createElement('input');
+		deleteBtn.setAttribute('id', 'delete_btn'+i);
+		deleteBtn.type = 'button';
+		deleteBtn.value = mxResources.get('delete');
+		deleteBtn.className = 'delete_btn';
+		deleteBtn.onclick = deleteComponent;
+		row.appendChild(deleteBtn);
 
 		table.appendChild(row);
 	}
 	
-	var table_div = document.createElement('div');
-	table_div.style.height = '160px';
-	table_div.style.overflow = 'auto';
-	table_div.appendChild(table);
-	div.appendChild(table_div);
+	var tableDiv = document.createElement('div');
+	tableDiv.style.height = '160px';
+	tableDiv.style.overflow = 'auto';
+	tableDiv.appendChild(table);
+	div.appendChild(tableDiv);
 	mxUtils.br(div);
 	
-	var cancel_btn = document.createElement('input');
-	cancel_btn.type = 'button';
-	cancel_btn.value = mxResources.get('cancel');
-	cancel_btn.setAttribute('class', 'geBtn');
-	cancel_btn.setAttribute('id', 'cancelButton');
-	cancel_btn.onclick = hide_window;
-	div.appendChild(cancel_btn);
+	var cancelBtn = document.createElement('input');
+	cancelBtn.type = 'button';
+	cancelBtn.value = mxResources.get('cancel');
+	cancelBtn.setAttribute('class', 'geBtn');
+	cancelBtn.setAttribute('id', 'cancelButton');
+	cancelBtn.onclick = hideWindow;
+	div.appendChild(cancelBtn);
 
-	var save_btn = document.createElement('input');
-	save_btn.type = 'button';
-	save_btn.value = mxResources.get('save');
-	save_btn.setAttribute('class', 'geBtn gePrimaryBtn');
-	save_btn.onclick = handle_save;
-	div.appendChild(save_btn);
+	var saveBtn = document.createElement('input');
+	saveBtn.type = 'button';
+	saveBtn.value = mxResources.get('save');
+	saveBtn.setAttribute('class', 'geBtn gePrimaryBtn');
+	saveBtn.onclick = handleSave;
+	div.appendChild(saveBtn);
 
 	this.container = div;
 };
@@ -1567,6 +1579,12 @@ var DRCWindow = function(editorUi, x, y, w, h)
 
 var VerilogWindow = function(editorUi, x, y, w, h)
 {
+	function downloadVFile(file_name, file_contents){
+		blob = new Blob([file_contents], { type: "text/plain"});
+		exportveriloganchor.download = file_name+".v";
+		exportveriloganchor.href = window.URL.createObjectURL(blob);
+		exportveriloganchor.click();
+	}
 	var graph = editorUi.editor.graph;
 
 	var div = document.createElement('div');
@@ -1595,31 +1613,26 @@ var VerilogWindow = function(editorUi, x, y, w, h)
 	drcBtn.className = 'geBtn';
 	var exportBtn = mxUtils.button("Export", function()
 	{
-		var blob = new Blob([textarea.value], { type: "text/plain"});
-		exportveriloganchor.download = "top_level.v";
-		exportveriloganchor.href = window.URL.createObjectURL(blob);
-		exportveriloganchor.click();
+		downloadVFile('top_level',textarea.value);
 
-		var imported_components = editorUi.circuit.getImportedComponentsForExport();
-		if (imported_components) imported_components.forEach(function(module){
-			var moduleVerilog = editorUi.circuit.getImportedComponentVerilog(module);
-			blob = new Blob([moduleVerilog], { type: "text/plain"});
-			exportveriloganchor.download = module+".v";
-			exportveriloganchor.href = window.URL.createObjectURL(blob);
-			exportveriloganchor.click();
-		}); 
-	
-		var native_components = editorUi.circuit.getNativeComponentsForExport(); 
-		if (native_components) native_components.forEach(function(module){
-			fetch( this.window.VERILOG_PATH+'/'+module+'.v')
-			.then(response => response.text())
-			.then(data => {
-				blob = new Blob([data], { type:"text/plain" });
-				exportveriloganchor.download = module+".v";
-				exportveriloganchor.href = window.URL.createObjectURL(blob);
-				exportveriloganchor.click();
-			});
-		}); 
+		var export_components = schematic.getVFilesFor(textarea.value);
+		var alert_text = "";
+		export_components.forEach(function(component){
+			if ( schematic.isImportedComponent(component, -1) ) {
+				downloadVFile( component, schematic.getImportedComponentVerilog(component) );
+			}
+			else if ( schematic.DSDhasVFile(component) ){
+				fetch( this.window.VERILOG_PATH+'/'+component+'.v')
+				.then(response => response.text())
+				.then(data => {
+					downloadVFile( component, data );
+				});
+			}
+			else
+				alert_text += component+'.v not found\n';
+		});
+		if (alert_text!="")
+			alert(alert_text);
 	});
 
 	exportBtn.className = 'geBtn';
@@ -1670,7 +1683,7 @@ var VerilogWindow = function(editorUi, x, y, w, h)
 	this.update = function(){ update();};
 	function update()
 	{
-		textarea.value=editorUi.circuit.createVerilog();
+		textarea.value=editorUi.circuit.getVerilog();
 	};
 	graph.getModel().addListener(mxEvent.CHANGE, update);
 	update();

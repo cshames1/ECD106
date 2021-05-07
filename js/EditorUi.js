@@ -28,7 +28,7 @@ EditorUi = function(editor, container, lightbox)
 	mxCellOverlay.prototype.graph=graph;
 	this.isInSimulationMode=false;
 	this.circuit=new schematic(graph);
-	this.circuit.createVerilog();
+	this.circuit.updateSchematic();
 
 	mxConnectionHandler.prototype.select = false;
 	mxGraph.prototype.enterStopsCellEditing = true;
@@ -76,7 +76,7 @@ EditorUi = function(editor, container, lightbox)
 		if( truecount != 1 )
 			deleteEdge(edge);
 		var circuit=new schematic(graph);
-		circuit.createVerilog();
+		circuit.updateSchematic();
 		graph.refresh();
     });
 
@@ -3493,15 +3493,6 @@ EditorUi.prototype.directImport = function() {
 	dlg.init();
 };
 
-EditorUi.prototype.clearComponents = function()
-{
-	localStorage.removeItem('storedShapes');
-	var graph = this.editor.graph;
-	this.circuit=new schematic(graph);
-	circuit=new schematic(graph);
-	circuit.deleteClearedComponents();
-	location.reload();
-};
 EditorUi.prototype.save = function()
 {
 	if (name != null)

@@ -105,7 +105,7 @@ Actions.prototype.init = function()
 		
 		window.openFile.setConsumer(mxUtils.bind(this, function(name)
 		{	
-			schematic.addComponent(ui.circuit.createVerilog(), name, mxUtils.getPrettyXml(ui.editor.getGraphXml()));
+			schematic.addComponent(ui.circuit.getVerilog(), name, mxUtils.getPrettyXml(ui.editor.getGraphXml()));
 		}));
 
 		ui.directImport();
@@ -363,7 +363,7 @@ Actions.prototype.init = function()
 				graph.setSelectionCells(select);
 			}
 		}
-		ui.circuit.createVerilog();
+		ui.circuit.updateSchematic();
 	};
 
 	this.addAction('delete', function(evt)
