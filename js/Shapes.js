@@ -558,7 +558,7 @@
 	FanOutShape.prototype.getPorts = function()
 	{
 		var ports=new Array();
-		ports['in_w'] = {x: 0, y: .5, perimeter: false, label: 'in'};
+		ports['in_w'] = {x: 0, y: .5, perimeter: false, label:'['+(this.numOutputs()-1)+':0] in'};
 		for( var i=0; i<this.numOutputs(); i=i+1 )
 			ports['out'+ i + '_d' + i + '_e'] = {x: 1, y: (i+.5)/(this.numOutputs()), perimeter: false, label: 'out'+i};
 		return ports;
