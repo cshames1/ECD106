@@ -707,45 +707,6 @@ schematic.prototype.updateSchematic=function()
 		});
 	}
 
-	//Iterates through all components and renames nets accordingly if any constants or user defined identifiers are used
-	function defineNetAliases(){
-		//Iterate through the nodes a first time to define net aliases
-		if( nodes ) nodes.forEach(function(node){
-			var module = getModule(node);
-			switch( module )
-			{
-				case "inputport1": 
-				case "inputport2": 
-				case "inputport4": 
-				case "inputport8": 
-				case "inputport16": 
-				case "inputport32": 
-					var links=node.linksOutOf();
-					//if user named port, use that name as net alias
-					if( node.value && links.length )
-						netAliases[netName(links[0])] = node.value;
-					//otherwise, generate name
-					else if( links.length )
-						netAliases[netName(links[0])] = portName(node,"I");
-					break;
-				case "constant0": 
-					//any wire coming from a constant0 will be named 1b'0
-					var links=node.linksOutOf();
-					if( node.value && links.length )
-						links.forEach( function( link ){
-						netAliases[netName(link)] = '1\'b0';});
-					break;
-				case "constant1": 
-					//any wire coming from a constant1 will be named 1b'1
-					var links=node.linksOutOf();
-					if( node.value && links.length )
-						links.forEach( function( link ){
-						netAliases[netName(link)] = '1\'b1';});
-					break;
-			}
-		});
-	}
-
 	//Defines bitwidth and aliases of all wires
 	function mapNetlist(){
 		if( nodes ) nodes.forEach(function(node){
@@ -761,8 +722,14 @@ schematic.prototype.updateSchematic=function()
 				case "inputport4":  inputPortSize++;
 				case "inputport2":  inputPortSize++;
 				case "inputport1":
-					var linksout=node.linksOutOf();
-					setLinkSetSize(linksout, (1<<inputPortSize));
+					var links=node.linksOutOf();
+					//if user named port, use that name as net alias
+					if( node.value && links.length )
+						netAliases[netName(links[0])] = node.value;
+					//otherwise, generate name
+					else if( links.length )
+						netAliases[netName(links[0])] = portName(node,"I");
+					setLinkSetSize(links, (1<<inputPortSize));
 					break;
 				case "outputport32":
 				case "outputport16":
@@ -772,9 +739,19 @@ schematic.prototype.updateSchematic=function()
 				case "outputport1":
 					break;
 				case "constant0":
+					//any wire coming from a constant0 will be named 1b'0
+					var links=node.linksOutOf();
+					if( node.value && links.length )
+						links.forEach( function( link ){
+						netAliases[netName(link)] = '1\'b0';});
+					break;
 				case "constant1":
-					var linksout=node.linksOutOf();
-					setLinkSetSize(linksout, 1);
+					//any wire coming from a constant1 will be named 1b'1
+					var links=node.linksOutOf();
+					if( node.value && links.length )
+						links.forEach( function( link ){
+						netAliases[netName(link)] = '1\'b1';});
+					setLinkSetSize(links, 1);
 					break;
 				case "and":
 				case "nand":
@@ -835,8 +812,14 @@ schematic.prototype.updateSchematic=function()
 				case "fanIn4":  faninSize++;
 				case "fanIn2":  faninSize++;
 					var linksout=node.linksOutOf();
-					if( linksout.length == 1 && trgtNodeIs(linksout[0], "outputport") ) 
+					if( linksout.length == 1 && trgtNodeIs(linksout[0], "outputport") ) {
 						netAliases[netName(linksout[0])] = portName(linksout[0].target,"O");
+						var inputLinks = node.linksInto();
+						var i = 0;
+						inputLinks.forEach(function(inputLink){
+							netAliases[netName(inputLink)] = netAliases[netName(linksout[0])]+'['+(i++)+']';
+						});						
+					}
 					setLinkSetSize(linksout, (1<<faninSize));
 					break;
 				default:
@@ -850,7 +833,7 @@ schematic.prototype.updateSchematic=function()
 						var linksout=node.getLinks( 'out' + id + '_', true);
 						if( linksout.length == 1 && trgtNodeIs(linksout[0], "outputport") ) 
 							netAliases[netName(linksout[0])] = portName(linksout[0].target,"O");
-						if( linksout.length ) 
+						else if( linksout.length ) 
 							wireSet[portSizes.output[id]].add(netName(linksout[0],"X"));
 						setLinkSetSize(linksout, portSizes.output[id]);					
 					});
@@ -1167,27 +1150,22 @@ schematic.prototype.updateSchematic=function()
 				case "fanIn8":  faninSize++;
 				case "fanIn4":  faninSize++;
 				case "fanIn2":  faninSize++;
-					var assignment = "";
 					var links=node.linksOutOf();
-					if(links.length == 1 && trgtNodeIs(links[0], "outputport") ) 
-						assignment += "\nassign "+getNameOrAlias( links[0]) +' = { ';
-					else
-						assignment += "\nwire ["+((1<<faninSize)-1)+":0] "+gateName(node,"X")+" = { ";
-					for( var i=(1<<faninSize)-1; i>=0; i=i-1 )
-					{
-						var lnk=node.getLink( 'in'+i,false);
-						if( lnk ) 
-							assignment+=getNameOrAlias( lnk);
-						else 
-							assignment+='1\'bx';
-						assignment+=', ';
-					}
-					assignment=assignment.replace(/, *$/gi, '');
-					assignment=assignment+" };\n";
-					if(links.length == 1 && trgtNodeIs(links[0], "outputport") ) 
-						outputAssignList += assignment;
-					else
+					if( links.length>0 && !(links.length==1 && trgtNodeIs(links[0], "outputport")) ) {
+						var assignment = "\nwire ["+((1<<faninSize)-1)+":0] "+gateName(node,"X")+" = { ";
+						for( var i=(1<<faninSize)-1; i>=0; i=i-1 )
+						{
+							var lnk=node.getLink( 'in'+i,false);
+							if( lnk ) 
+								assignment+=getNameOrAlias( lnk);
+							else 
+								assignment+='1\'bx';
+							assignment+=', ';
+						}
+						assignment=assignment.replace(/, *$/gi, '');
+						assignment=assignment+" };\n";
 						wireAssignList += assignment;
+					}
 					break; 
 				default: 
 					var ports = getModulePorts(module);
@@ -1245,7 +1223,7 @@ schematic.prototype.updateSchematic=function()
 	//nodes must be sorted so any module which can determine a wire's bit width is processed before modules that can't
 	var nodes = sortNodes( graph.getChildVertices(graph.getDefaultParent()) );
 	
-	defineNetAliases();
+	//defineNetAliases();
 	mapNetlist();
 	createVerilog();
 	
