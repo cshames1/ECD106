@@ -781,7 +781,7 @@ schematic.prototype.updateSchematic=function()
 					var linksout=node.linksOutOf();
 					if( linksout.length == 1 && trgtNodeIs(linksout[0], "outputport") ) 
 						netAliases[netName(linksout[0])] = portName(linksout[0].target,"O");
-					else
+					else if ( linksout.length && netAliases[netName(linksout[0])]==null )
 						wireSet[1].add(gateName(node,"X") );
 					setLinkSetSize(linksout, 1);
 					break;
@@ -793,7 +793,7 @@ schematic.prototype.updateSchematic=function()
 						var linksout=node.getLinks( 'out'+ i +'_d', true);
 						if( linksout.length == 1 && trgtNodeIs(linksout[0], "outputport") ) 
 							netAliases[netName(linksout[0])] = portName(linksout[0].target,"O");
-						else if( linksout.length )
+						else if( linksout.length && netAliases[netName(linksout[0])]==null )
 							wireSet[(1<<0)].add(netName(linksout[0],"X"));
 						setLinkSetSize(linksout, 1);
 					}
@@ -815,9 +815,13 @@ schematic.prototype.updateSchematic=function()
 					if( linksout.length == 1 && trgtNodeIs(linksout[0], "outputport") ) {
 						netAliases[netName(linksout[0])] = portName(linksout[0].target,"O");
 						var inputLinks = node.linksInto();
-						var i = 0;
 						inputLinks.forEach(function(inputLink){
-							netAliases[netName(inputLink)] = netAliases[netName(linksout[0])]+'['+(i++)+']';
+							var srcPort = graph.getCellStyle( inputLink )["sourcePort"];
+							var srcNode = inputLink.source;
+							var net = srcNode.getLinks(srcPort, true);
+							console.log(net);
+							if (net.length==1)
+								netAliases[netName(inputLink)] = netAliases[netName(linksout[0])]+'['+getTrgtPortID(inputLink)+']';
 						});						
 					}
 					setLinkSetSize(linksout, (1<<faninSize));
@@ -875,12 +879,14 @@ schematic.prototype.updateSchematic=function()
 				case "outputport8":  outputportSize++;
 				case "outputport4":  outputportSize++;
 				case "outputport2":  outputportSize++;
+					outputList+="\n\toutput [" + ((1<<outputportSize)-1) + ':0] ' + portName(node,'O') +',';
+					break;
 				case "outputport1":
-					if (outputportSize==0)
-						outputList+="\n\toutput " + portName(node,'O') + ',';
-					else
-						outputList+="\n\toutput [" + ((1<<outputportSize)-1) + ':0] ' + portName(node,'O') +',';
+					outputList+="\n\toutput " + portName(node,'O') + ',';
+					
+						
 					var link=node.linksInto();
+					//console.log(link[0].source);
 					if( link.length == 0 ){
 						outputAssignList += "\nassign "+portName(node,"O")+" = " + (1<<outputportSize)+"\'b";
 						for (var i=0; i<(1<<outputportSize); i++) {
@@ -924,14 +930,16 @@ schematic.prototype.updateSchematic=function()
 				case "mux2":  muxSize++;
 					netList += "\n\n" + gateNames[module] +' '+gateName(node,"U")+' ('; 
 					netList=netList.replace(/, *$/gi, '');
-					netList += '\n\t.data_out( ';
+					
 					var links=node.linksOutOf();
-					if( links.length )
+					if( links.length ) {
+						netList += '\n\t.data_out( ';
 						netList += getNameOrAlias( links[0]);
-					else
-						netList += gateName(node,"X");
-					netList=netList.replace(/, *$/gi, '');
-					netList += ' ),\n\t.select_in( {';
+						netList=netList.replace(/, *$/gi, '');
+						netList += ' ),';
+					}
+					
+					netList += '\n\t.select_in( {';
 					//iterate through each select input
 					for( var i=muxSize-1; i>=0; i=i-1 )
 					{
