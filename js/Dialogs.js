@@ -211,14 +211,6 @@ var ImportDialog = function()
 	div.setAttribute('width', (((Editor.useLocalStorage) ? 640 : 320) + dx) + 'px');
 	div.setAttribute('height', (((Editor.useLocalStorage) ? 500 : 220) + dx) + 'px');
 
-	var form = document.createElement('form');
-	form.method = 'POST';
-	form.enctype = 'multipart/form-data';
-	form.action = "";
-	form.name = 'openForm';
-	form.setAttribute('accept-charset','UTF-8');
-	div.appendChild(form);
-
 	var fileInput = document.createElement('input');
 	fileInput.type = 'file';
 	fileInput.name = 'upfile';
